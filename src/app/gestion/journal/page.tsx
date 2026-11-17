@@ -32,7 +32,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                   <td className="whitespace-nowrap">{r.actorId ? names.get(r.actorId) ?? "Compte supprimé" : "Système"}</td>
                   <td className="font-mono text-[13px] text-ink">{r.action}</td>
                   <td className="text-[13px] text-ink-soft">{r.entity}{r.entityId ? <span className="block font-mono text-xs text-muted">{r.entityId}</span> : null}</td>
-                  <td className="max-w-80 break-words font-mono text-xs text-muted">{r.meta ? JSON.stringify(r.meta).slice(0, 220) : "—"}</td>
+                  <td className="max-w-80 break-words font-mono text-xs text-muted" data-empty={r.meta ? undefined : ""}>{r.meta ? JSON.stringify(r.meta).slice(0, 220) : "—"}</td>
                 </tr>
               ))}
             </Table>

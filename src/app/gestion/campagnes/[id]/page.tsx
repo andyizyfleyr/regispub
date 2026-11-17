@@ -131,7 +131,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
 
             <Card>
               <CardHeader title="Historique" />
-              <ol className="space-y-4 px-5 py-4">
+              <ol className="space-y-4 px-4 sm:px-5 py-4">
                 {c.statusEvents.map((e) => (
                   <li key={e.id} className="relative pl-5 text-sm before:absolute before:left-0 before:top-1.5 before:size-2 before:rounded-full before:bg-line-strong">
                     <p className="font-medium text-ink">{STATUS_META[e.toStatus as CampaignStatusName].label}</p>
@@ -149,8 +149,8 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
               <AccessPanel campaignId={c.id} canReveal={can(user.role, "access.reveal")} canReview={can(user.role, "campaign.update_status")}
                 items={platforms.map((p) => { const row = accessRows.find((r) => r.platform === p); const state = accessState(accessRows, p, c.id); return { platform: p, url: accounts[p] ?? "", state, method: state === "TODO" ? null : row?.method ?? null, hasSecret: state !== "TODO" && Boolean(row?.hasSecret), note: row?.note ?? null, updatedAt: row?.updatedAt.toISOString() ?? null }; })} />
               <ul className="divide-y divide-line border-t border-line empty:hidden">
-                {c.destinationWhatsapp && <li className="flex items-center gap-3 px-5 py-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-green-soft text-green"><MessageCircle className="size-3.5" /></span><span className="min-w-0 flex-1"><span className="block text-xs text-muted">WhatsApp des clients</span><span className="tnum block font-medium text-ink">{formatPhone(c.destinationWhatsapp)}</span></span></li>}
-                {c.destinationUrl && <li className="flex items-center gap-3 px-5 py-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-sand text-ink-soft"><LinkIcon className="size-3.5" /></span><span className="min-w-0 flex-1"><span className="block text-xs text-muted">Lien de destination</span><a href={c.destinationUrl} target="_blank" rel="noreferrer nofollow" className="block truncate font-medium text-green hover:underline">{accountDisplay(c.destinationUrl)}</a></span></li>}
+                {c.destinationWhatsapp && <li className="flex items-center gap-3 px-4 sm:px-5 py-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-green-soft text-green"><MessageCircle className="size-3.5" /></span><span className="min-w-0 flex-1"><span className="block text-xs text-muted">WhatsApp des clients</span><span className="tnum block font-medium text-ink">{formatPhone(c.destinationWhatsapp)}</span></span></li>}
+                {c.destinationUrl && <li className="flex items-center gap-3 px-4 sm:px-5 py-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-sand text-ink-soft"><LinkIcon className="size-3.5" /></span><span className="min-w-0 flex-1"><span className="block text-xs text-muted">Lien de destination</span><a href={c.destinationUrl} target="_blank" rel="noreferrer nofollow" className="block truncate font-medium text-green hover:underline">{accountDisplay(c.destinationUrl)}</a></span></li>}
               </ul>
             </Card>
             <Card>
@@ -257,7 +257,7 @@ async function Stats({ campaignId, platforms, adBudget, kpis, launched, canImpor
       {rows.length > 0 && (
         <Card>
           <CardHeader title="Lignes enregistrées" />
-          <Table head={["Date", "Plateforme", "Impressions", "Clics", "Dépenses", "Source", "État"]}>
+          <Table head={["Date", "Plateforme", "Impressions", "Clics", "Dépenses", "Source", "État"]} mobileCorner={7} mobileHide={[6]}>
             {rows.map((r) => (
               <tr key={r.id}>
                 <td className="whitespace-nowrap">{formatPureDate(r.date)}</td>
@@ -277,7 +277,7 @@ async function Stats({ campaignId, platforms, adBudget, kpis, launched, canImpor
           <CardHeader title="Imports" />
           <ul className="divide-y divide-line">
             {imports.map((i) => (
-              <li key={i.id} className="flex items-start justify-between gap-3 px-5 py-3 text-sm">
+              <li key={i.id} className="flex items-start justify-between gap-3 px-4 sm:px-5 py-3 text-sm">
                 <span className="min-w-0"><span className="block truncate text-ink">{i.fileName} · <span className="tnum">{i.rowCount}</span> ligne(s)</span><span className="block text-xs text-muted">{formatDateTime(i.createdAt)}{i.note ? ` · ${i.note}` : ""}</span></span>
                 <StateBadge kind="import" value={i.status} />
               </li>

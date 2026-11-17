@@ -71,7 +71,7 @@ export function Thread({ campaignId, messages, canPost, allowInternal, disabledR
             <Button type="submit" size="sm" disabled={busy || !body.trim()}><Send />{busy ? "Envoi…" : "Envoyer"}</Button>
           </div>
         </form>
-      ) : <p className="border-t border-line px-5 py-4 text-[13px] text-muted">{disabledReason ?? "La messagerie est fermée pour cette campagne."}</p>}
+      ) : <p className="border-t border-line px-4 sm:px-5 py-4 text-[13px] text-muted">{disabledReason ?? "La messagerie est fermée pour cette campagne."}</p>}
     </div>
   );
 }

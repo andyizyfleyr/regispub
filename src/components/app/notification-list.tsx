@@ -23,7 +23,7 @@ export async function NotificationList({ userId, fallbackHref, embedded }: { use
           <ul className="divide-y divide-line">
             {items.map((n) => (
               <li key={n.id}>
-                <Link href={n.link ?? fallbackHref} className="flex gap-3.5 px-5 py-4 hover:bg-paper">
+                <Link href={n.link ?? fallbackHref} className="flex gap-3.5 px-4 sm:px-5 py-4 hover:bg-paper">
                   <span className={`mt-1.5 size-2 shrink-0 rounded-full ${n.readAt ? "bg-line-strong" : "bg-marigold"}`} />
                   <span className="min-w-0 flex-1">
                     <span className={`block text-[14.5px] ${n.readAt ? "text-ink-soft" : "font-medium text-ink"}`}>{n.title}</span>

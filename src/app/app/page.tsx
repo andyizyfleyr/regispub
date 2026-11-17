@@ -66,7 +66,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               const meta = TODO_META[status]!;
               const href = status === "PENDING_PAYMENT" && c.orders[0] ? `/app/paiements/${c.orders[0].id}` : status === "CLIENT_REVIEW" ? `/app/campagnes/${c.id}?onglet=creations` : `/app/campagnes/${c.id}?onglet=messages`;
               return <ListRow key={c.id} href={href} icon={<meta.icon />} tone="marigold" title={c.name} subtitle={STATUS_META[status].label} className="hover:bg-marigold-soft/70"
-                trailing={<span className="rounded-full bg-forest px-3 py-1.5 text-[13px] font-medium text-white">{meta.cta}</span>} chevron={false} />;
+                trailing={<span className="block w-[5.5rem] rounded-full bg-forest py-1.5 text-center text-[13px] font-medium text-white">{meta.cta}</span>} chevron={false} />;
             })}
           </List>
         </section>

@@ -31,7 +31,7 @@ export function ObjectiveShortcut({ code, tone = "green" }: { code: string; tone
   );
 }
 
-const GRID = "grid grid-cols-2 gap-3 sm:grid-cols-3";
+const GRID = "grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3";
 
 const POPULAR = ["whatsapp_orders", "sales", "page_awareness", "leads", "ig_followers", "store_visits"];
 

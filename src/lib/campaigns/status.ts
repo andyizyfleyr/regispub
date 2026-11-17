@@ -5,13 +5,14 @@ export type CampaignStatusName =
   | "DRAFT" | "PENDING_PAYMENT" | "PAID" | "AWAITING_INFO" | "IN_PREPARATION" | "CLIENT_REVIEW"
   | "READY_TO_LAUNCH" | "RUNNING" | "PAUSED" | "COMPLETED" | "CANCELLED";
 
-export const STATUS_META: Record<CampaignStatusName, { label: string; tone: "neutral" | "warn" | "info" | "ok" | "danger"; clientHint: string }> = {
+/** `short` : libellé court affiché dans les listes, où la place manque sur téléphone. */
+export const STATUS_META: Record<CampaignStatusName, { label: string; short?: string; tone: "neutral" | "warn" | "info" | "ok" | "danger"; clientHint: string }> = {
   DRAFT: { label: "Brouillon", tone: "neutral", clientHint: "À terminer pour commander." },
-  PENDING_PAYMENT: { label: "En attente de paiement", tone: "warn", clientHint: "Payez pour démarrer." },
+  PENDING_PAYMENT: { label: "En attente de paiement", short: "À payer", tone: "warn", clientHint: "Payez pour démarrer." },
   PAID: { label: "Payé", tone: "info", clientHint: "Paiement reçu. Un gestionnaire s'en occupe." },
-  AWAITING_INFO: { label: "En attente d'informations", tone: "warn", clientHint: "Une précision est attendue." },
-  IN_PREPARATION: { label: "En préparation", tone: "info", clientHint: "Préparation en cours." },
-  CLIENT_REVIEW: { label: "En validation client", tone: "warn", clientHint: "Créations à valider." },
+  AWAITING_INFO: { label: "En attente d'informations", short: "Infos attendues", tone: "warn", clientHint: "Une précision est attendue." },
+  IN_PREPARATION: { label: "En préparation", short: "Préparation", tone: "info", clientHint: "Préparation en cours." },
+  CLIENT_REVIEW: { label: "En validation client", short: "À valider", tone: "warn", clientHint: "Créations à valider." },
   READY_TO_LAUNCH: { label: "Prêt à lancer", tone: "info", clientHint: "Lancement programmé." },
   RUNNING: { label: "En cours", tone: "ok", clientHint: "Diffusion en cours." },
   PAUSED: { label: "En pause", tone: "warn", clientHint: "Diffusion suspendue." },

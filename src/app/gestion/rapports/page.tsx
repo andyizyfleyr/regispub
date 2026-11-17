@@ -72,7 +72,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               const n = byStatus.find((b) => b.status === s)?._count ?? 0;
               const max = Math.max(1, ...byStatus.map((b) => b._count));
               return (
-                <li key={s} className="flex items-center gap-3 px-5 py-2.5 text-sm">
+                <li key={s} className="flex items-center gap-3 px-4 sm:px-5 py-2.5 text-sm">
                   <span className="w-44 shrink-0 text-ink-soft">{STATUS_META[s].label}</span>
                   <span className="h-2 flex-1 overflow-hidden rounded-full bg-sand"><span className="block h-full rounded-full bg-green" style={{ width: `${(n / max) * 100}%` }} /></span>
                   <span className="tnum w-8 text-right font-medium">{n}</span>
@@ -89,7 +89,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                 <tr key={o.objective ?? "none"}><td>{getObjective(o.objective)?.label ?? "Confiée à un expert"}</td><td className="tnum">{o._count}</td><td className="tnum">{formatFcfa(o._sum.adBudget ?? 0)}</td></tr>
               ))}
             </Table>
-          ) : <p className="px-5 py-6 text-sm text-muted">Aucune campagne sur la période.</p>}
+          ) : <p className="px-4 sm:px-5 py-6 text-sm text-muted">Aucune campagne sur la période.</p>}
         </Card>
       </div>
 
@@ -106,7 +106,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               </tr>
             ))}
           </Table>
-        ) : <p className="px-5 py-6 text-sm text-muted">Aucune statistique validée sur la période.</p>}
+        ) : <p className="px-4 sm:px-5 py-6 text-sm text-muted">Aucune statistique validée sur la période.</p>}
       </Card>
     </>
   );

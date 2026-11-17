@@ -46,11 +46,11 @@ export default async function TeamPage() {
             <CardHeader title="Droits par rôle" />
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] border-collapse text-left text-[13px]">
-                <thead><tr className="border-b border-line text-muted"><th className="px-5 py-2.5 font-medium">Permission</th>{STAFF_ROLES.map((r) => <th key={r} className="px-2 py-2.5 text-center font-medium">{ROLE_LABELS[r]}</th>)}</tr></thead>
+                <thead><tr className="border-b border-line text-muted"><th className="px-4 sm:px-5 py-2.5 font-medium">Permission</th>{STAFF_ROLES.map((r) => <th key={r} className="px-2 py-2.5 text-center font-medium">{ROLE_LABELS[r]}</th>)}</tr></thead>
                 <tbody>
                   {(Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]).map((p) => (
                     <tr key={p} className="border-b border-line last:border-0">
-                      <td className="px-5 py-2 text-ink-soft">{PERMISSIONS[p]}</td>
+                      <td className="px-4 sm:px-5 py-2 text-ink-soft">{PERMISSIONS[p]}</td>
                       {STAFF_ROLES.map((r) => <td key={r} className="px-2 py-2 text-center">{permissionsOf(r).includes(p) ? <span className="text-green" aria-label="Autorisé">●</span> : <span className="text-line-strong" aria-label="Refusé">–</span>}</td>)}
                     </tr>
                   ))}

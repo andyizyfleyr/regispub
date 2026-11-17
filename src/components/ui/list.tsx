@@ -23,7 +23,7 @@ export function List({ className, ...props }: React.HTMLAttributes<HTMLUListElem
 }
 
 /** Classes d'une ligne cliquable : à réutiliser pour un bouton de formulaire. */
-export const rowClass = "group flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-paper focus-visible:bg-paper focus-visible:outline-none sm:px-5";
+export const rowClass = "group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-paper focus-visible:bg-paper focus-visible:outline-none sm:px-5";
 
 const ICON_TONES = {
   green: "bg-green-soft text-green",
@@ -31,20 +31,33 @@ const ICON_TONES = {
   neutral: "bg-sand text-ink-soft",
 } as const;
 
-/** Contenu d'une ligne : pictogramme, titre, précision, puis valeur ou état à droite. */
-export function RowBody({ icon, tone = "neutral", title, subtitle, trailing, chevron, below }: {
-  icon?: React.ReactNode; tone?: keyof typeof ICON_TONES; title: React.ReactNode; subtitle?: React.ReactNode; trailing?: React.ReactNode; chevron?: React.ReactNode | boolean; below?: React.ReactNode;
+/**
+ * Contenu d'une ligne, toujours dans le même ordre pour que tout s'aligne d'une ligne à l'autre :
+ * pictogramme (largeur fixe), titre puis précision sur une ligne chacun, et à droite `value` en face du titre,
+ * `meta` (état, pastilles) en face de la précision. `trailing` reste centré sur la hauteur (bouton d'action).
+ */
+export function RowBody({ icon, tone = "neutral", title, subtitle, value, meta, trailing, chevron, below }: {
+  icon?: React.ReactNode; tone?: keyof typeof ICON_TONES; title: React.ReactNode; subtitle?: React.ReactNode; value?: React.ReactNode; meta?: React.ReactNode;
+  trailing?: React.ReactNode; chevron?: React.ReactNode | boolean; below?: React.ReactNode;
 }) {
   return (
     <>
       {icon && <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-md [&_svg]:size-[18px]", ICON_TONES[tone])}>{icon}</span>}
       <span className="min-w-0 flex-1">
-        <span className="block font-medium leading-snug text-ink">{title}</span>
-        {subtitle && <span className="mt-0.5 block text-[13.5px] leading-snug text-muted">{subtitle}</span>}
+        <span className="flex items-center gap-3">
+          <span className="min-w-0 flex-1 truncate font-medium leading-snug text-ink">{title}</span>
+          {value && <span className="shrink-0 text-right text-sm">{value}</span>}
+        </span>
+        {(subtitle || meta) && (
+          <span className="mt-0.5 flex items-center gap-3">
+            <span className="min-w-0 flex-1 truncate text-[13.5px] leading-snug text-muted">{subtitle}</span>
+            {meta && <span className="flex shrink-0 items-center">{meta}</span>}
+          </span>
+        )}
         {below}
       </span>
       {trailing && <span className="shrink-0 text-right text-sm">{trailing}</span>}
-      {chevron === true ? <ChevronRight aria-hidden className="size-4 shrink-0 text-line-strong transition-colors group-hover:text-muted" /> : chevron || null}
+      {chevron === true ? <ChevronRight aria-hidden className="hidden size-4 shrink-0 text-line-strong transition-colors group-hover:text-muted sm:block" /> : chevron || null}
     </>
   );
 }
@@ -53,7 +66,7 @@ type RowProps = React.ComponentProps<typeof RowBody> & { href?: string; external
 
 /** Ligne de liste. Avec `href`, toute la ligne est un lien. */
 export function ListRow({ href, external, className, chevron, ...body }: RowProps) {
-  if (!href) return <li className={cn("flex items-center gap-3.5 px-4 py-3.5 sm:px-5", className)}><RowBody chevron={chevron ?? false} {...body} /></li>;
+  if (!href) return <li className={cn("flex items-center gap-3 px-4 py-3 sm:px-5", className)}><RowBody chevron={chevron ?? false} {...body} /></li>;
   const inner = <RowBody chevron={chevron ?? true} {...body} />;
   return (
     <li>

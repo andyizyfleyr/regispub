@@ -33,7 +33,7 @@ export default async function ServicesPage() {
           return (
             <Card key={kind}>
               <CardHeader title={meta.title} description={meta.description} />
-              <Table head={["Prestation", "Code", "Frais", "État", ""]}>
+              <Table head={["Prestation", "Code", "Frais", "État", ""]} mobileCorner={4}>
                 {list.map((s) => (
                   <tr key={s.id}>
                     <td><span className="block font-medium text-ink">{s.name}</span><span className="block max-w-md text-xs text-muted">{s.description}</span></td>

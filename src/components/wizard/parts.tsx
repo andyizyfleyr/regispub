@@ -156,11 +156,11 @@ export function QuotePanel({ state, promo, onPromo, children }: { state: ReturnT
   const applied = Boolean(promo && !state.promoError && state.quote && state.quote.discount > 0);
   return (
     <div className="overflow-hidden rounded-lg border border-line bg-surface">
-      <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+      <div className="flex items-center justify-between border-b border-line px-4 sm:px-5 py-3.5">
         <p className="text-[15px] font-semibold">Total</p>
         {state.loading && <LoaderCircle className="size-4 animate-spin text-muted" aria-label="Calcul en cours" />}
       </div>
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {state.quote ? (
           <div className={cn("transition-opacity", state.loading && "opacity-50")}>
             <QuoteLines lines={state.quote.lines} total={state.quote.total} />

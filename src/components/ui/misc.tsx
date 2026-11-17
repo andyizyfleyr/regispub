@@ -66,15 +66,16 @@ const STAT_TONES: Record<StatTone, string> = {
   violet: "bg-violet-soft text-violet", rose: "bg-rose-soft text-rose", neutral: "bg-sand text-ink-soft",
 };
 
+/** Chiffre clé. Toutes les cartes ont la même forme : libellé, valeur, précision, sur une ligne chacun. */
 export function Stat({ label, value, hint, icon, tone = "neutral", className }: { label: string; value: React.ReactNode; hint?: React.ReactNode; icon?: React.ReactNode; tone?: StatTone; className?: string }) {
   return (
-    <div className={cn("rounded-lg border border-line bg-surface p-4 shadow-card", className)}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[13px] text-muted">{label}</p>
-        {icon && <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-md [&_svg]:size-4", STAT_TONES[tone])}>{icon}</span>}
+    <div className={cn("min-w-0 rounded-lg border border-line bg-surface p-3.5 shadow-card sm:p-4", className)}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-[13px] leading-5 text-muted">{label}</p>
+        {icon && <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-md sm:size-8 [&_svg]:size-4", STAT_TONES[tone])}>{icon}</span>}
       </div>
-      <p className="tnum mt-2 font-display text-[24px] font-semibold leading-none text-ink">{value}</p>
-      {hint && <p className="mt-2 text-xs text-muted">{hint}</p>}
+      <p className="tnum mt-1.5 truncate font-display text-[21px] font-semibold leading-none text-ink sm:mt-2 sm:text-[24px]">{value}</p>
+      <p className="mt-1.5 truncate text-xs leading-4 text-muted sm:mt-2" title={typeof hint === "string" ? hint : undefined}>{hint || "\u00a0"}</p>
     </div>
   );
 }
@@ -97,9 +98,21 @@ export function TabsNav({ tabs, current, className }: { tabs: { href: string; la
   );
 }
 
-export function Table({ head, children, className }: { head: React.ReactNode[]; children: React.ReactNode; className?: string }) {
+/**
+ * Tableau. Sur téléphone, chaque ligne devient une fiche : la première colonne sert de titre, les autres
+ * s'empilent avec leur libellé à gauche et leur valeur à droite, toujours aux mêmes positions.
+ * Une colonne sans en-tête (boutons) se cale à droite, en bas de la fiche. Une cellule `data-empty` disparaît.
+ * `mobile="fit"` garde un vrai tableau resserré, pour une série de chiffres : on masque des colonnes jusqu'à ce qu'il tienne dans l'écran.
+ * `mobile="scroll"` garde le tableau entier, à faire défiler. Numéros de colonne à partir de 1 :
+ * `mobileHide` masque des colonnes sur téléphone, `mobileCorner` place une colonne (l'état) en haut à droite, en face du titre.
+ */
+export function Table({ head, children, className, mobile = "stack", mobileHide, mobileCorner }: { head: React.ReactNode[]; children: React.ReactNode; className?: string; mobile?: "stack" | "fit" | "scroll"; mobileHide?: number[]; mobileCorner?: number }) {
+  const stack = mobile === "stack";
+  const plain = head.map((h, i) => (i > 0 && !h ? i + 1 : 0)).filter(Boolean);
+  const labels = Object.fromEntries(head.map((h, i) => [`--l${i + 1}`, JSON.stringify(typeof h === "string" ? h : "")])) as React.CSSProperties;
   return (
-    <div className={cn("overflow-x-auto", className)}>
+    <div className={cn("overflow-x-auto", stack && "table-stack", mobile === "fit" && "table-fit", className)} style={stack ? labels : undefined} data-hide={mobile !== "scroll" && mobileHide?.length ? mobileHide.join(" ") : undefined}
+      data-corner={stack && mobileCorner ? mobileCorner : undefined} data-plain={stack && plain.length ? plain.join(" ") : undefined}>
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead>
           <tr className="border-b border-line bg-paper text-[12px] uppercase tracking-wider text-muted">
