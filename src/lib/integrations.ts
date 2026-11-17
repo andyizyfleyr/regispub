@@ -1,6 +1,5 @@
 import "server-only";
 import { env } from "@/lib/env";
-import { aiStatus } from "@/lib/ai/service";
 import { ADS_ADAPTERS } from "@/lib/ads/adapters";
 import { notificationChannelsStatus } from "@/lib/notifications/service";
 import { getActiveProvider, sandboxAllowed } from "@/lib/payments/registry";
@@ -21,7 +20,6 @@ export const STATE_LABELS: Record<IntegrationState, string> = {
 /** État réel de chaque intégration externe. Affiché tel quel dans l'administration : rien n'est présenté comme actif s'il ne l'est pas. */
 export function integrationsStatus(): Integration[] {
   const provider = getActiveProvider();
-  const ai = aiStatus();
   const channels = notificationChannelsStatus();
   const fedapayReady = Boolean(env.fedapaySecretKey);
   return [
@@ -32,10 +30,6 @@ export function integrationsStatus(): Integration[] {
     ...(!provider && !sandboxAllowed() ? [{ area: "Paiements", name: "Paiement en ligne", state: "needs_config" as const, detail: "Aucun prestataire actif : les clients ne peuvent pas payer." }] : []),
     { area: "Paiements", name: "Remboursements automatiques", state: "planned", detail: "Les remboursements sont suivis dans l'application mais le transfert est effectué manuellement depuis le compte du prestataire." },
     { area: "Paiements", name: "Autres pays (Togo, Côte d'Ivoire, Sénégal…)", state: "planned", detail: "L'architecture le prévoit (opérateurs par pays) ; l'activation dépend des contrats avec les agrégateurs." },
-    ai.text
-      ? { area: "IA", name: "Génération de textes", state: "operational", detail: `Fournisseur : ${ai.text.provider} (${ai.text.model}).` }
-      : { area: "IA", name: "Génération de textes", state: "needs_config", detail: "Sans fournisseur, l'assistant utilise des suggestions guidées (modèles), signalées comme telles.", action: "Définir AI_TEXT_PROVIDER (openai, anthropic ou gemini) et la clé correspondante." },
-    { area: "IA", name: "Génération de vidéos", state: "planned", detail: "Non proposée : l'assistant fournit des scripts et le client importe ses vidéos." },
     ADS_ADAPTERS.META.isConfigured()
       ? { area: "Publicité", name: "Meta — lecture des statistiques", state: "operational", detail: "Jeton configuré. Synchronisation depuis la fiche campagne ou la tâche planifiée." }
       : { area: "Publicité", name: "Meta — lecture des statistiques", state: "needs_authorization", detail: "Adaptateur implémenté (Insights API), non testé sans identifiants.", action: "Vérification de l'entreprise Meta, application avec l'autorisation ads_read, jeton d'utilisateur système (META_ACCESS_TOKEN)." },

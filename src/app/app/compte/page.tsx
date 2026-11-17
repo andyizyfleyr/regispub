@@ -4,7 +4,7 @@ import { Bell, BookOpen, Building2, CalendarClock, Check, Gift, LifeBuoy, LogOut
 import { BusinessDialog, CopyField, RedeemPoints } from "@/components/app/account-parts";
 import { WhatsappIcon } from "@/components/icons";
 import { ActionButton, ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
-import { StateBadge } from "@/components/ui/badge";
+import { StateIcon } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
@@ -226,7 +226,7 @@ async function SubscriptionTab({ userId, error }: { userId: string; error?: stri
             {subs.map((s) => (
               <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-sm">
                 <span><span className="font-medium text-ink">{names.get(s.serviceCode) ?? s.serviceCode}</span><span className="block text-[0.8125rem] text-muted">{s.business?.name ?? "Toutes mes activités"}{s.periodEnd ? ` · jusqu'au ${formatDate(s.periodEnd)}` : ""}</span></span>
-                <span className="flex items-center gap-3"><StateBadge kind="subscription" value={s.status} />{s.status === "PENDING" && s.orders[0]?.status === "PENDING" && <Button asChild size="sm" variant="outline"><a href={`/app/paiements/${s.orders[0].id}`}>Payer</a></Button>}</span>
+                <span className="flex items-center gap-3"><StateIcon kind="subscription" value={s.status} />{s.status === "PENDING" && s.orders[0]?.status === "PENDING" && <Button asChild size="sm" variant="outline"><a href={`/app/paiements/${s.orders[0].id}`}>Payer</a></Button>}</span>
               </li>
             ))}
           </ul>
@@ -248,7 +248,7 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
             {tickets.map((t) => (
               <li key={t.id} className="px-4 sm:px-5 py-4 text-sm">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="font-medium text-ink">{t.subject}</p><StateBadge kind="ticket" value={t.status} />
+                  <p className="font-medium text-ink">{t.subject}</p><StateIcon kind="ticket" value={t.status} />
                 </div>
                 <p className="mt-0.5 text-xs text-muted"><span className="font-mono">{t.reference}</span> · {t.category} · {formatDateTime(t.createdAt)}</p>
                 <p className="mt-2 whitespace-pre-wrap text-ink-soft">{t.body}</p>

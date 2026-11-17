@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ReceiptText } from "lucide-react";
 import { FilterChips, hrefWith, PAGE_SIZE, pageOf, Pagination, SearchForm } from "@/components/staff/common";
-import { StateBadge } from "@/components/ui/badge";
+import { StateIcon } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState, PageHeader, Table } from "@/components/ui/misc";
 import { requirePermission } from "@/lib/auth/session";
@@ -53,7 +53,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                   <td className="tnum whitespace-nowrap" data-empty={o.discount ? undefined : ""}>{o.discount ? <>−{formatFcfa(o.discount)}<span className="block font-mono text-xs text-muted">{o.promoCode?.code}</span></> : "—"}</td>
                   <td className="tnum whitespace-nowrap">{formatFcfa(o.paymentFee)}</td>
                   <td className="tnum whitespace-nowrap font-medium">{formatFcfa(o.total)}</td>
-                  <td><StateBadge kind="order" value={o.status} /></td>
+                  <td><StateIcon kind="order" value={o.status} /></td>
                 </tr>
               ))}
             </Table>

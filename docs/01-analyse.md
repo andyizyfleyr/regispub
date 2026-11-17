@@ -38,4 +38,4 @@ Dans les deux cas, l'équipe vérifie la campagne avant diffusion.
 
 - Création automatique des campagnes sur Meta et TikTok (autorisations à obtenir, voir `04-contraintes-api.md`).
 - Remboursement automatique, renouvellement automatique des abonnements (le Mobile Money ne permet pas le prélèvement récurrent sans mandat).
-- Génération de vidéos par IA, application mobile native, autres pays que le Bénin.
+- Assistance par intelligence artificielle (retirée en novembre 2026 : textes, audience et idées ne sont plus générés), application mobile native, autres pays que le Bénin.

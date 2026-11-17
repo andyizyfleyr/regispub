@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Users } from "lucide-react";
 import { FilterChips, hrefWith, PAGE_SIZE, pageOf, Pagination, SearchForm } from "@/components/staff/common";
 import { ActionButton } from "@/components/ui/action-form";
-import { Badge } from "@/components/ui/badge";
+import { ToneIcon } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState, PageHeader, Table } from "@/components/ui/misc";
 import { can } from "@/lib/auth/permissions";
@@ -46,7 +46,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
             <Table head={["Client", "Contact", "Entreprises", "Campagnes", "Total payé", "Inscription", ""]}>
               {rows.map((u) => (
                 <tr key={u.id}>
-                  <td><span className="block font-medium text-ink">{u.name}</span><span className="text-xs text-muted">{u.accountType === "PROFESSIONAL" ? "Professionnel" : "Particulier"}</span>{u.status === "SUSPENDED" && <span className="ml-2"><Badge tone="danger">Suspendu</Badge></span>}</td>
+                  <td><span className="block font-medium text-ink">{u.name}</span><span className="text-xs text-muted">{u.accountType === "PROFESSIONAL" ? "Professionnel" : "Particulier"}</span>{u.status === "SUSPENDED" && <ToneIcon tone="danger" label="Suspendu" className="ml-2" />}</td>
                   <td><span className="block text-[0.8125rem]">{u.email}</span>{u.phone && <span className="tnum block text-xs text-muted">{formatPhone(u.phone)}</span>}</td>
                   <td className="text-[0.8125rem] text-ink-soft">{u.businesses.length ? u.businesses.map((b) => <span key={b.name} className="block max-w-48 truncate">{b.name} <span className="text-muted">· {b.sector}</span></span>) : "—"}</td>
                   <td className="tnum">{u._count.campaigns}</td>

@@ -7,14 +7,13 @@ import { AssetThumb } from "@/components/app/uploader";
 import { MetricsView } from "@/components/app/metrics-view";
 import { Thread } from "@/components/app/thread";
 import { AccessPanel, AssignPanel, CreativesPanel, ExternalRefsPanel, MetricsPanel, RevisionItem, StatusPanel } from "@/components/staff/campaign-panels";
-import { CampaignStatusBadge, StateBadge } from "@/components/ui/badge";
+import { CampaignStatusIcon, StateIcon } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { DefinitionList, EmptyState, Notice, PageHeader, Table, TabsNav } from "@/components/ui/misc";
 import { ADS_ADAPTERS } from "@/lib/ads/adapters";
 import { CSV_TEMPLATE } from "@/lib/ads/csv";
 import { loadCampaignReport } from "@/lib/ads/report";
 import { readExternalRefs } from "@/lib/ads/sync";
-import type { Strategy } from "@/lib/ai/schemas";
 import { can, canViewCampaign, ROLE_LABELS, type RoleName } from "@/lib/auth/permissions";
 import { requireStaff } from "@/lib/auth/session";
 import { loadAccessRows } from "@/lib/campaigns/access";
@@ -26,7 +25,7 @@ import { accountDisplay, accountsOf } from "@/lib/catalog/accounts";
 import { PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
 import { formatPhone, toWhatsappLink } from "@/lib/phone";
-import { formatDateTime, formatFcfa, formatNumber, formatPureDate, isRecord, todayUtc, toIsoDate } from "@/lib/utils";
+import { formatDateTime, formatFcfa, formatNumber, formatPureDate, todayUtc, toIsoDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Campagne" };
 
@@ -66,7 +65,6 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
   const creatives = c.assets.filter((a) => a.role === "CREATIVE");
   const order = c.orders[0];
   const copy = readAdCopy(c.adCopy);
-  const strategy = isRecord(c.strategy) ? (c.strategy as unknown as Partial<Strategy>) : null;
   const wa = c.user.phone ? toWhatsappLink(c.user.phone) : null;
   const accounts = accountsOf(c.business);
   const clientFiles = c.assets.filter((a) => a.addedById === c.userId);
@@ -74,7 +72,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
   return (
     <>
       <PageHeader title={c.name} back={{ href: "/gestion/campagnes", label: "Campagnes" }} eyebrow={<span className="font-mono normal-case tracking-normal">{c.reference}</span>}
-        description={`${c.user.name} · ${c.mode === "EXPERT" ? "Confiée à un expert" : "Créée par le client"} · ${objective?.label ?? "objectif non défini"}`} actions={<CampaignStatusBadge status={status} />} />
+        description={`${c.user.name} · ${c.mode === "EXPERT" ? "Confiée à un expert" : "Créée par le client"} · ${objective?.label ?? "objectif non défini"}`} status={<CampaignStatusIcon status={status} />} />
 
       <TabsNav current={tab} tabs={[
         { id: "apercu", label: "Aperçu", href: base },
@@ -117,14 +115,11 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
               </Card>
             )}
 
-            {(copy || strategy) && (
+            {copy && (
               <Card>
-                <CardHeader title="Texte et stratégie" description={strategy ? (isRecord(c.strategy) && c.strategy.engine === "ai" ? "Stratégie générée par IA, relue par le client." : "Stratégie issue des suggestions guidées.") : undefined} />
-                <CardBody className="space-y-4 text-sm">
-                  {copy && <div className="rounded-md border border-line bg-paper p-4"><p className="font-medium text-ink">{copy.headline}</p><p className="mt-1.5 whitespace-pre-wrap text-ink-soft">{copy.body}</p>{copy.cta && <p className="mt-2 text-[0.8125rem] text-green">Bouton : {copy.cta}</p>}</div>}
-                  {strategy?.analysis && <p className="text-ink-soft">{strategy.analysis}</p>}
-                  {strategy?.audiences?.length ? <div><h4 className="text-[0.8125rem] font-semibold">Audiences proposées</h4><ul className="mt-1.5 list-disc space-y-1 pl-5 text-ink-soft">{strategy.audiences.map((a, i) => <li key={i}><span className="font-medium text-ink">{a.name}</span> — {a.description}</li>)}</ul></div> : null}
-                  {strategy?.variants?.length ? <div><h4 className="text-[0.8125rem] font-semibold">Variantes A/B</h4><ul className="mt-1.5 list-disc space-y-1 pl-5 text-ink-soft">{strategy.variants.map((v, i) => <li key={i}><span className="font-medium text-ink">{v.name}</span> — {v.angle}</li>)}</ul></div> : null}
+                <CardHeader title="Texte de l'annonce" />
+                <CardBody className="text-sm">
+                  <div className="rounded-md border border-line bg-paper p-4"><p className="font-medium text-ink">{copy.headline}</p><p className="mt-1.5 whitespace-pre-wrap text-ink-soft">{copy.body}</p>{copy.cta && <p className="mt-2 text-[0.8125rem] text-green">Bouton : {copy.cta}</p>}</div>
                 </CardBody>
               </Card>
             )}
@@ -182,7 +177,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
             </Card>
             {order && can(user.role, "order.view") && (
               <Card>
-                <CardHeader title="Commande" action={<StateBadge kind="order" value={order.status} />} />
+                <CardHeader title="Commande" action={<StateIcon kind="order" value={order.status} />} />
                 <CardBody>
                   <DefinitionList className="sm:grid-cols-2" items={[
                     { label: "Référence", value: <span className="font-mono text-[0.8125rem]">{order.reference}</span> },
@@ -266,7 +261,7 @@ async function Stats({ campaignId, platforms, adBudget, kpis, launched, canImpor
                 <td className="tnum">{formatNumber(r.clicks)}</td>
                 <td className="tnum">{formatFcfa(r.spend)}</td>
                 <td className="text-muted">{sourceLabel[r.source] ?? r.source}</td>
-                <td><StateBadge kind="import" value={r.validated ? "VALIDATED" : "PENDING"} /></td>
+                <td><StateIcon kind="import" value={r.validated ? "VALIDATED" : "PENDING"} /></td>
               </tr>
             ))}
           </Table>
@@ -279,7 +274,7 @@ async function Stats({ campaignId, platforms, adBudget, kpis, launched, canImpor
             {imports.map((i) => (
               <li key={i.id} className="flex items-start justify-between gap-3 px-4 sm:px-5 py-3 text-sm">
                 <span className="min-w-0"><span className="block truncate text-ink">{i.fileName} · <span className="tnum">{i.rowCount}</span> ligne(s)</span><span className="block text-xs text-muted">{formatDateTime(i.createdAt)}{i.note ? ` · ${i.note}` : ""}</span></span>
-                <StateBadge kind="import" value={i.status} />
+                <StateIcon kind="import" value={i.status} />
               </li>
             ))}
           </ul>

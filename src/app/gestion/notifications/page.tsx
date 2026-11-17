@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { NotificationList } from "@/components/app/notification-list";
 import { ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
-import { StateBadge } from "@/components/ui/badge";
+import { StateIcon } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Switch, ToggleRow } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
@@ -71,7 +71,7 @@ async function Deliveries() {
               <td>{d.channel === "EMAIL" ? "E-mail" : "WhatsApp"}</td>
               <td className="text-[0.8125rem]">{d.recipient.replace(/(?<=.{3}).(?=[^@]*.{2}(@|$))/g, "•")}</td>
               <td className="max-w-64 truncate">{d.notification?.title ?? "—"}</td>
-              <td><StateBadge kind="delivery" value={d.status} />{d.detail && <span className="mt-0.5 block max-w-64 truncate text-xs text-muted" title={d.detail}>{d.detail}</span>}</td>
+              <td><StateIcon kind="delivery" value={d.status} />{d.detail && <span className="mt-0.5 block max-w-64 truncate text-xs text-muted" title={d.detail}>{d.detail}</span>}</td>
             </tr>
           ))}
         </Table>

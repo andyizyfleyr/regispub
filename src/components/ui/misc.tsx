@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function PageHeader({ title, description, actions, actionsFrom, eyebrow, back }: { title: React.ReactNode; description?: React.ReactNode; actions?: React.ReactNode; /** `lg` : les actions ne s'affichent que sur ordinateur. */ actionsFrom?: "lg"; eyebrow?: React.ReactNode; back?: { href: string; label: string } }) {
+export function PageHeader({ title, description, status, actions, actionsFrom, eyebrow, back }: { title: React.ReactNode; description?: React.ReactNode; /** Pastille d'état, posée à droite du titre. */ status?: React.ReactNode; actions?: React.ReactNode; /** `lg` : les actions ne s'affichent que sur ordinateur. */ actionsFrom?: "lg"; eyebrow?: React.ReactNode; back?: { href: string; label: string } }) {
   return (
     <header className="mb-4 flex animate-rise flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div className="min-w-0">
@@ -14,7 +14,10 @@ export function PageHeader({ title, description, actions, actionsFrom, eyebrow, 
           </Link>
         )}
         {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
-        <h1 className="text-[1.375rem] font-semibold leading-[1.15] sm:text-[2.125rem] sm:leading-[1.1]">{title}</h1>
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <h1 className="min-w-0 text-[1.375rem] font-semibold leading-[1.15] sm:text-[2.125rem] sm:leading-[1.1]">{title}</h1>
+          {status}
+        </div>
         {description && <p className="mt-1 max-w-2xl text-[0.875rem] text-muted sm:mt-1.5 sm:text-[0.9375rem]">{description}</p>}
       </div>
       {actions && <div className={cn("flex shrink-0 flex-wrap items-center gap-2", actionsFrom === "lg" && "max-lg:hidden")}>{actions}</div>}

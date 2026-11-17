@@ -3,7 +3,7 @@
 ## Phase 1 — Socle (livrée dans ce dépôt)
 
 - Site public, inscription, connexion, réinitialisation du mot de passe.
-- Espace client : assistant de création, brief expert, devis, paiement, suivi, créations, messagerie, résultats, rapport, assistant, compte.
+- Espace client : assistant de création, brief expert, devis, paiement, suivi, créations, messagerie, résultats, rapport, compte.
 - Espace de gestion : campagnes, commandes, paiements, remboursements, réclamations, rapports, clients, équipe, tarifs, promotions, modèles, notifications, intégrations, paramètres, journal d'audit.
 - Paiement : contrat de prestataire, adaptateur FedaPay, simulateur, webhook, vérification, idempotence.
 - Tests : tarification, statuts, droits, import CSV, signatures, parcours de paiement et de remboursement sur une vraie base.
@@ -24,7 +24,6 @@
 
 - Jeton Meta `ads_read` et accès TikTok Reporting : synchronisation quotidienne des statistiques, puis validation par un gestionnaire.
 - Notifications WhatsApp avec un modèle approuvé.
-- Clé d'IA pour les textes et les images.
 
 ## Phase 4 — Automatisation du lancement
 
@@ -42,4 +41,4 @@
 
 Exercé de bout en bout sur la base locale avec le simulateur de paiement : création d'une campagne sur téléphone, paiement et reçu, prise en charge, ajout d'une création, validation par le client, refus du lancement sans identifiant de campagne externe, lancement, import CSV, publication des statistiques, remboursement (refus sans référence de transfert, puis clôture), réclamation et réponse, création d'un code promotionnel (préfixes réservés refusés), création d'un collaborateur, enregistrement des paramètres (plancher de 10 000 F conservé), export d'une création du studio, restrictions d'accès par rôle.
 
-Écrit et compilé, mais pas exercé un à un : brief « expert » jusqu'au paiement, demande de modification après paiement, conversion des points de fidélité, souscription à l'accompagnement mensuel, édition d'un tarif et d'un modèle, envoi d'une notification groupée, suspension d'un compte, réinitialisation du mot de passe (l'e-mail n'est pas envoyé sans fournisseur configuré), génération par IA (aucune clé disponible).
+Écrit et compilé, mais pas exercé un à un : brief « expert » jusqu'au paiement, demande de modification après paiement, conversion des points de fidélité, souscription à l'accompagnement mensuel, édition d'un tarif et d'un modèle, envoi d'une notification groupée, suspension d'un compte, réinitialisation du mot de passe (l'e-mail n'est pas envoyé sans fournisseur configuré).

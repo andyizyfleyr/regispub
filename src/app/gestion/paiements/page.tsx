@@ -4,7 +4,7 @@ import { OperatorChip } from "@/components/icons";
 import { RefundDialog, ResolveRefund } from "@/components/staff/admin-panels";
 import { FilterChips, hrefWith, PAGE_SIZE, pageOf, Pagination, SearchForm } from "@/components/staff/common";
 import { ActionButton } from "@/components/ui/action-form";
-import { StateBadge } from "@/components/ui/badge";
+import { StateIcon } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState, Notice, PageHeader, Table, TabsNav } from "@/components/ui/misc";
 import { can } from "@/lib/auth/permissions";
@@ -76,7 +76,7 @@ async function Transactions({ sp, canRefund, canVerify, showFullPhone }: { sp: {
                     <td>{p.user.name}</td>
                     <td><span className="flex items-center gap-2"><OperatorChip operator={p.operator as OperatorCode} /><span className="tnum whitespace-nowrap text-[0.8125rem]">{showFullPhone ? formatPhone(p.phone) : maskPhone(p.phone)}</span></span></td>
                     <td className="tnum whitespace-nowrap font-medium">{formatFcfa(p.amount)}</td>
-                    <td><StateBadge kind="payment" value={p.status} /></td>
+                    <td><StateIcon kind="payment" value={p.status} /></td>
                     <td className="text-right">
                       <span className="flex justify-end gap-2">
                         {canVerify && (open || p.status === "EXPIRED" || p.status === "FAILED") && p.providerRef && <ActionButton variant="outline" size="sm" action={recheckPaymentAction.bind(null, p.id)} successMessage="Vérification effectuée auprès du prestataire.">Revérifier</ActionButton>}
@@ -114,7 +114,7 @@ async function Refunds({ canRefund }: { canRefund: boolean }) {
                     <p className="mt-1 text-ink-soft">{r.reason}</p>
                     <p className="mt-1 text-xs text-muted">Créé le {formatDateTime(r.createdAt)} par {names.get(r.requestedById) ?? "le système"}{r.processedAt ? ` · traité le ${formatDateTime(r.processedAt)}${r.processedById ? ` par ${names.get(r.processedById) ?? "—"}` : ""}` : ""}{r.reference ? ` · réf. ${r.reference}` : ""}{r.note ? ` · ${r.note}` : ""}</p>
                   </div>
-                  <StateBadge kind="refund" value={r.status} />
+                  <StateIcon kind="refund" value={r.status} />
                 </div>
                 {r.status === "REQUESTED" && canRefund && <ResolveRefund refundId={r.id} />}
               </li>

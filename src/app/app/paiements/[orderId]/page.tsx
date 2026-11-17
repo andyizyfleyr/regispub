@@ -5,7 +5,7 @@ import { ArrowRight, CircleCheck, Download } from "lucide-react";
 import { Checkout } from "@/components/app/checkout";
 import { QuoteLines } from "@/components/app/quote-box";
 import { OperatorChip } from "@/components/icons";
-import { StateBadge } from "@/components/ui/badge";
+import { StateIcon } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice, PageHeader } from "@/components/ui/misc";
@@ -52,7 +52,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
   return (
     <>
       <PageHeader title={isPaid ? "Paiement confirmé" : order.status === "PENDING" ? "Paiement" : "Commande"} back={{ href: "/app/paiements", label: "Paiements" }}
-        eyebrow={<span className="font-mono normal-case tracking-normal">{order.reference}</span>} actions={<StateBadge kind="order" value={order.status} />} />
+        eyebrow={<span className="font-mono normal-case tracking-normal">{order.reference}</span>} status={<StateIcon kind="order" value={order.status} />} />
 
       <div className="space-y-6">
           {isPaid && (
@@ -101,7 +101,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
                 {order.refunds.map((r) => (
                   <li key={r.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 text-sm">
                     <span><span className="tnum font-medium">{formatFcfa(r.amount)}</span><span className="block text-[0.8125rem] text-muted">{r.reason}{r.reference ? ` · réf. ${r.reference}` : ""}</span></span>
-                    <StateBadge kind="refund" value={r.status} />
+                    <StateIcon kind="refund" value={r.status} />
                   </li>
                 ))}
               </ul>
@@ -121,7 +121,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
                       <span className="tnum block text-ink">{maskPhone(p.phone)} · {formatFcfa(p.amount)}</span>
                       <span className="block truncate text-xs text-muted">{formatDateTime(p.createdAt)}{p.providerRef ? ` · réf. ${p.providerRef}` : ""}{p.duplicate ? " · doublon, remboursement en cours" : ""}</span>
                     </span>
-                    <StateBadge kind="payment" value={p.status} />
+                    <StateIcon kind="payment" value={p.status} />
                   </li>
                 ))}
               </ul>
