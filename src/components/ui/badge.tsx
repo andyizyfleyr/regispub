@@ -27,9 +27,9 @@ export function Badge({ tone = "neutral", dot, live, className, children }: { to
   );
 }
 
-export function CampaignStatusBadge({ status }: { status: string }) {
+export function CampaignStatusBadge({ status, short }: { status: string; short?: boolean }) {
   const meta = STATUS_META[status as CampaignStatusName];
-  return <Badge tone={meta?.tone ?? "neutral"} dot live={status === "RUNNING"}>{meta?.label ?? status}</Badge>;
+  return <Badge tone={meta?.tone ?? "neutral"} dot live={status === "RUNNING"}>{(short && meta?.short) || meta?.label || status}</Badge>;
 }
 
 const GENERIC: Record<string, { label: string; tone: Tone }> = {

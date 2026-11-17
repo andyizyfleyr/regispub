@@ -26,7 +26,7 @@ export default async function PromosPage({ searchParams }: { searchParams: Promi
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Card className="min-w-0 self-start">
           {promos.length ? (
-            <Table head={["Code", "Remise", "Utilisations", "Validité", "État", ""]}>
+            <Table head={["Code", "Remise", "Utilisations", "Validité", "État", ""]} mobileCorner={5}>
               {promos.map((p) => {
                 const expired = Boolean(p.endsAt && p.endsAt < now); const exhausted = p.maxUses !== null && p.usedCount >= p.maxUses;
                 return (

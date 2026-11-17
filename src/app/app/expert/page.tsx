@@ -55,7 +55,7 @@ export default async function ExpertPage() {
           <SectionTitle id="formules">Formules</SectionTitle>
           <Carousel label="Formules" itemClassName="basis-[78%] sm:basis-[47%]">
             {services.map((s, i) => (
-              <div key={s.id} className="flex w-full flex-col rounded-2xl border border-line bg-surface p-5 shadow-card">
+              <div key={s.id} className="flex w-full flex-col rounded-2xl border border-line bg-surface p-4 sm:p-5 shadow-card">
                 <span aria-hidden className={cn("flex size-11 items-center justify-center rounded-xl [&_svg]:size-5", TILE_TONES[toneAt(i)])}>{s.kind === "PACK" ? <Palette /> : <Headset />}</span>
                 <p className="mt-4 text-[15px] font-semibold leading-snug text-ink">{s.name}</p>
                 <p className="mt-auto pt-3"><span className="tnum font-display text-[26px] font-semibold leading-none">{formatFcfa(s.fee)}</span><span className="ml-1.5 text-[13px] text-muted">/ campagne</span></p>

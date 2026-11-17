@@ -80,8 +80,15 @@ export function PlatformBadge({ platform, size = "md" }: { platform: PlatformCod
   return <span className={cn("inline-flex shrink-0 items-center justify-center", dims, PLATFORM_BG[platform])}><Icon /></span>;
 }
 
-export function PlatformStack({ platforms, size = "sm" }: { platforms: PlatformCode[]; size?: "sm" | "md" }) {
-  return <span className="inline-flex items-center gap-1">{platforms.map((p) => <PlatformBadge key={p} platform={p} size={size} />)}</span>;
+const PLATFORM_NAMES: Record<PlatformCode, string> = { FACEBOOK: "Facebook", INSTAGRAM: "Instagram", TIKTOK: "TikTok" };
+
+/** Pastilles des réseaux. `compact` : petites et rondes, pour tenir au bout d'une ligne de liste. */
+export function PlatformStack({ platforms, size = "sm", compact }: { platforms: PlatformCode[]; size?: "sm" | "md"; compact?: boolean }) {
+  return (
+    <span className={cn("inline-flex items-center gap-1", compact && "[&>span]:size-5 [&>span]:rounded-full [&_svg]:size-3")} aria-label={platforms.map((p) => PLATFORM_NAMES[p]).join(", ")}>
+      {platforms.map((p) => <PlatformBadge key={p} platform={p} size={size} />)}
+    </span>
+  );
 }
 
 const OPERATOR_STYLE: Record<OperatorCode, { cls: string; short: string }> = {

@@ -47,9 +47,9 @@ export function FilterChips({ items, current }: { items: { id: string; label: st
 
 export function Pagination({ page, total, base, params }: { page: number; total: number; base: string; params: Record<string, string | undefined> }) {
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  if (pages <= 1) return <p className="px-5 py-3 text-xs text-muted">{total} résultat{total > 1 ? "s" : ""}</p>;
+  if (pages <= 1) return <p className="px-4 sm:px-5 py-3 text-xs text-muted">{total} résultat{total > 1 ? "s" : ""}</p>;
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-3 text-[13px] text-muted">
+    <div className="flex items-center justify-between gap-3 border-t border-line px-4 sm:px-5 py-3 text-[13px] text-muted">
       <span className="tnum">{total} résultats · page {page} / {pages}</span>
       <span className="flex gap-1.5">
         {page > 1 ? <Button asChild variant="outline" size="sm"><Link href={hrefWith(base, params, { page: page > 2 ? String(page - 1) : undefined })}><ChevronLeft />Précédent</Link></Button> : null}

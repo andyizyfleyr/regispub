@@ -43,7 +43,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     return (
       <>
         <PageHeader title="Mon compte" description={user.email} />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3">
           {TABS.map((id, i) => { const m = MENU[id]; return <Tile key={id} href={`${base}?onglet=${id}`} icon={<m.icon />} tone={toneAt(i)} title={m.label} arrow={false} />; })}
           <Tile href="/app/notifications" icon={<Bell />} tone="neutral" title="Notifications" arrow={false} />
         </div>
@@ -101,13 +101,13 @@ async function Businesses({ userId }: { userId: string }) {
       {list.length ? (
         <ul className="divide-y divide-line">
           {list.map((b) => (
-            <li key={b.id} className="flex flex-wrap items-center gap-3 px-5 py-4">
+            <li key={b.id} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5 sm:py-4">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-sand text-ink-soft"><Building2 className="size-5" /></span>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[11rem] flex-1">
                 <p className="truncate font-medium text-ink">{b.name}</p>
                 <p className="truncate text-[13px] text-muted">{b.sector}{b.city ? ` · ${b.city}` : ""} · {b._count.campaigns} campagne{b._count.campaigns > 1 ? "s" : ""}</p>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 max-sm:-my-1 max-sm:w-full max-sm:justify-end">
                 <BusinessDialog business={{ id: b.id, name: b.name, sector: b.sector, description: b.description, country: b.country, city: b.city, whatsapp: b.whatsapp, facebookUrl: b.facebookUrl, instagramUrl: b.instagramUrl, tiktokUrl: b.tiktokUrl, website: b.website }} />
                 <ActionButton variant="ghost" size="sm" className="text-clay" action={deleteBusinessAction.bind(null, b.id)} confirm={`Supprimer « ${b.name} » ?`} successMessage="Entreprise supprimée.">Supprimer</ActionButton>
               </div>
@@ -141,7 +141,7 @@ async function Loyalty({ userId, points, referralCode, settings }: { userId: str
           {entries.length > 0 && (
             <ul className="divide-y divide-line border-t border-line">
               {entries.map((e) => (
-                <li key={e.id} className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm">
+                <li key={e.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-2.5 text-sm">
                   <span className="min-w-0"><span className="block truncate text-ink">{e.reason}</span><span className="text-xs text-muted">{formatDate(e.createdAt)}</span></span>
                   <span className={`tnum font-medium ${e.points < 0 ? "text-clay" : "text-green"}`}>{e.points > 0 ? "+" : ""}{formatNumber(e.points)}</span>
                 </li>
@@ -164,14 +164,14 @@ async function Loyalty({ userId, points, referralCode, settings }: { userId: str
                 {vouchers.map((v) => {
                   const used = v.maxUses !== null && v.usedCount >= v.maxUses; const expired = Boolean(v.endsAt && v.endsAt < now);
                   return (
-                    <li key={v.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+                    <li key={v.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 text-sm">
                       <span><span className="font-mono text-ink">{v.code}</span><span className="block text-xs text-muted">{v.description ?? "Bon d'achat"}{v.endsAt ? ` · jusqu'au ${formatDate(v.endsAt)}` : ""}</span></span>
                       <span className="text-right"><span className="tnum block font-medium">{v.type === "PERCENT" ? `${v.value} %` : formatFcfa(v.value)}</span><span className="text-xs text-muted">{used ? "Utilisé" : expired ? "Expiré" : "Disponible"}</span></span>
                     </li>
                   );
                 })}
               </ul>
-            ) : <p className="px-5 py-4 text-sm text-muted">Aucun bon pour l&apos;instant.</p>}
+            ) : <p className="px-4 sm:px-5 py-4 text-sm text-muted">Aucun bon pour l&apos;instant.</p>}
           </Card>
         </div>
       </div>
@@ -215,7 +215,7 @@ async function SubscriptionTab({ userId, error }: { userId: string; error?: stri
           <CardHeader title="Mes abonnements" />
           <ul className="divide-y divide-line">
             {subs.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 text-sm">
+              <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-sm">
                 <span><span className="font-medium text-ink">{names.get(s.serviceCode) ?? s.serviceCode}</span><span className="block text-[13px] text-muted">{s.business?.name ?? "Toutes mes activités"}{s.periodEnd ? ` · jusqu'au ${formatDate(s.periodEnd)}` : ""}</span></span>
                 <span className="flex items-center gap-3"><StateBadge kind="subscription" value={s.status} />{s.status === "PENDING" && s.orders[0]?.status === "PENDING" && <Button asChild size="sm" variant="outline"><a href={`/app/paiements/${s.orders[0].id}`}>Payer</a></Button>}</span>
               </li>
@@ -237,7 +237,7 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
         {tickets.length ? (
           <ul className="divide-y divide-line">
             {tickets.map((t) => (
-              <li key={t.id} className="px-5 py-4 text-sm">
+              <li key={t.id} className="px-4 sm:px-5 py-4 text-sm">
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-medium text-ink">{t.subject}</p><StateBadge kind="ticket" value={t.status} />
                 </div>

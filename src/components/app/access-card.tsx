@@ -52,7 +52,7 @@ export function AccessCard({ campaignId, items, agency }: { campaignId: string; 
               <div className="flex items-center gap-3">
                 <PlatformBadge platform={it.platform} />
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 text-sm font-medium text-ink">{PLATFORMS[it.platform].label}<Badge tone={meta.tone}>{meta.label}</Badge></p>
+                  <p className="flex items-center gap-2 text-sm font-medium text-ink"><span className="w-[4.5rem] shrink-0">{PLATFORMS[it.platform].label}</span><Badge tone={meta.tone}>{meta.label}</Badge></p>
                   {it.account && <p className="mt-0.5 truncate text-[13px] text-muted">{it.account}</p>}
                 </div>
                 {act ? (

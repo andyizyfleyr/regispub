@@ -49,7 +49,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <Figures className="mt-3" items={KEYS.map((k) => ({ label: METRIC_LABELS[k], value: metricValue(k, report) }))} />
             <h2 className="mt-8 text-base font-semibold">Détail quotidien</h2>
             <div className="mt-3 overflow-hidden rounded-md border border-line">
-              <Table head={["Date", "Affichages", "Personnes touchées", "Clics", "Taux de clic", "Dépenses"]}>
+              <Table head={["Date", "Affichages", "Personnes touchées", "Clics", "Taux de clic", "Dépenses"]} mobile="fit" mobileHide={[3, 5]}>
                 {report.daily.map((d) => (
                   <tr key={d.date} className="border-b border-line last:border-0">
                     <td className="px-4 py-2">{formatPureDate(d.date)}</td>

@@ -4,6 +4,7 @@ import { ArrowRight, CircleCheck } from "lucide-react";
 import { CampaignRow } from "@/components/app/campaign-row";
 import { StateBadge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
+import { ListRow } from "@/components/ui/list";
 import { EmptyState, Notice, PageHeader, Stat } from "@/components/ui/misc";
 import { can } from "@/lib/auth/permissions";
 import { requireStaff } from "@/lib/auth/session";
@@ -56,7 +57,7 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
           <Stat label="Encaissé ce mois" value={formatFcfa(month._sum.total ?? 0)} hint={`${month._count} commande${month._count > 1 ? "s" : ""}`} />
           <Stat label="Frais de prestation" value={formatFcfa((month._sum.serviceFee ?? 0) - (month._sum.discount ?? 0))} hint="Chiffre d'affaires du mois" />
           <Stat label="Budgets publicitaires" value={formatFcfa(month._sum.adBudget ?? 0)} hint="À reverser aux plateformes" />
-          <Stat label="À traiter" value={formatNumber((openTickets ?? 0) + (refunds ?? 0) + (pendingMetrics ?? 0))} hint={[openTickets !== null ? `${openTickets} réclamation(s)` : null, refunds !== null ? `${refunds} remboursement(s)` : null, pendingMetrics !== null ? `${pendingMetrics} stat. à valider` : null].filter(Boolean).join(" · ")} />
+          <Stat label="À traiter" value={formatNumber((openTickets ?? 0) + (refunds ?? 0) + (pendingMetrics ?? 0))} hint={[openTickets !== null ? `${openTickets} récl.` : null, refunds !== null ? `${refunds} remb.` : null, pendingMetrics !== null ? `${pendingMetrics} stat.` : null].filter(Boolean).join(" · ")} />
         </div>
       )}
 
@@ -75,13 +76,11 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
             {lastPayments.length ? (
               <ul className="divide-y divide-line">
                 {lastPayments.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
-                    <span className="min-w-0"><span className="block truncate text-ink">{p.user.name}</span><span className="block text-xs text-muted">{formatDateTime(p.createdAt)}</span></span>
-                    <span className="text-right"><span className="tnum block font-medium">{formatFcfa(p.amount)}</span><StateBadge kind="payment" value={p.status} /></span>
-                  </li>
+                  <ListRow key={p.id} title={p.user.name} subtitle={formatDateTime(p.createdAt)}
+                    value={<span className="tnum font-semibold text-ink">{formatFcfa(p.amount)}</span>} meta={<StateBadge kind="payment" value={p.status} />} />
                 ))}
               </ul>
-            ) : <p className="px-5 py-6 text-sm text-muted">Aucun paiement.</p>}
+            ) : <p className="px-4 sm:px-5 py-6 text-sm text-muted">Aucun paiement.</p>}
           </Card>
         )}
       </div>

@@ -136,7 +136,7 @@ export function RevisionItem({ id, description, status, response, requester, cre
   const [text, setText] = React.useState(response ?? "");
   const open = status === "OPEN" || status === "IN_PROGRESS";
   return (
-    <li className="space-y-3 px-5 py-4 text-sm">
+    <li className="space-y-3 px-4 sm:px-5 py-4 text-sm">
       <div className="flex items-start justify-between gap-3">
         <div><p className="whitespace-pre-wrap text-ink">{description}</p><p className="mt-1 text-xs text-muted">{requester} · {formatDateTime(createdAt)}</p></div>
         <StateBadge kind="revision" value={status} />
@@ -258,7 +258,7 @@ export function AccessPanel({ campaignId, items, canReveal, canReview }: { campa
         const meta = ACCESS_STATE_META[it.state];
         const secret = shown[it.platform];
         return (
-          <li key={it.platform} className="space-y-2.5 px-5 py-3.5 text-sm">
+          <li key={it.platform} className="space-y-2.5 px-4 sm:px-5 py-3.5 text-sm">
             <div className="flex items-center gap-3">
               <PlatformBadge platform={it.platform} size="sm" />
               <span className="min-w-0 flex-1">

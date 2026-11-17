@@ -33,8 +33,8 @@ export default async function PaymentsPage() {
           {orders.map((o) => (
             <ListRow key={o.id} href={`/app/paiements/${o.id}`} title={o.campaign?.name ?? o.serviceLabel}
               subtitle={<>{formatDate(o.createdAt)} · <span className="font-mono text-[12.5px]">{o.reference}</span></>}
-              below={<span className="mt-1.5 block"><StateBadge kind="order" value={o.status} /></span>}
-              trailing={<span className="tnum font-semibold text-ink">{formatFcfa(o.total)}</span>} />
+              value={<span className="tnum font-semibold text-ink">{formatFcfa(o.total)}</span>}
+              meta={<StateBadge kind="order" value={o.status} />} />
           ))}
         </List>
       ) : <EmptyState art="phone" title="Aucune commande" action={<Button asChild><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer</Link></Button>} />}

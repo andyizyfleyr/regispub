@@ -99,7 +99,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
               <CardHeader title="Remboursements" />
               <ul className="divide-y divide-line">
                 {order.refunds.map((r) => (
-                  <li key={r.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+                  <li key={r.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 text-sm">
                     <span><span className="tnum font-medium">{formatFcfa(r.amount)}</span><span className="block text-[13px] text-muted">{r.reason}{r.reference ? ` · réf. ${r.reference}` : ""}</span></span>
                     <StateBadge kind="refund" value={r.status} />
                   </li>

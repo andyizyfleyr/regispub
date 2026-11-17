@@ -13,6 +13,9 @@ Règles : icônes linéaires (lucide), peu de texte, coins arrondis, beaucoup d'
 | Étiquette de statut | `Badge`, `CampaignStatusBadge` | `src/components/ui/badge.tsx` |
 | Carte, tuile, chiffre clé, bandeau | `Card`, `Tile`, `StatTile`, `Banner` | `src/components/ui/card.tsx`, `tile.tsx` |
 | Liste | `List`, `ListRow` | `src/components/ui/list.tsx` |
+| Ligne de campagne | `CampaignRow` | `src/components/app/campaign-row.tsx` |
+| Tableau (fiches sur téléphone) | `Table` | `src/components/ui/misc.tsx` |
+| Chiffre clé du back-office | `Stat` | `src/components/ui/misc.tsx` |
 | Carrousel | `Carousel` | `src/components/ui/carousel.tsx` |
 | Fil chronologique | `Timeline` | `src/components/ui/timeline.tsx` |
 | Étapes | `Stepper`, `StepTile` | `src/components/wizard/parts.tsx`, `tile.tsx` |
@@ -24,3 +27,13 @@ Règles : icônes linéaires (lucide), peu de texte, coins arrondis, beaucoup d'
 | Écrans de bienvenue | `Onboarding` | `src/components/app/onboarding.tsx` |
 
 Illustrations 3D : `public/img/3d/*.webp` (fond blanc, à afficher avec `mix-blend-multiply`).
+
+## Alignement sur téléphone
+
+Dans une même section, chaque ligne a la même forme : titre sous titre, précision sous précision, état sous état.
+
+- `ListRow` : pictogramme de largeur fixe, puis deux lignes. À gauche le titre (`title`) et la précision (`subtitle`), sur une ligne chacun, coupés par « … » s'ils sont trop longs. À droite `value` (montant) en face du titre et `meta` (état) en face de la précision. Ne rien placer avant le titre dont la largeur change d'une ligne à l'autre.
+- `CampaignRow` : nom et état sur la première ligne, objectif, budget et réseaux sur la seconde. L'état utilise le libellé court (`STATUS_META[...].short`).
+- `Table` : sous 640 px, une fiche par ligne. La première colonne fait le titre, les autres s'empilent « libellé à gauche, valeur à droite ». Options : `mobileCorner={n}` place la colonne d'état en haut à droite ; `mobileHide={[n]}` masque des colonnes ; une colonne sans en-tête (boutons) se cale en bas à droite ; `data-empty` sur une cellule la masque ; `mobile="fit"` garde un vrai tableau resserré (série de chiffres par jour) ; `mobile="scroll"` garde le tableau à faire défiler. Les règles sont dans `globals.css` (`.table-stack`, `.table-fit`).
+- `Stat`, `StatTile` : libellé, valeur et précision sur une ligne chacun, pour que les cartes d'une grille aient la même hauteur. Les grilles de tuiles portent `auto-rows-fr`.
+- Marges intérieures des cartes : `px-4` sur téléphone, `sm:px-5` au-delà, pour l'en-tête comme pour les lignes.

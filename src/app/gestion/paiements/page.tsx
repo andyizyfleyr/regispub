@@ -61,7 +61,7 @@ async function Transactions({ sp, canRefund, canVerify, showFullPhone }: { sp: {
       <Card>
         {rows.length ? (
           <>
-            <Table head={["Transaction", "Client", "Numéro", "Montant", "Statut", ""]}>
+            <Table head={["Transaction", "Client", "Numéro", "Montant", "Statut", ""]} mobileCorner={5}>
               {rows.map((p) => {
                 const refundable = p.status === "SUCCEEDED" ? p.amount - p.refunds.reduce((s, r) => s + r.amount, 0) : 0;
                 const open = p.status === "PENDING" || p.status === "INITIATED";
@@ -106,7 +106,7 @@ async function Refunds({ canRefund }: { canRefund: boolean }) {
         {rows.length ? (
           <ul className="divide-y divide-line">
             {rows.map((r) => (
-              <li key={r.id} className="px-5 py-4 text-sm">
+              <li key={r.id} className="px-4 sm:px-5 py-4 text-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-ink"><span className="tnum font-medium">{formatFcfa(r.amount)}</span> · {r.order.user.name} · <span className="font-mono text-[13px]">{r.order.reference}</span></p>

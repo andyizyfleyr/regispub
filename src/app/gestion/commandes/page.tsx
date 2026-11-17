@@ -39,7 +39,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       <Card>
         {rows.length ? (
           <>
-            <Table head={["Commande", "Client", "Budget pub.", "Prestation", "Remise", "Frais paiement", "Total", "Statut"]}>
+            <Table head={["Commande", "Client", "Budget pub.", "Prestation", "Remise", "Frais paiement", "Total", "Statut"]} mobileCorner={8}>
               {rows.map((o) => (
                 <tr key={o.id}>
                   <td>
@@ -50,7 +50,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                   <td><span className="block text-ink">{o.user.name}</span><span className="block text-xs text-muted">{o.user.email}</span></td>
                   <td className="tnum whitespace-nowrap">{formatFcfa(o.adBudget)}</td>
                   <td className="tnum whitespace-nowrap">{formatFcfa(o.serviceFee)}</td>
-                  <td className="tnum whitespace-nowrap">{o.discount ? <>−{formatFcfa(o.discount)}<span className="block font-mono text-xs text-muted">{o.promoCode?.code}</span></> : "—"}</td>
+                  <td className="tnum whitespace-nowrap" data-empty={o.discount ? undefined : ""}>{o.discount ? <>−{formatFcfa(o.discount)}<span className="block font-mono text-xs text-muted">{o.promoCode?.code}</span></> : "—"}</td>
                   <td className="tnum whitespace-nowrap">{formatFcfa(o.paymentFee)}</td>
                   <td className="tnum whitespace-nowrap font-medium">{formatFcfa(o.total)}</td>
                   <td><StateBadge kind="order" value={o.status} /></td>
