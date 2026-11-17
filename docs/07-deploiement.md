@@ -21,7 +21,8 @@ Le dépôt contient `vercel.json` : framework Next.js, commande de build `npm ru
 
 1. `prisma generate` ;
 2. `scripts/deploy-db.ts` : migrations SQL puis données initiales (prestations, modèles, compte super administrateur). Rejouable : rien d'existant n'est écrasé, et un verrou empêche deux déploiements simultanés d'appliquer la même migration. Ignoré pour les déploiements de prévisualisation ;
-3. `next build`.
+3. `scripts/check-storage.ts` : si un bucket est configuré, écrit, relit et supprime un objet témoin, puis teste les adresses signées et la règle CORS du site. Le résultat (« Stockage : opérationnel » ou la liste des contrôles en échec) apparaît dans le journal de build ; un échec ne bloque pas la mise en ligne ;
+4. `next build`.
 
 Variables à définir pour l'environnement **Production** :
 
@@ -81,7 +82,7 @@ Sans cette règle, les photos légères passent, mais les vidéos et les fichier
 | `S3_ACCESS_KEY_ID` | Access Key ID |
 | `S3_SECRET_ACCESS_KEY` | Secret Access Key |
 
-Un nouveau déploiement est nécessaire pour qu'elles soient prises en compte. La page **Gestion → Intégrations** indique ensuite « Stockage : Opérationnel ».
+Un nouveau déploiement est nécessaire pour qu'elles soient prises en compte. Son journal de build se termine par « Stockage : opérationnel » si les clés, le nom du bucket et la règle CORS sont corrects.
 
 ### Comment circulent les fichiers
 
