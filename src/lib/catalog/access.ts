@@ -43,29 +43,39 @@ export function accessToGive(rows: AccessRow[], platforms: PlatformCode[], campa
 
 export const accountNoun = (platform: PlatformCode) => `${platform === "FACEBOOK" ? "page" : "compte"} ${PLATFORMS[platform].label}`;
 
+/** Une étape affichée au client, avec éventuellement un bouton qui ouvre directement le bon écran du réseau. */
+export type InviteStep = { text: string; link?: { href: string; label: string } };
+
+/**
+ * Lien direct vers « Accès à la Page » de Facebook (nouvelle expérience des Pages).
+ * Il n'ouvre le bon écran que si le client utilise Facebook en tant que sa page : d'où l'étape 1.
+ * Facebook change parfois ses adresses : à revérifier si des clients disent que le lien n'ouvre pas le bon écran.
+ */
+export const FACEBOOK_PAGE_ACCESS_URL = "https://www.facebook.com/settings/?tab=profile_access";
+const pageAccessLink = { href: FACEBOOK_PAGE_ACCESS_URL, label: "Ouvrir « Accès à la Page »" };
+
 /** Étapes de l'option « Je vous ajoute ». `agency` : nom du profil Facebook de l'agence, que le client recherche. */
-export function inviteSteps(platform: PlatformCode, agency: string): string[] {
-  const add = `Touchez « Ajouter », cherchez « ${agency} », cochez « Publicités », puis validez.`;
-  return rawInviteSteps(platform, add).map(glue);
+export function inviteSteps(platform: PlatformCode, agency: string): InviteStep[] {
+  const add = `Touchez « Ajouter », cherchez « ${agency} », puis donnez l'accès. Facebook demande votre mot de passe.`;
+  return rawInviteSteps(platform, add).map((step) => ({ text: glue(step.text), link: step.link && { ...step.link, label: glue(step.link.label) } }));
 }
 
-/** Espaces insécables dans les guillemets : un « » ne se retrouve jamais seul en fin de ligne. */
-const glue = (text: string) => text.replace(/« /g, "«\u00a0").replace(/ »/g, "\u00a0»");
+/** Espaces insécables dans les guillemets et avant les deux-points : un « » ou un « : » ne se retrouve jamais seul en début de ligne. */
+const glue = (text: string) => text.replace(/« /g, "«\u00a0").replace(/ »/g, "\u00a0»").replace(/ :/g, "\u00a0:");
 
-function rawInviteSteps(platform: PlatformCode, add: string): string[] {
-  if (platform === "FACEBOOK") return [
-    "Ouvrez votre page Facebook, puis « Paramètres ».",
-    "Touchez « Accès à la Page ».",
-    add,
-  ];
+function rawInviteSteps(platform: PlatformCode, add: string): InviteStep[] {
+  const switchToPage = "Sur Facebook, passez sur votre page : touchez votre photo, puis le nom de la page.";
+  const openAccess = { text: "Ouvrez « Accès à la Page » avec ce bouton. Sinon : « Paramètres », puis « Accès à la Page ».", link: pageAccessLink };
+  if (platform === "FACEBOOK") return [{ text: switchToPage }, openAccess, { text: add }];
   if (platform === "INSTAGRAM") return [
-    "Dans Instagram : « Paramètres », « Type de compte », puis « Compte professionnel ».",
-    "Sur votre page Facebook : « Paramètres », « Comptes liés », « Instagram », puis « Connecter ».",
-    `Toujours sur la page Facebook : « Accès à la Page ». ${add}`,
+    { text: "Dans Instagram : « Paramètres », « Type de compte », puis « Compte professionnel »." },
+    { text: `${switchToPage} Puis « Paramètres », « Comptes liés », « Instagram », « Connecter ».` },
+    openAccess,
+    { text: add },
   ];
   return [
-    "Dans TikTok : « Paramètres », « Outils de créateur », « Paramètres publicitaires ». Activez « Autorisation publicitaire ».",
-    "Ouvrez la vidéo à promouvoir : « … », « Paramètres publicitaires », puis « Générer le code » (30 jours).",
-    "Collez ce code ci-dessous.",
+    { text: "Dans TikTok : « Paramètres », « Outils de créateur », « Paramètres publicitaires ». Activez « Autorisation publicitaire »." },
+    { text: "Ouvrez la vidéo à promouvoir : « … », « Paramètres publicitaires », puis « Générer le code » (30 jours)." },
+    { text: "Collez ce code ci-dessous." },
   ];
 }

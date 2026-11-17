@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accessState, accessToGive, inviteSteps, type AccessRow } from "@/lib/catalog/access";
+import { accessState, accessToGive, FACEBOOK_PAGE_ACCESS_URL, inviteSteps, type AccessRow } from "@/lib/catalog/access";
 import { can } from "@/lib/auth/permissions";
 import { sanitizeSettings } from "@/lib/settings-schema";
 import { seal, unseal } from "@/lib/vault";
@@ -53,8 +53,16 @@ describe("état des accès", () => {
     expect(accessState([row({ platform: "TIKTOK", method: "LOGIN" })], "TIKTOK", "c2")).toBe("SENT");
   });
   it("cite le nom de l'agence dans les étapes", () => {
-    expect(inviteSteps("FACEBOOK", "Régis Pub").join(" ")).toContain("«\u00a0Régis Pub\u00a0»");
+    const facebook = inviteSteps("FACEBOOK", "Régis Pub");
+    expect(facebook.map((s) => s.text).join(" ")).toContain("«\u00a0Régis Pub\u00a0»");
     expect(inviteSteps("TIKTOK", "Régis Pub")).toHaveLength(3);
+  });
+  it("donne un lien direct vers « Accès à la Page » pour Facebook et Instagram, aucun pour TikTok", () => {
+    const links = (p: "FACEBOOK" | "INSTAGRAM" | "TIKTOK") => inviteSteps(p, "Régis Pub").flatMap((s) => (s.link ? [s.link.href] : []));
+    expect(links("FACEBOOK")).toEqual([FACEBOOK_PAGE_ACCESS_URL]);
+    expect(links("INSTAGRAM")).toEqual([FACEBOOK_PAGE_ACCESS_URL]);
+    expect(links("TIKTOK")).toEqual([]);
+    expect(FACEBOOK_PAGE_ACCESS_URL).toMatch(/^https:\/\/www\.facebook\.com\//);
   });
 });
 
