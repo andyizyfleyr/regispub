@@ -7,7 +7,7 @@ import { getSessionUser } from "@/lib/auth/session";
 export async function MarketingHeader() {
   const user = await getSessionUser();
   return (
-    <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-line/70 bg-surface/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
         <Link href="/" aria-label="RegisPub — accueil"><Logo /></Link>
         <nav className="hidden items-center gap-7 text-sm text-ink-soft md:flex">

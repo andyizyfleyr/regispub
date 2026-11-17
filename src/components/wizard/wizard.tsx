@@ -143,7 +143,7 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
       {warnings.length > 0 && <Notice tone="warn" className="mt-6" title="À vérifier avant le lancement">{warnings.map((w) => <p key={w}>{w}</p>)}</Notice>}
       {error && <Notice tone="danger" className="mt-6">{error}</Notice>}
 
-      <div className="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-b-lg sm:px-0">
+      <div className="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-b-lg sm:px-0">
         <Button type="button" variant="ghost" disabled={step === 1 || busy} onClick={() => go(step - 1)}><ArrowLeft />Retour</Button>
         {step < 7 ? (
           <Button type="button" size="lg" disabled={busy} onClick={() => go(step + 1)}>{busy && <LoaderCircle className="animate-spin" />}Continuer<ArrowRight /></Button>

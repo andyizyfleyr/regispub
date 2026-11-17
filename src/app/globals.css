@@ -5,6 +5,7 @@
   --font-display: "Bricolage Grotesque Variable", "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
+  /* Le fond des pages est blanc (surface). « paper » ne sert plus qu'aux aplats discrets : encarts, survols. */
   --color-paper: #f6f4ee;
   --color-surface: #ffffff;
   --color-sand: #efece3;
@@ -45,7 +46,7 @@
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   fieldset { min-width: 0; }
   body {
-    background: var(--color-paper);
+    background: var(--color-surface);
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-size: 15px;
