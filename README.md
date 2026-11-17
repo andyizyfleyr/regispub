@@ -26,7 +26,7 @@ Tant que les API publicitaires ne sont pas autorisées, les campagnes sont **lan
 
 ## Démarrage
 
-Prérequis : Node.js 22 ou plus récent. Aucune installation de PostgreSQL ni de Docker n'est nécessaire en local.
+Prérequis : Node.js 26 (la même version que sur Vercel ; champ `engines` de `package.json`). Aucune installation de PostgreSQL ni de Docker n'est nécessaire en local.
 
 ```bash
 npm install
