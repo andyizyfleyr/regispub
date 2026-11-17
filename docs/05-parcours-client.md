@@ -36,7 +36,7 @@ L'équipe lance la publicité sur les comptes du client : il doit donc lui en ou
 
 L'équipe est prévenue, vérifie l'accès dans « Comptes du client » puis marque « Accès OK » ou « Problème » avec un message, que le client reçoit. Un accès donné reste valable pour les campagnes suivantes (sauf le code de vidéo TikTok, propre à une campagne).
 
-Le nom du profil Facebook à ajouter se règle dans Gestion → Paramètres (« Votre profil Facebook »). Le texte des étapes est dans `src/lib/catalog/access.ts` : les menus des réseaux changent, il faut le relire de temps en temps.
+Le nom du profil Facebook à ajouter se règle dans Gestion → Paramètres (« Votre profil Facebook »). Pour Facebook et Instagram, un bouton ouvre directement l'écran « Accès à la Page » (`FACEBOOK_PAGE_ACCESS_URL`) ; il ne fonctionne que si le client utilise Facebook en tant que sa page, ce que demande l'étape précédente. Le texte des étapes et ce lien sont dans `src/lib/catalog/access.ts` : les menus des réseaux changent, il faut le relire de temps en temps.
 
 ## Suivre
 

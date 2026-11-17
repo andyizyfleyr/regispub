@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Eye, EyeOff, KeyRound, LoaderCircle, Lock, Trash2, UserPlus } from "lucide-react";
+import { ArrowRight, Check, ExternalLink, Eye, EyeOff, KeyRound, LoaderCircle, Lock, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformBadge } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
@@ -124,7 +124,14 @@ function AccessForm({ campaignId, platform, agency, onDone }: { campaignId: stri
             {steps.map((s, i) => (
               <li key={i} className="flex gap-3 text-[14px] leading-relaxed text-ink">
                 <span className="tnum mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-forest text-xs font-semibold text-white">{i + 1}</span>
-                <span>{s}</span>
+                <span className="min-w-0">
+                  {s.text}
+                  {s.link && (
+                    <a href={s.link.href} target="_blank" rel="noopener noreferrer" className="mt-2 flex h-10 w-fit items-center gap-2 rounded-full bg-green-soft px-4 text-[13.5px] font-medium text-green transition-colors hover:bg-green-soft/70">
+                      {s.link.label}<ExternalLink className="size-4" />
+                    </a>
+                  )}
+                </span>
               </li>
             ))}
           </ol>
