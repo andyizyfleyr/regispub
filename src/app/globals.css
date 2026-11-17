@@ -5,15 +5,16 @@
   --font-display: "Bricolage Grotesque Variable", "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
-  /* Fond des pages : blanc. « paper » et « sand » sont des aplats discrets (encarts, survols, pistes). */
+  /* « canvas » : fond des espaces connectés. « surface » : cartes, posées dessus. « paper » et « sand » : aplats discrets. */
+  --color-canvas: #f3f5f1;
   --color-surface: #ffffff;
-  --color-paper: #f6f8f7;
-  --color-sand: #eef2f0;
+  --color-paper: #f5f7f5;
+  --color-sand: #ecf0ed;
   --color-ink: #0d1b15;
   --color-ink-soft: #33413a;
   --color-muted: #66736c;
-  --color-line: #e6ebe8;
-  --color-line-strong: #cfd7d2;
+  --color-line: #e8ece9;
+  --color-line-strong: #d2d9d4;
 
   --color-forest: #0b2a1f;
   --color-forest-600: #124434;
@@ -32,13 +33,13 @@
   --color-rose: #d6336c;
   --color-rose-soft: #fde8f0;
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 22px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
   --radius-2xl: 28px;
 
-  --shadow-card: 0 1px 2px rgb(13 27 21 / 0.05);
+  --shadow-card: 0 1px 2px rgb(13 27 21 / 0.04), 0 10px 24px -16px rgb(13 27 21 / 0.16);
   --shadow-lift: 0 14px 32px -14px rgb(13 27 21 / 0.2), 0 2px 6px rgb(13 27 21 / 0.05);
   --shadow-pop: 0 24px 48px -16px rgb(13 27 21 / 0.25), 0 4px 12px rgb(13 27 21 / 0.06);
   --shadow-glow: 0 8px 20px -8px rgb(248 168 31 / 0.7);
@@ -65,7 +66,11 @@
 }
 
 @layer base {
-  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  /* Champs : pleins et sans trait sur une carte, blancs avec un trait sur le fond de page. */
+  :root { --field-bg: var(--color-surface); --field-line: var(--color-line-strong); }
+  :where(.bg-surface) { --field-bg: #f1f4f2; --field-line: transparent; }
+  :where(.bg-paper, .bg-sand) { --field-bg: var(--color-surface); --field-line: var(--color-line); }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
   fieldset { min-width: 0; }
   body {
     background: var(--color-surface);
