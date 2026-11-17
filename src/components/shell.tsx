@@ -85,27 +85,23 @@ function Avatar({ name, className }: { name: string; className?: string }) {
 
 const menuItem = "flex cursor-pointer items-center gap-2.5 rounded-sm px-2.5 py-2 text-[0.875rem] text-ink-soft outline-none data-[highlighted]:bg-paper data-[highlighted]:text-ink [&_svg]:size-4 [&_svg]:text-muted";
 
-function UserMenu({ user, area, compact }: { user: { name: string; roleLabel: string }; area: "client" | "staff"; compact?: boolean }) {
+function UserMenu({ user, area }: { user: { name: string; roleLabel: string }; area: "client" | "staff" }) {
   const [pending, start] = React.useTransition();
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
         aria-label="Menu du compte"
-        className={cn("flex items-center gap-3 rounded-md text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-green", compact ? "rounded-full ring-2 ring-surface" : "w-full bg-paper p-2 hover:bg-sand")}
+        className="flex w-full items-center gap-3 rounded-md bg-paper p-2 text-left outline-none transition-colors hover:bg-sand focus-visible:ring-2 focus-visible:ring-green"
       >
-        <Avatar name={user.name} className={compact ? "size-9 text-[0.75rem] sm:size-10" : undefined} />
-        {!compact && (
-          <>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[0.84375rem] font-medium text-ink">{user.name}</span>
-              <span className="block truncate text-xs text-muted">{user.roleLabel}</span>
-            </span>
-            <ChevronsUpDown className="mr-1 size-4 shrink-0 text-muted" />
-          </>
-        )}
+        <Avatar name={user.name} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[0.84375rem] font-medium text-ink">{user.name}</span>
+          <span className="block truncate text-xs text-muted">{user.roleLabel}</span>
+        </span>
+        <ChevronsUpDown className="mr-1 size-4 shrink-0 text-muted" />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content align={compact ? "end" : "start"} side={compact ? "bottom" : "top"} sideOffset={8} className="z-50 w-60 animate-pop rounded-lg border border-line/70 bg-surface p-1.5 shadow-pop">
+        <DropdownMenu.Content align="start" side="top" sideOffset={8} className="z-50 w-60 animate-pop rounded-lg border border-line/70 bg-surface p-1.5 shadow-pop">
           <div className="px-2.5 pb-2 pt-1.5">
             <p className="truncate text-[0.84375rem] font-semibold text-ink">{user.name}</p>
             <p className="truncate text-xs text-muted">{user.roleLabel}</p>
@@ -176,7 +172,10 @@ export function AppShell({ area, user, unread, allowed, children }: {
             {!client && (
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger className="flex size-9 items-center justify-center rounded-full bg-surface text-ink-soft shadow-card sm:size-10 lg:hidden" aria-label="Ouvrir le menu"><Menu className="size-5" /></DialogTrigger>
-                <DialogContent title="Menu" side="left"><NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} /></DialogContent>
+                <DialogContent title="Menu" side="left">
+                  <NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} />
+                  <div className="mt-4 border-t border-line pt-4"><UserMenu user={user} area={area} /></div>
+                </DialogContent>
               </Dialog>
             )}
             <Link href={home} className="lg:hidden"><Logo /></Link>
@@ -186,10 +185,7 @@ export function AppShell({ area, user, unread, allowed, children }: {
               <span className="truncate font-medium text-ink">{title}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
-            {bell}
-            <span className="lg:hidden"><UserMenu user={user} area={area} compact /></span>
-          </div>
+          {bell}
         </header>
 
         <main className={cn("mx-auto w-full flex-1 px-4 pb-8 pt-2 sm:px-6 lg:px-8 lg:pb-10 lg:pt-4", client ? "max-w-4xl" : "max-w-6xl", client && !immersive && "pb-28 lg:pb-10")}>{children}</main>

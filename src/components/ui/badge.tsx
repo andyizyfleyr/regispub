@@ -1,4 +1,5 @@
 import * as React from "react";
+import { BadgeCheck, Check, Hourglass, ImageIcon, MessageSquareText, Pause, PencilLine, Play, Rocket, Wallet, X, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STATUS_META, type CampaignStatusName } from "@/lib/campaigns/status";
 
@@ -30,6 +31,23 @@ export function Badge({ tone = "neutral", dot, live, className, children }: { to
 export function CampaignStatusBadge({ status, short }: { status: string; short?: boolean }) {
   const meta = STATUS_META[status as CampaignStatusName];
   return <Badge tone={meta?.tone ?? "neutral"} dot live={status === "RUNNING"}>{(short && meta?.short) || meta?.label || status}</Badge>;
+}
+
+const STATUS_ICONS: Record<CampaignStatusName, LucideIcon> = {
+  DRAFT: PencilLine, PENDING_PAYMENT: Wallet, PAID: BadgeCheck, AWAITING_INFO: MessageSquareText, IN_PREPARATION: Hourglass, CLIENT_REVIEW: ImageIcon,
+  READY_TO_LAUNCH: Rocket, RUNNING: Play, PAUSED: Pause, COMPLETED: Check, CANCELLED: X,
+};
+
+/** État d'une campagne en pictogramme seul, pour les listes courtes. Le libellé reste lisible par les lecteurs d'écran et au survol. */
+export function CampaignStatusIcon({ status, className }: { status: string; className?: string }) {
+  const meta = STATUS_META[status as CampaignStatusName];
+  const Icon = STATUS_ICONS[status as CampaignStatusName] ?? PencilLine;
+  const label = meta?.label ?? status;
+  return (
+    <span role="img" aria-label={label} title={label} className={cn("flex size-6 shrink-0 items-center justify-center rounded-full", TONES[meta?.tone ?? "neutral"], className)}>
+      <Icon aria-hidden className="size-3.5" strokeWidth={2.4} />
+    </span>
+  );
 }
 
 const GENERIC: Record<string, { label: string; tone: Tone }> = {

@@ -62,3 +62,9 @@ Sur téléphone (moins de 640 px de large), toute l'interface est réduite d'env
 - Tailles de départ pensées pour le téléphone, agrandies avec `sm:` : boutons `sm` 32 px, `md` 40 px, `lg` 44 px ; champs 44 px ; vignette de ligne 40 px ; titre de page 22 px ; titre de section 16 px.
 - **Bandeau de marque** : compact sur téléphone (`px-4 py-4`, rayon 22 px). Le titre tient sur une ligne, les chiffres sont en ligne avec leur libellé. Pas de bouton `lg` dans un bandeau.
 - `PageHeader` : `actionsFrom="lg"` masque les actions sur téléphone sans laisser de vide (quand le « + » du menu fait déjà la même chose).
+
+## Accueil client et barre du haut
+
+- **Accueil** : le bandeau vert, puis « À faire », puis « Vos campagnes ». Pas de raccourcis sous le bandeau : le menu du bas suffit.
+- **« Vos campagnes » (accueil)** : l'état est un pictogramme seul (`CampaignRow statusIcon`, composant `CampaignStatusIcon`), sans texte. Le libellé reste donné aux lecteurs d'écran. Les autres listes gardent le badge avec texte.
+- **Barre du haut sur téléphone** : logo et cloche uniquement, pas d'avatar. Le client passe par « Plus » → « Mon compte » (bouton « Se déconnecter » en bas de la page). L'équipe retrouve son compte en bas du menu latéral.

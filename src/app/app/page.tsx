@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Headset, ImageIcon, LifeBuoy, MessageSquareText, Plus, Sparkles, Wallet } from "lucide-react";
+import { ImageIcon, MessageSquareText, Plus, Wallet } from "lucide-react";
 import { CampaignRow } from "@/components/app/campaign-row";
 import { Onboarding } from "@/components/app/onboarding";
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,6 @@ const TODO_META: Partial<Record<CampaignStatusName, { cta: string; icon: typeof 
   CLIENT_REVIEW: { cta: "Valider", icon: ImageIcon },
   AWAITING_INFO: { cta: "Répondre", icon: MessageSquareText },
 };
-
-const SHORTCUTS = [
-  { href: "/app/expert", label: "Un expert", icon: Headset, cls: "bg-surface text-green" },
-  { href: "/app/assistant", label: "Idées", icon: Sparkles, cls: "bg-surface text-violet" },
-  { href: "/app/paiements", label: "Paiements", icon: Wallet, cls: "bg-surface text-sky" },
-  { href: "/app/compte?onglet=aide", label: "Aide", icon: LifeBuoy, cls: "bg-surface text-rose" },
-];
 
 /** Accueil : ce qu'il y a à faire, puis les campagnes. Rien d'autre. */
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ guide?: string }> }) {
@@ -74,15 +67,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       </section>
 
-      <nav aria-label="Raccourcis" className="grid grid-cols-4 gap-2 lg:hidden">
-        {SHORTCUTS.map((sc) => (
-          <Link key={sc.href} href={sc.href} className="group flex flex-col items-center gap-1.5 text-center">
-            <span className={`flex size-11 items-center justify-center rounded-2xl shadow-card ring-1 ring-line/70 transition-transform group-active:scale-95 ${sc.cls}`}><sc.icon className="size-5" /></span>
-            <span className="text-[0.75rem] font-medium leading-tight text-ink-soft">{sc.label}</span>
-          </Link>
-        ))}
-      </nav>
-
       {todo.length > 0 && (
         <section aria-labelledby="a-faire">
           <SectionTitle id="a-faire">À faire</SectionTitle>
@@ -101,7 +85,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {hasCampaigns && (
         <section aria-labelledby="campagnes">
           <SectionTitle id="campagnes" action={<Link href="/app/campagnes">Tout voir</Link>}>Vos campagnes</SectionTitle>
-          <List>{campaigns.map((c) => <li key={c.id}><CampaignRow c={c} /></li>)}</List>
+          <List>{campaigns.map((c) => <li key={c.id}><CampaignRow c={c} statusIcon /></li>)}</List>
         </section>
       )}
     </div>
