@@ -1,13 +1,17 @@
 import * as React from "react";
 import Link from "next/link";
-import { CircleAlert, Info, TriangleAlert, CircleCheck } from "lucide-react";
+import { ArrowLeft, CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PageHeader({ title, description, actions, eyebrow, back }: { title: React.ReactNode; description?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode; back?: { href: string; label: string } }) {
   return (
-    <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-7 flex animate-rise flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {back && <Link href={back.href} className="mb-2 inline-block text-[13px] text-muted hover:text-ink">← {back.label}</Link>}
+        {back && (
+          <Link href={back.href} className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pl-2 pr-3 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
+            <ArrowLeft className="size-3.5" />{back.label}
+          </Link>
+        )}
         {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
         <h1 className="text-[26px] font-semibold leading-tight sm:text-[30px]">{title}</h1>
         {description && <p className="mt-1.5 max-w-2xl text-muted">{description}</p>}
@@ -19,9 +23,15 @@ export function PageHeader({ title, description, actions, eyebrow, back }: { tit
 
 export function EmptyState({ icon, title, description, action, className }: { icon?: React.ReactNode; title: string; description?: React.ReactNode; action?: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex flex-col items-center rounded-lg border border-dashed border-line-strong px-6 py-12 text-center", className)}>
-      {icon && <div className="mb-3 flex size-11 items-center justify-center rounded-full bg-sand text-ink-soft [&_svg]:size-5">{icon}</div>}
-      <p className="font-medium text-ink">{title}</p>
+    <div className={cn("flex flex-col items-center rounded-lg border border-dashed border-line-strong bg-paper/60 px-6 py-12 text-center", className)}>
+      {icon && (
+        <div className="relative mb-4 flex size-14 items-center justify-center">
+          <span aria-hidden className="absolute inset-0 rounded-full bg-green-soft" />
+          <span aria-hidden className="absolute -inset-2 rounded-full border border-green/15" />
+          <span className="relative text-green [&_svg]:size-6">{icon}</span>
+        </div>
+      )}
+      <p className="font-display text-lg font-semibold text-ink">{title}</p>
       {description && <p className="mt-1 max-w-sm text-sm text-muted">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
@@ -29,17 +39,17 @@ export function EmptyState({ icon, title, description, action, className }: { ic
 }
 
 const NOTICE = {
-  info: { cls: "border-sky/20 bg-sky-soft text-sky", Icon: Info },
-  warn: { cls: "border-marigold/40 bg-marigold-soft text-[#7a4f00]", Icon: TriangleAlert },
-  danger: { cls: "border-clay/25 bg-clay-soft text-clay", Icon: CircleAlert },
-  ok: { cls: "border-green/20 bg-green-soft text-green", Icon: CircleCheck },
+  info: { cls: "border-sky/15 bg-sky-soft/70", icon: "bg-sky/10 text-sky", Icon: Info },
+  warn: { cls: "border-marigold/35 bg-marigold-soft/70", icon: "bg-marigold/25 text-[#8a5a00]", Icon: TriangleAlert },
+  danger: { cls: "border-clay/20 bg-clay-soft/70", icon: "bg-clay/10 text-clay", Icon: CircleAlert },
+  ok: { cls: "border-green/20 bg-green-soft/70", icon: "bg-green/10 text-green", Icon: CircleCheck },
 } as const;
 
 export function Notice({ tone = "info", title, children, className }: { tone?: keyof typeof NOTICE; title?: string; children?: React.ReactNode; className?: string }) {
-  const { cls, Icon } = NOTICE[tone];
+  const { cls, icon, Icon } = NOTICE[tone];
   return (
     <div className={cn("flex gap-3 rounded-md border px-3.5 py-3 text-[13.5px] leading-relaxed", cls, className)}>
-      <Icon className="mt-0.5 size-4 shrink-0" />
+      <span className={cn("mt-px flex size-6 shrink-0 items-center justify-center rounded-full", icon)}><Icon className="size-3.5" /></span>
       <div className="min-w-0 text-ink-soft">
         {title && <p className="font-medium text-ink">{title}</p>}
         {children}
@@ -48,27 +58,39 @@ export function Notice({ tone = "info", title, children, className }: { tone?: k
   );
 }
 
-export function Stat({ label, value, hint, className }: { label: string; value: React.ReactNode; hint?: React.ReactNode; className?: string }) {
+export type StatTone = "green" | "marigold" | "sky" | "violet" | "rose" | "neutral";
+const STAT_TONES: Record<StatTone, string> = {
+  green: "bg-green-soft text-green", marigold: "bg-marigold-soft text-[#9a6400]", sky: "bg-sky-soft text-sky",
+  violet: "bg-violet-soft text-violet", rose: "bg-rose-soft text-rose", neutral: "bg-sand text-ink-soft",
+};
+
+export function Stat({ label, value, hint, icon, tone = "neutral", className }: { label: string; value: React.ReactNode; hint?: React.ReactNode; icon?: React.ReactNode; tone?: StatTone; className?: string }) {
   return (
-    <div className={cn("rounded-lg border border-line bg-surface px-4 py-3.5 shadow-card", className)}>
-      <p className="text-[12.5px] text-muted">{label}</p>
-      <p className="tnum mt-1 font-display text-[22px] font-semibold leading-none text-ink">{value}</p>
-      {hint && <p className="mt-1.5 text-xs text-muted">{hint}</p>}
+    <div className={cn("rounded-lg border border-line bg-surface p-4 shadow-card", className)}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[13px] text-muted">{label}</p>
+        {icon && <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-md [&_svg]:size-4", STAT_TONES[tone])}>{icon}</span>}
+      </div>
+      <p className="tnum mt-2 font-display text-[24px] font-semibold leading-none text-ink">{value}</p>
+      {hint && <p className="mt-2 text-xs text-muted">{hint}</p>}
     </div>
   );
 }
 
+/** Onglets en pastilles (liens) : l'onglet actif est porté par l'URL. */
 export function TabsNav({ tabs, current, className }: { tabs: { href: string; label: string; id: string; count?: number }[]; current: string; className?: string }) {
   return (
-    <nav className={cn("scrollbar-none -mx-4 mb-6 flex gap-1 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0", className)}>
-      {tabs.map((t) => (
-        <Link key={t.id} href={t.href} scroll={false} aria-current={t.id === current ? "page" : undefined}
-          className={cn("-mb-px flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors", t.id === current ? "border-forest text-ink" : "border-transparent text-muted hover:text-ink")}>
-          {t.label}
-          {t.count ? <span className="tnum rounded-full bg-marigold px-1.5 text-[11px] font-semibold leading-5 text-forest">{t.count}</span> : null}
-        </Link>
-      ))}
-    </nav>
+    <div className={cn("scrollbar-none -mx-4 mb-6 overflow-x-auto px-4 sm:mx-0 sm:px-0", className)}>
+      <nav className="inline-flex gap-1 rounded-full bg-sand p-1">
+        {tabs.map((t) => (
+          <Link key={t.id} href={t.href} scroll={false} aria-current={t.id === current ? "page" : undefined}
+            className={cn("flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors", t.id === current ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>
+            {t.label}
+            {t.count ? <span className="tnum rounded-full bg-marigold px-1.5 text-[11px] font-semibold leading-5 text-forest">{t.count}</span> : null}
+          </Link>
+        ))}
+      </nav>
+    </div>
   );
 }
 
@@ -77,11 +99,11 @@ export function Table({ head, children, className }: { head: React.ReactNode[]; 
     <div className={cn("overflow-x-auto", className)}>
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-line text-[12px] uppercase tracking-wider text-muted">
-            {head.map((h, i) => <th key={i} className="whitespace-nowrap px-4 py-2.5 font-medium first:pl-5 last:pr-5">{h}</th>)}
+          <tr className="border-b border-line bg-paper text-[12px] uppercase tracking-wider text-muted">
+            {head.map((h, i) => <th key={i} className="whitespace-nowrap px-4 py-3 font-medium first:pl-5 last:pr-5">{h}</th>)}
           </tr>
         </thead>
-        <tbody className="[&_td]:px-4 [&_td]:py-3 [&_td]:align-middle [&_td:first-child]:pl-5 [&_td:last-child]:pr-5 [&_tr]:border-b [&_tr]:border-line [&_tr:last-child]:border-0">{children}</tbody>
+        <tbody className="[&_td]:px-4 [&_td]:py-3.5 [&_td]:align-middle [&_td:first-child]:pl-5 [&_td:last-child]:pr-5 [&_tr]:border-b [&_tr]:border-line [&_tr]:transition-colors [&_tr:hover]:bg-paper/70 [&_tr:last-child]:border-0">{children}</tbody>
       </table>
     </div>
   );

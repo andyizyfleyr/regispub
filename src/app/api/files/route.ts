@@ -19,15 +19,11 @@ export async function POST(request: Request) {
   try { form = await request.formData(); } catch { return NextResponse.json({ error: "Envoi illisible ou trop volumineux." }, { status: 400 }); }
   const file = form.get("file");
   if (!(file instanceof File)) return NextResponse.json({ error: "Aucun fichier reçu." }, { status: 400 });
-  const sourceRaw = String(form.get("source") ?? "UPLOAD");
-  const source = sourceRaw === "STUDIO" ? "STUDIO" : isStaff(user.role) ? "STAFF" : "UPLOAD";
-  let design: unknown;
-  const designRaw = form.get("design");
-  if (typeof designRaw === "string" && designRaw.length < 20_000) { try { design = JSON.parse(designRaw); } catch { /* ignoré */ } }
+  const source = isStaff(user.role) ? "STAFF" : "UPLOAD";
   try {
     const asset = await storeAsset({
       bytes: new Uint8Array(await file.arrayBuffer()), mime: file.type, name: String(form.get("name") || file.name), owner: user, source,
-      format: typeof form.get("format") === "string" ? String(form.get("format")).slice(0, 30) : null, design,
+      format: typeof form.get("format") === "string" ? String(form.get("format")).slice(0, 30) : null,
     });
     return NextResponse.json({ asset: { id: asset.id, name: asset.name, kind: asset.kind, mime: asset.mime, width: asset.width, height: asset.height, format: asset.format } });
   } catch (error) {

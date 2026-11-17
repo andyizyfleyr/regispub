@@ -19,7 +19,7 @@ src/lib ──► PostgreSQL (Prisma) · stockage (disque ou S3) · IA · e-mail
 | `src/app` | Pages et routes | Aucune règle métier ; chaque page appelle `requireUser`, `requireStaff` ou `requirePermission` |
 | `src/server/actions` | Mutations | Valide l'entrée, vérifie le droit, appelle `src/lib`, journalise, renvoie `{ ok, error }` |
 | `src/lib` | Logique métier | Indépendante de React ; les modules de calcul (devis, statuts, CSV, indicateurs) sont purs et testés |
-| `src/components` | Interface | `ui/` (briques), `app/` (client), `staff/` (gestion), `wizard/`, `studio/` |
+| `src/components` | Interface | `ui/` (briques), `app/` (client), `staff/` (gestion), `wizard/` |
 
 ## Intégrations interchangeables
 

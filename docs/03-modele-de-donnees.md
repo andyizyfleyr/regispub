@@ -16,7 +16,7 @@ Source de vérité : `prisma/schema.prisma` (PostgreSQL). Les montants sont des 
 | --- | --- |
 | `Service` | Prestation et tarif (`CAMPAIGN`, `PACK`, `MANAGEMENT`, `SUBSCRIPTION`) |
 | `PromoCode`, `PromoRedemption` | Codes, bons de fidélité (`FID-`) et de parrainage (`PAR-`), une utilisation par commande |
-| `CreativeTemplate` | Modèles du studio créatif |
+| `CreativeTemplate` | Table héritée de l'ancien studio créatif (retiré), conservée pour éviter une migration |
 | `Setting` | Paramètres modifiables (planchers, frais, fidélité, coordonnées) |
 
 ## Campagnes

@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const begin = beginSchema.safeParse(json);
     if (begin.success) {
       if (!(await rateLimit(`upload:${user.id}`, 80, 3600))) return NextResponse.json({ error: "Trop d'envois en peu de temps. Réessayez plus tard." }, { status: 429 });
-      const source = begin.data.source === "STUDIO" ? "STUDIO" : isStaff(user.role) ? "STAFF" : "UPLOAD";
+      const source = isStaff(user.role) ? "STAFF" : "UPLOAD";
       const started = await beginDirectUpload({ owner: user, mime: begin.data.mime, size: begin.data.size, name: begin.data.name, source, format: begin.data.format ?? null });
       if (!started) return NextResponse.json({ error: "direct_unavailable" }, { status: 409 });
       return NextResponse.json(started);

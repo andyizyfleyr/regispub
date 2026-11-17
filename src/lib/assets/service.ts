@@ -35,7 +35,7 @@ export function imageSize(bytes: Uint8Array, mime: string): { width: number; hei
 
 export type StoreInput = {
   bytes: Uint8Array; mime: string; name: string; owner: Actor; ownerId?: string;
-  source?: "UPLOAD" | "STUDIO" | "AI" | "STAFF"; format?: string | null; design?: unknown; businessId?: string | null;
+  source?: "UPLOAD" | "STAFF"; format?: string | null; businessId?: string | null;
 };
 
 const MAX_ASSETS = 500;
@@ -69,7 +69,7 @@ export async function storeAsset(input: StoreInput) {
     data: {
       ownerId, businessId: input.businessId ?? null, kind, source: input.source ?? "UPLOAD", mime: input.mime, size: input.bytes.byteLength,
       name: cleanName(input.name),
-      width: size?.width ?? null, height: size?.height ?? null, format: input.format ?? null, storageKey: key, design: (input.design as never) ?? undefined,
+      width: size?.width ?? null, height: size?.height ?? null, format: input.format ?? null, storageKey: key,
     },
   });
 }
@@ -78,7 +78,7 @@ export async function storeAsset(input: StoreInput) {
 // Le navigateur envoie le fichier au stockage avec une URL signée ; le serveur ne crée la fiche
 // qu'après avoir relu l'objet (taille réelle, signature binaire). Le « ticket » signé lie les deux étapes.
 
-type Ticket = { k: string; o: string; m: string; s: number; n: string; src: "UPLOAD" | "STUDIO" | "STAFF"; f: string | null; e: number };
+type Ticket = { k: string; o: string; m: string; s: number; n: string; src: "UPLOAD" | "STAFF"; f: string | null; e: number };
 const DIRECT_TTL_SECONDS = 15 * 60;
 const signTicket = (body: string) => createHmac("sha256", env.appSecret).update(`upload:${body}`).digest("base64url");
 

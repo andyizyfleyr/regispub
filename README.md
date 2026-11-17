@@ -12,12 +12,10 @@ L'application n'affiche jamais une intégration comme active si elle ne l'est pa
 | Domaine | État | Ce qu'il faut pour l'activer |
 | --- | --- | --- |
 | Comptes, rôles, commandes, devis, suivi, messagerie, validation des créations, réclamations, reçus, fidélité, parrainage, journal d'audit | **Opérationnel** | Rien |
-| Studio créatif (modèles, mise en page, export PNG) | **Opérationnel** | Rien |
 | Statistiques par import CSV ou saisie, validées avant publication | **Opérationnel** | Rien |
 | Paiement Mobile Money MTN / Moov / Celtiis via FedaPay | **Implémenté, non testé avec un vrai compte** | Compte marchand FedaPay, `PAYMENT_PROVIDER=fedapay`, `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET` |
 | Simulateur de paiement | **Simulation** (aucun argent ne circule) | Actif par défaut en développement, refusé en production |
 | Assistant IA (textes) | **Implémenté** ; sans clé, suggestions guidées signalées comme telles | `AI_TEXT_PROVIDER` + clé OpenAI, Anthropic ou Gemini |
-| Génération d'images | **Implémenté**, désactivé sans clé | `AI_IMAGE_PROVIDER=openai` + `OPENAI_API_KEY` |
 | Lecture des statistiques Meta et TikTok par API | **Implémenté, non testé** ; autorisation requise | Jetons `ads_read` (Meta) et Reporting API (TikTok) |
 | Création de campagnes par API Meta / TikTok | **Non implémenté** | Accès avancé `ads_management` (App Review Meta), application TikTok approuvée |
 | E-mails (Resend), WhatsApp Cloud API | **Implémenté, non testé** | Clés, domaine vérifié, modèle WhatsApp approuvé |

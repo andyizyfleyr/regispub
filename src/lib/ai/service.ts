@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
 import { rateLimit } from "@/lib/rate-limit";
-import { AiError, extractJson, getImageProvider, getTextProvider } from "./providers";
+import { AiError, extractJson, getTextProvider } from "./providers";
 import { rulesCalendar, rulesCaptions, rulesDiagnostic, rulesHashtags, rulesIdeas, rulesStrategy, rulesTargeting } from "./rules";
 import { AI_TASKS, type AiTaskKind, type BusinessContext } from "./schemas";
 
@@ -64,8 +64,7 @@ export type AiRunResult<T = unknown> =
 
 export function aiStatus() {
   const text = getTextProvider();
-  const image = getImageProvider();
-  return { text: text ? { provider: text.id, model: text.model } : null, image: image ? { provider: image.id, model: image.model } : null };
+  return { text: text ? { provider: text.id, model: text.model } : null };
 }
 
 /** Exécute une tâche de l'assistant : modèle d'IA s'il est configuré, sinon suggestions guidées (clairement signalées). */
@@ -101,13 +100,4 @@ export async function runAiTask<T = unknown>(kind: AiTaskKind, ctx: BusinessCont
     data: { userId: user.id, campaignId: campaignId ?? null, kind, provider: engine === "ai" ? provider!.id : "rules", model: engine === "ai" ? provider!.model : null, input: ctx as never, output: data as never },
   });
   return { ok: true, data: data as T, engine, provider: engine === "ai" ? provider!.id : "rules", notice, generationId: saved.id };
-}
-
-export async function generateAdImage(prompt: string, size: "square" | "portrait" | "landscape", userId: string) {
-  const provider = getImageProvider();
-  if (!provider) throw new AiError("aucun fournisseur d'images", "La génération d'images IA n'est pas encore activée sur la plateforme.");
-  if (!(await rateLimit(`ai-image:${userId}`, 10, 3600))) throw new AiError("limite atteinte", "Limite de générations d'images atteinte pour cette heure.");
-  const safePrompt = `Photographie publicitaire professionnelle, sans aucun texte ni logo dans l'image. ${prompt.slice(0, 800)}`;
-  const image = await provider.generate(safePrompt, size);
-  return { ...image, provider: provider.id, model: provider.model };
 }

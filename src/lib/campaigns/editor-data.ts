@@ -10,7 +10,7 @@ import { isRecord, toIsoDate } from "@/lib/utils";
 export type StrategyState = Strategy & { engine?: "ai" | "rules"; edited?: boolean };
 export type AdCopy = { headline: string; body: string; cta: string };
 export type LinkedAsset = { linkId: string; assetId: string; role: string; name: string; kind: string; format: string | null; approval: string };
-export type LibraryAsset = { id: string; name: string; kind: string; source: string; format: string | null; hasDesign: boolean };
+export type LibraryAsset = { id: string; name: string; kind: string; source: string; format: string | null };
 
 export type EditorData = {
   campaign: {
@@ -24,7 +24,7 @@ export type EditorData = {
   limits: { minAdBudget: number; minDailyBudget: number; maxAdBudget: number; extraPlatformFee: number; minServiceFee: number };
   links: LinkedAsset[];
   library: LibraryAsset[];
-  ai: { text: string | null; image: string | null };
+  ai: { text: string | null };
   promoCode: string | null;
 };
 
@@ -73,8 +73,8 @@ export async function loadEditorData(campaignId: string, userId: string): Promis
     baseFees: Object.fromEntries(services.filter((s) => s.kind === "CAMPAIGN").map((s) => [s.code, Math.max(s.fee, settings.minServiceFee)])),
     limits: { minAdBudget: settings.minAdBudget, minDailyBudget: settings.minDailyBudget, maxAdBudget: settings.maxAdBudget, extraPlatformFee: settings.extraPlatformFee, minServiceFee: settings.minServiceFee },
     links: c.assets.map((l) => ({ linkId: l.id, assetId: l.assetId, role: l.role, name: l.asset.name, kind: l.asset.kind, format: l.asset.format, approval: l.approval })),
-    library: library.map((a) => ({ id: a.id, name: a.name, kind: a.kind, source: a.source, format: a.format, hasDesign: a.design !== null })),
-    ai: { text: ai.text?.provider ?? null, image: ai.image?.provider ?? null },
+    library: library.map((a) => ({ id: a.id, name: a.name, kind: a.kind, source: a.source, format: a.format })),
+    ai: { text: ai.text?.provider ?? null },
     promoCode: c.orders[0]?.promoCode?.code ?? null,
   };
 }

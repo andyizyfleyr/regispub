@@ -8,9 +8,8 @@ import { ActionForm, FieldError, SubmitButton } from "@/components/ui/action-for
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
-import { LAYOUTS, PALETTES } from "@/lib/studio/render";
 import { formatFcfa } from "@/lib/utils";
-import { changeRoleAction, requestRefundAction, resolveRefundAction, saveServiceAction, saveTemplateAction, updateTicketAction } from "@/server/actions/staff-admin";
+import { changeRoleAction, requestRefundAction, resolveRefundAction, saveServiceAction, updateTicketAction } from "@/server/actions/staff-admin";
 
 type Result = { ok: true; data: unknown } | { ok: false; error: string };
 
@@ -117,50 +116,6 @@ export function ServiceDialog({ service, minFee }: { service?: ServiceData; minF
           </div>
           <Field label="Inclus dans la prestation" htmlFor="sv-feat" hint="Une ligne par élément." optional><Textarea id="sv-feat" name="features" rows={4} defaultValue={s?.features.join("\n")} /></Field>
           <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" name="active" defaultChecked={s?.active ?? true} className="size-4 accent-forest" />Proposée aux clients</label>
-          <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={() => setOpen(false)}>Fermer</Button><SubmitButton pendingLabel="Enregistrement…">Enregistrer</SubmitButton></div>
-        </ActionForm>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export type TemplateData = { id: string; name: string; category: string; layout: string; paletteIndex: number; headline: string; subline: string; cta: string; badge: string; active: boolean; sortOrder: number };
-
-export function TemplateDialog({ template }: { template?: TemplateData }) {
-  const [open, setOpen] = React.useState(false);
-  const [palette, setPalette] = React.useState(template?.paletteIndex ?? 0);
-  const t = template;
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{t ? <Button variant="ghost" size="sm"><Pencil />Modifier</Button> : <Button size="sm"><Plus />Nouveau modèle</Button>}</DialogTrigger>
-      <DialogContent title={t ? "Modifier le modèle" : "Nouveau modèle"} description="Point de départ proposé aux clients dans le studio créatif.">
-        <ActionForm action={saveTemplateAction} onSuccess={() => setOpen(false)} className="space-y-4">
-          {t && <input type="hidden" name="id" value={t.id} />}
-          <input type="hidden" name="palette" value={palette} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nom" htmlFor="tp-name"><Input id="tp-name" name="name" required maxLength={60} defaultValue={t?.name} /><FieldError name="name" /></Field>
-            <Field label="Catégorie" htmlFor="tp-cat"><Input id="tp-cat" name="category" required maxLength={40} defaultValue={t?.category} placeholder="Promotion, Produit, Service…" /><FieldError name="category" /></Field>
-            <Field label="Mise en page" htmlFor="tp-layout"><Select id="tp-layout" name="layout" defaultValue={t?.layout ?? LAYOUTS[0]!.id}>{LAYOUTS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}</Select></Field>
-            <Field label="Ordre" htmlFor="tp-order"><Input id="tp-order" name="sortOrder" type="number" min={0} max={999} className="tnum" defaultValue={t?.sortOrder ?? 50} /></Field>
-          </div>
-          <fieldset>
-            <legend className="mb-2 text-[13px] font-medium text-ink-soft">Couleurs</legend>
-            <div className="flex flex-wrap gap-2">
-              {PALETTES.map((p, i) => (
-                <button key={i} type="button" aria-label={`Palette ${i + 1}`} aria-pressed={palette === i} onClick={() => setPalette(i)}
-                  className={`flex size-9 overflow-hidden rounded-full border-2 ${palette === i ? "border-forest ring-2 ring-forest/25" : "border-line"}`}>
-                  <span className="h-full w-1/2" style={{ background: p.background }} /><span className="h-full w-1/2" style={{ background: p.accent }} />
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Titre par défaut" htmlFor="tp-h" optional><Input id="tp-h" name="headline" maxLength={60} defaultValue={t?.headline} /></Field>
-            <Field label="Sous-titre" htmlFor="tp-s" optional><Input id="tp-s" name="subline" maxLength={120} defaultValue={t?.subline} /></Field>
-            <Field label="Bouton" htmlFor="tp-c" optional><Input id="tp-c" name="cta" maxLength={24} defaultValue={t?.cta} /></Field>
-            <Field label="Pastille" htmlFor="tp-b" optional><Input id="tp-b" name="badge" maxLength={20} defaultValue={t?.badge} placeholder="-20 %" /></Field>
-          </div>
-          <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" name="active" defaultChecked={t?.active ?? true} className="size-4 accent-forest" />Visible dans le studio</label>
           <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={() => setOpen(false)}>Fermer</Button><SubmitButton pendingLabel="Enregistrement…">Enregistrer</SubmitButton></div>
         </ActionForm>
       </DialogContent>

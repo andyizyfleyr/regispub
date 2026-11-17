@@ -6,17 +6,14 @@
 2. **Inscription** : nom, e-mail, téléphone, mot de passe. Un lien de parrainage est reconnu.
 3. **Choix du parcours** sur `/app/creer` : créer soi-même ou confier à un expert.
 
-### Je crée ma publicité (7 étapes)
+### Je crée ma publicité (4 étapes)
 
 | Étape | Contenu | Aide apportée |
 | --- | --- | --- |
-| 1. Plateforme | Facebook, Instagram, TikTok ou une combinaison | Une phrase par réseau sur son usage |
-| 2. Objectif | Ventes, commandes WhatsApp, abonnés, visibilité… | Tarif de la prestation affiché ; objectifs incompatibles grisés |
-| 3. Activité | Entreprise, produit, description, lien WhatsApp ou page, photos | Entreprises déjà enregistrées réutilisées |
-| 4. Stratégie | Angle, textes, bouton d'action | Propositions modifiables, origine indiquée (IA ou suggestions guidées) |
-| 5. Visuels | Import, studio créatif ou création par l'équipe | Aperçu de l'annonce |
-| 6. Ciblage | Zone, âge, genre, langue, centres d'intérêt | Valeurs par défaut adaptées à l'objectif |
-| 7. Budget | Budget, durée, date de début, niveau d'accompagnement, code promotionnel | Devis recalculé par le serveur à chaque changement |
+| 1. Objectif | Plateformes (Facebook et Instagram présélectionnés) et résultat attendu | Objectifs classés par famille, tarif de la prestation affiché, conseil et repère de budget |
+| 2. Votre annonce | Entreprise, offre, photo ou vidéo, texte de l'annonce | Aperçu en direct sur chaque plateforme ; bouton « Rédiger pour moi » (origine indiquée : IA ou modèles de l'équipe) |
+| 3. Audience | Zone, profil, centres d'intérêt | Audience proposée d'office à partir de l'activité ; réglages détaillés repliés |
+| 4. Budget | Budget, durée, date de début, niveau d'accompagnement, code promotionnel, récapitulatif | Montants et durées prédéfinis ; devis recalculé par le serveur à chaque changement |
 
 ### Je confie ma publicité à un expert
 
@@ -47,4 +44,4 @@ Un brief d'une page : objectif en clair, description, public visé, budget, dur�
 
 ## Autour de la campagne
 
-Studio créatif (modèles, texte, couleurs, image, export), assistant marketing (diagnostic, calendrier, idées, légendes, hashtags), historique des paiements et reçus, fidélité, parrainage, accompagnement mensuel, support par ticket.
+Assistant marketing (diagnostic, calendrier, idées, légendes, hashtags), historique des paiements et reçus, fidélité, parrainage, accompagnement mensuel, support par ticket.

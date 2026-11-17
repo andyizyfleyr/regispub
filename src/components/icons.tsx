@@ -12,9 +12,9 @@ type SvgProps = React.SVGProps<SVGSVGElement>;
 export function LogoMark({ className, ...props }: SvgProps) {
   return (
     <svg viewBox="0 0 32 32" className={cn("size-8", className)} aria-hidden {...props}>
-      <rect width="32" height="32" rx="9" fill="#0E2A20" />
-      <circle cx="10.5" cy="21.5" r="3" fill="#F5A524" />
-      <path d="M10.5 13.5a8 8 0 0 1 8 8" stroke="#F5A524" strokeWidth="2.6" strokeLinecap="round" fill="none" />
+      <rect width="32" height="32" rx="10" fill="#0B2A1F" />
+      <circle cx="10.5" cy="21.5" r="3" fill="#F8A81F" />
+      <path d="M10.5 13.5a8 8 0 0 1 8 8" stroke="#F8A81F" strokeWidth="2.6" strokeLinecap="round" fill="none" />
       <path d="M10.5 7.5a14 14 0 0 1 14 14" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" fill="none" />
     </svg>
   );
@@ -67,7 +67,7 @@ export function WhatsappIcon(props: SvgProps) {
 }
 
 const PLATFORM_ICON: Record<PlatformCode, (p: SvgProps) => React.ReactElement> = { FACEBOOK: FacebookIcon, INSTAGRAM: InstagramIcon, TIKTOK: TiktokIcon };
-const PLATFORM_BG: Record<PlatformCode, string> = { FACEBOOK: "bg-[#1877F2] text-white", INSTAGRAM: "bg-[#D62976] text-white", TIKTOK: "bg-[#111] text-white" };
+const PLATFORM_BG: Record<PlatformCode, string> = { FACEBOOK: "bg-[#1877F2] text-white", INSTAGRAM: "bg-[linear-gradient(45deg,#f9a825_0%,#ee2a7b_50%,#6228d7_100%)] text-white", TIKTOK: "bg-[#111] text-white" };
 
 export function PlatformIcon({ platform, className }: { platform: PlatformCode; className?: string }) {
   const Icon = PLATFORM_ICON[platform];

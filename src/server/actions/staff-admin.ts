@@ -13,7 +13,6 @@ import { effectiveMinFee } from "@/lib/pricing/quote";
 import { rateLimit } from "@/lib/rate-limit";
 import { loadSettings, saveSettings } from "@/lib/settings";
 import { sanitizeSettings, type PlatformSettings } from "@/lib/settings-schema";
-import { LAYOUTS, PALETTES } from "@/lib/studio/render";
 import { formatFcfa, parseIsoDate, randomCode, truncate } from "@/lib/utils";
 import { formAction, safeAction, UserError } from "@/server/action";
 
@@ -164,39 +163,6 @@ export async function changeRoleAction(userId: string, role: string) {
     await db.user.update({ where: { id: userId }, data: { role: next } });
     await db.session.deleteMany({ where: { userId } });
     await audit({ actorId: actor.id, action: "staff.role_changed", entity: "User", entityId: userId, meta: { from: target.role, to: next } });
-  });
-}
-
-// ─────────────────────────── Modèles de création ───────────────────────────
-
-export const saveTemplateAction = formAction(
-  z.object({
-    id: z.string().optional(), name: z.string().trim().min(2, "Indiquez un nom.").max(60), category: z.string().trim().min(2, "Indiquez une catégorie.").max(40), layout: z.string(), palette: z.string(),
-    headline: z.string().trim().max(60).optional(), subline: z.string().trim().max(120).optional(), cta: z.string().trim().max(24).optional(), badge: z.string().trim().max(20).optional(),
-    active: z.string().optional(), sortOrder: z.string().optional(),
-  }),
-  async (input) => {
-    const actor = await assertPermission("template.manage");
-    if (!LAYOUTS.some((l) => l.id === input.layout)) return { ok: false, error: "Mise en page inconnue.", fieldErrors: { layout: "Choisissez une mise en page" } };
-    const palette = PALETTES[Number(input.palette)];
-    if (!palette) return { ok: false, error: "Palette inconnue.", fieldErrors: { palette: "Choisissez une palette" } };
-    const data = {
-      name: input.name, category: input.category, layout: input.layout, palette: { background: palette.background, accent: palette.accent, text: palette.text },
-      defaults: { headline: input.headline ?? "", subline: input.subline ?? "", cta: input.cta ?? "", badge: input.badge ?? "" }, active: input.active === "on", sortOrder: Math.min(999, Math.max(0, Number(input.sortOrder) || 0)),
-    };
-    if (input.id) await db.creativeTemplate.update({ where: { id: input.id }, data });
-    else if ((await db.creativeTemplate.count()) >= 60) throw new UserError("Nombre maximal de modèles atteint.");
-    else await db.creativeTemplate.create({ data });
-    await audit({ actorId: actor.id, action: input.id ? "template.updated" : "template.created", entity: "CreativeTemplate", entityId: input.id ?? null, meta: { name: input.name } });
-    return { ok: true, message: input.id ? "Modèle mis à jour." : "Modèle créé." };
-  },
-);
-
-export async function deleteTemplateAction(id: string) {
-  return safeAction(async () => {
-    const actor = await assertPermission("template.manage");
-    await db.creativeTemplate.deleteMany({ where: { id } });
-    await audit({ actorId: actor.id, action: "template.deleted", entity: "CreativeTemplate", entityId: id });
   });
 }
 

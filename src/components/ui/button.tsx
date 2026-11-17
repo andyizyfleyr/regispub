@@ -4,19 +4,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 export const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-[background-color,border-color,color,transform] duration-150 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        primary: "bg-forest text-white hover:bg-forest-600",
-        accent: "bg-marigold text-forest hover:bg-marigold-600",
-        outline: "border border-line-strong bg-surface text-ink hover:border-ink/40 hover:bg-sand/60",
-        ghost: "text-ink-soft hover:bg-sand",
+        primary: "bg-forest text-white shadow-card hover:bg-forest-600",
+        accent: "bg-marigold text-forest shadow-glow hover:bg-marigold-600",
+        outline: "border border-line-strong bg-surface text-ink hover:border-ink/30 hover:bg-paper",
+        soft: "bg-green-soft text-green hover:bg-green-soft/70",
+        ghost: "text-ink-soft hover:bg-sand hover:text-ink",
         danger: "bg-clay text-white hover:bg-clay/90",
         "danger-outline": "border border-clay/40 bg-surface text-clay hover:bg-clay-soft",
         link: "h-auto! p-0! text-green underline-offset-4 hover:underline",
       },
-      size: { sm: "h-8 px-3 text-[13px]", md: "h-10 px-4 text-sm", lg: "h-12 px-6 text-[15px]", icon: "size-9" },
+      size: { sm: "h-9 px-3.5 text-[13px]", md: "h-11 px-[1.125rem] text-sm", lg: "h-12 px-6 text-[15px]", icon: "size-10" },
     },
     defaultVariants: { variant: "primary", size: "md" },
   },

@@ -42,6 +42,8 @@ export async function createCampaignAction(mode: "SELF_SERVICE" | "EXPERT", obje
     data: {
       reference: makeReference("CMP"), userId: user.id, mode: mode === "EXPERT" ? "EXPERT" : "SELF_SERVICE", name: mode === "EXPERT" ? "Campagne confiée à un expert" : "Nouvelle campagne",
       businessId: business?.id ?? null, destinationWhatsapp: business?.whatsapp ?? null, objective: obj?.code ?? null,
+      // Présélection : les plateformes de l'objectif, sinon Facebook et Instagram (une seule famille, sans supplément).
+      platforms: mode === "EXPERT" ? [] : obj && obj.platforms.length < 3 ? obj.platforms : ["FACEBOOK", "INSTAGRAM"],
       serviceCode: mode === "EXPERT" ? "full_management" : null, startDate: addDays(todayUtc(), 2),
     },
   });

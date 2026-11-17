@@ -34,8 +34,6 @@ export const env = {
   get openaiBaseUrl() { return str("OPENAI_BASE_URL", "https://api.openai.com/v1").replace(/\/$/, ""); },
   get anthropicKey() { return str("ANTHROPIC_API_KEY"); },
   get geminiKey() { return str("GEMINI_API_KEY"); },
-  get aiImageProvider() { return str("AI_IMAGE_PROVIDER").toLowerCase(); },
-  get aiImageModel() { return str("AI_IMAGE_MODEL"); },
 
   get storageDriver() { return str("STORAGE_DRIVER", "local").toLowerCase(); },
   get storageLocalDir() { return str("STORAGE_LOCAL_DIR", ".data/uploads"); },

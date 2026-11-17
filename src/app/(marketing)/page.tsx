@@ -141,9 +141,9 @@ export default async function HomePage() {
           <div className="flex flex-col rounded-xl border border-line bg-surface p-7">
             <Palette className="size-6 text-green" />
             <h3 className="mt-4 text-2xl font-semibold">Je crée ma publicité</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">Un assistant vous guide : plateforme, objectif, textes, visuels dans le studio créatif, ciblage et budget. Notre équipe vérifie puis lance la campagne.</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted">Un assistant vous guide : plateforme, objectif, annonce, audience et budget. Notre équipe vérifie puis lance la campagne.</p>
             <ul className="mt-5 space-y-2 text-sm text-ink-soft">
-              {["Assistant en 7 étapes, utilisable sur téléphone", "Studio créatif et bibliothèque de visuels", `Prestation à partir de ${formatFcfa(minFee)}`].map((t) => <li key={t} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-green" />{t}</li>)}
+              {["Quatre étapes, utilisable sur téléphone", "Texte et audience proposés pour vous", `Prestation à partir de ${formatFcfa(minFee)}`].map((t) => <li key={t} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-green" />{t}</li>)}
             </ul>
             <Button asChild className="mt-7 self-start"><Link href="/app/creer">Créer ma publicité <ArrowRight /></Link></Button>
           </div>

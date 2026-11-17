@@ -11,14 +11,14 @@ export const metadata: Metadata = {
   applicationName: "RegisPub",
 };
 
-export const viewport: Viewport = { themeColor: "#0E2A20", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#ffffff", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
       <body>
         {children}
-        <Toaster position="top-center" toastOptions={{ style: { fontFamily: "var(--font-sans)", borderRadius: 10, border: "1px solid var(--color-line)" } }} />
+        <Toaster position="top-center" toastOptions={{ style: { fontFamily: "var(--font-sans)", borderRadius: 14, boxShadow: "var(--shadow-pop)", border: "1px solid var(--color-line)" } }} />
       </body>
     </html>
   );

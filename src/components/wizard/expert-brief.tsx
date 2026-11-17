@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, LoaderCircle } from "lucide-react";
+import { ArrowRight, ClipboardList, FolderUp, LoaderCircle, Sparkles, Store, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
@@ -12,7 +12,7 @@ import { getObjective, OBJECTIVE_CATEGORIES, OBJECTIVES, type ObjectiveCategory 
 import { PLATFORM_CHOICES, type PlatformCode } from "@/lib/catalog/platforms";
 import { SECTORS } from "@/lib/catalog/targeting";
 import { placeOrderAction, saveCampaignAction } from "@/server/actions/campaigns";
-import { BudgetFields, LevelPicker, QuotePanel, useQuote } from "./parts";
+import { BudgetFields, LevelPicker, QuotePanel, Section, useQuote } from "./parts";
 import { MediaGrid } from "./wizard";
 
 export function ExpertBrief({ data }: { data: EditorData }) {
@@ -53,8 +53,8 @@ export function ExpertBrief({ data }: { data: EditorData }) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="space-y-6">
-        <section className="space-y-4 rounded-lg border border-line bg-surface p-5">
-          <h2 className="eyebrow">Votre besoin</h2>
+        <Section icon={<ClipboardList />} title="Votre besoin" description="Dites-nous ce que vous voulez obtenir, avec vos mots.">
+          <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Plateformes" htmlFor="eb-platforms">
               <Select id="eb-platforms" value={choice} onChange={(e) => { const p = PLATFORM_CHOICES.find((x) => x.id === e.target.value)!.platforms; const o = getObjective(s.objective); set({ platforms: p, objective: o && o.platforms.some((x) => p.includes(x)) ? s.objective : null, budgetSplit: Object.fromEntries(p.map((x, i) => [x, Math.floor(100 / p.length) + (i === 0 ? 100 - Math.floor(100 / p.length) * p.length : 0)])) }); }}>
@@ -78,10 +78,11 @@ export function ExpertBrief({ data }: { data: EditorData }) {
             <Field label="Produit ou service concerné" htmlFor="eb-product" optional><Input id="eb-product" maxLength={120} value={s.productName} onChange={(e) => set({ productName: e.target.value })} /></Field>
             <Field label="Nom de la campagne" htmlFor="eb-name"><Input id="eb-name" maxLength={80} value={s.name} onChange={(e) => set({ name: e.target.value })} /></Field>
           </div>
-        </section>
+          </div>
+        </Section>
 
-        <section className="space-y-4 rounded-lg border border-line bg-surface p-5">
-          <h2 className="eyebrow">Votre entreprise</h2>
+        <Section icon={<Store />} title="Votre entreprise" description="Pour que votre gestionnaire sache à qui il s'adresse.">
+          <div className="space-y-4">
           {data.businesses.length > 0 && (
             <Field label="Entreprise" htmlFor="eb-business">
               <Select id="eb-business" value={s.business.id ?? ""} onChange={(e) => { const b = data.businesses.find((x) => x.id === e.target.value); set({ business: b ? { ...b } : { id: null, name: "", sector: "", city: "" } }); }}>
@@ -98,27 +99,24 @@ export function ExpertBrief({ data }: { data: EditorData }) {
             <Field label="WhatsApp" htmlFor="eb-wa" optional><Input id="eb-wa" inputMode="tel" maxLength={40} value={s.destinationWhatsapp} onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" /></Field>
             <Field label="Lien de votre page" htmlFor="eb-url" optional><Input id="eb-url" type="url" maxLength={300} value={s.destinationUrl} onChange={(e) => set({ destinationUrl: e.target.value })} placeholder="https://facebook.com/votrepage" /></Field>
           </div>
-        </section>
+          </div>
+        </Section>
 
-        <section className="rounded-lg border border-line bg-surface p-5">
-          <h2 className="eyebrow">Vos fichiers</h2>
-          <p className="mt-1 text-sm text-muted">Photos, vidéos, logo, catalogue PDF : tout ce qui peut aider notre équipe.</p>
+        <Section icon={<FolderUp />} title="Vos fichiers" description="Photos, vidéos, logo, catalogue PDF : tout ce qui peut aider notre équipe. Facultatif.">
           <MediaGrid campaignId={c.id} role="BRIEF_FILE" items={links.filter((l) => l.role === "BRIEF_FILE")} setLinks={setLinks} library={data.library} accept="any" />
-        </section>
+        </Section>
 
-        <section className="rounded-lg border border-line bg-surface p-5">
-          <h2 className="eyebrow mb-4">Budget publicitaire et durée</h2>
+        <Section icon={<Wallet />} title="Budget publicitaire et durée" description="Le montant dépensé sur les plateformes pour diffuser votre publicité.">
           <BudgetFields data={data} value={{ adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "", budgetSplit: s.budgetSplit, platforms: s.platforms }} onChange={set}
             recommended={objective ? { daily: objective.config.recommendedDailyBudget, days: objective.config.recommendedDays } : null} />
-        </section>
+        </Section>
 
-        <section>
-          <h2 className="eyebrow mb-3">Formule</h2>
+        <Section icon={<Sparkles />} title="Formule" description="Ce que notre équipe prend en charge.">
           <LevelPicker expert levels={data.levels} value={s.serviceCode} onChange={(serviceCode) => set({ serviceCode })} baseLabel="" baseFee={objective ? data.baseFees[objective.serviceCode] ?? data.limits.minServiceFee : data.limits.minServiceFee} />
-        </section>
+        </Section>
       </div>
 
-      <aside className="space-y-3 lg:sticky lg:top-6 lg:self-start">
+      <aside className="space-y-3 lg:sticky lg:top-24 lg:self-start">
         <QuotePanel state={quote} promo={promo} onPromo={setPromo} />
         {error && <Notice tone="danger">{error}</Notice>}
         <Button type="button" size="lg" variant="accent" className="w-full" disabled={busy !== null} onClick={() => save(true)}>{busy === "order" && <LoaderCircle className="animate-spin" />}Passer au paiement<ArrowRight /></Button>

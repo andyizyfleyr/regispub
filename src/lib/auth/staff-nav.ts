@@ -12,7 +12,6 @@ const NAV_PERMISSIONS: Record<string, Permission[]> = {
   staff: ["staff.manage"],
   services: ["pricing.manage"],
   promos: ["promo.manage"],
-  templates: ["template.manage"],
   notifications: ["backoffice.access"],
   integrations: ["integration.view"],
   settings: ["settings.manage"],

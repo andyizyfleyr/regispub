@@ -19,15 +19,6 @@ const SERVICES = [
   { code: "monthly_support", name: "Accompagnement marketing mensuel", kind: "SUBSCRIPTION", fee: 50_000, periodDays: 30, description: "Un partenaire marketing toute l'année : campagnes, contenus et conseils.", features: ["Jusqu'à 2 campagnes gérées par mois (hors budget publicitaire)", "Calendrier éditorial mensuel", "8 visuels par mois", "Point mensuel avec votre gestionnaire", "Gestion de plusieurs entreprises"] },
 ] as const;
 
-const TEMPLATES = [
-  { name: "Produit plein cadre", category: "Produit", layout: "full", palette: { background: "#0E2A20", accent: "#F5A524", text: "#FFFFFF" }, defaults: { headline: "Votre produit ici", subline: "Disponible dès maintenant", cta: "Commander", badge: "" } },
-  { name: "Étiquette prix", category: "Produit", layout: "price", palette: { background: "#F6F4EE", accent: "#C8452B", text: "#15201B" }, defaults: { headline: "Nouveauté", subline: "Livraison à Cotonou et environs", cta: "Écrire sur WhatsApp", badge: "15 000 F" } },
-  { name: "Bandeau promotion", category: "Promotion", layout: "band", palette: { background: "#C8452B", accent: "#FFFFFF", text: "#FFFFFF" }, defaults: { headline: "Offre de la semaine", subline: "Jusqu'à dimanche, dans la limite des stocks", cta: "J'en profite", badge: "-20 %" } },
-  { name: "Moitié image, moitié texte", category: "Service", layout: "split", palette: { background: "#FFFFFF", accent: "#17604A", text: "#15201B" }, defaults: { headline: "Un service de confiance", subline: "Devis gratuit sous 24 h", cta: "Demander un devis", badge: "" } },
-  { name: "Texte seul", category: "Annonce", layout: "text", palette: { background: "#17604A", accent: "#F5A524", text: "#FFFFFF" }, defaults: { headline: "Ouverture samedi", subline: "Rendez-vous dès 9 h au carrefour Cadjèhoun", cta: "En savoir plus", badge: "" } },
-  { name: "Cadre élégant", category: "Mode & beauté", layout: "frame", palette: { background: "#F3E9DC", accent: "#8A5A2B", text: "#2B2118" }, defaults: { headline: "Nouvelle collection", subline: "Pièces uniques, faites main", cta: "Découvrir", badge: "" } },
-];
-
 export async function seed(opts: { onlyIfEmpty?: boolean } = {}) {
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
   try {
@@ -39,9 +30,6 @@ export async function seed(opts: { onlyIfEmpty?: boolean } = {}) {
         where: { code: s.code }, update: {},
         create: { code: s.code, name: s.name, kind: s.kind, fee: s.fee, description: s.description, features: [...s.features], periodDays: "periodDays" in s ? s.periodDays : null, sortOrder: i },
       });
-    }
-    if ((await db.creativeTemplate.count()) === 0) {
-      await db.creativeTemplate.createMany({ data: TEMPLATES.map((t, i) => ({ ...t, sortOrder: i })) });
     }
 
     const adminEmail = (process.env.SEED_ADMIN_EMAIL || "admin@regispub.local").toLowerCase();

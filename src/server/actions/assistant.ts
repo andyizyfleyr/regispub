@@ -2,13 +2,11 @@
 
 import { z } from "zod";
 import type { AiTaskKind, BusinessContext, CalendarPlan } from "@/lib/ai/schemas";
-import { generateAdImage, runAiTask } from "@/lib/ai/service";
-import { deleteAsset, storeAsset } from "@/lib/assets/service";
+import { runAiTask } from "@/lib/ai/service";
 import { assertUser } from "@/lib/auth/session";
 import { PLATFORM_CODES, type PlatformCode } from "@/lib/catalog/platforms";
 import { TARGET_COUNTRIES } from "@/lib/catalog/targeting";
 import { db } from "@/lib/db";
-import { getStorage } from "@/lib/storage";
 import { addDays, parseIsoDate, todayUtc, truncate } from "@/lib/utils";
 import { safeAction, UserError } from "@/server/action";
 
@@ -84,47 +82,5 @@ export async function deleteCalendarEntryAction(id: string) {
   return safeAction(async () => {
     const user = await assertUser();
     await db.calendarEntry.deleteMany({ where: { id, userId: user.id } });
-  });
-}
-
-// ─────────────────────────── Bibliothèque de créations ───────────────────────────
-
-export async function generateImageAction(prompt: string, size: "square" | "portrait" | "landscape") {
-  return safeAction(async () => {
-    const user = await assertUser();
-    const clean = prompt.trim();
-    if (clean.length < 10 || clean.length > 800) throw new UserError("Décrivez l'image souhaitée (10 à 800 caractères).");
-    if (!["square", "portrait", "landscape"].includes(size)) throw new UserError("Format inconnu.");
-    const image = await generateAdImage(clean, size, user.id);
-    const asset = await storeAsset({ bytes: image.bytes, mime: image.mime, name: `Image IA — ${truncate(clean, 60)}`, owner: user, source: "AI", format: size });
-    return { assetId: asset.id };
-  });
-}
-
-export async function deleteAssetAction(id: string) {
-  return safeAction(async () => {
-    const user = await assertUser();
-    await deleteAsset(user, id);
-  });
-}
-
-export async function duplicateAssetAction(id: string) {
-  return safeAction(async () => {
-    const user = await assertUser();
-    const asset = await db.asset.findFirst({ where: { id, ownerId: user.id } });
-    if (!asset) throw new UserError("Fichier introuvable.");
-    const bytes = await getStorage().get(asset.storageKey);
-    if (!bytes) throw new UserError("Le fichier d'origine est indisponible.");
-    const copy = await storeAsset({ bytes, mime: asset.mime, name: truncate(`${asset.name} (copie)`, 120), owner: user, source: asset.source === "STAFF" ? "UPLOAD" : asset.source, format: asset.format, design: asset.design ?? undefined, businessId: asset.businessId });
-    return { assetId: copy.id };
-  });
-}
-
-export async function renameAssetAction(id: string, name: string) {
-  return safeAction(async () => {
-    const user = await assertUser();
-    const clean = name.trim().slice(0, 120);
-    if (clean.length < 1) throw new UserError("Indiquez un nom.");
-    await db.asset.updateMany({ where: { id, ownerId: user.id }, data: { name: clean } });
   });
 }

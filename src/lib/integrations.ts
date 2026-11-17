@@ -35,9 +35,6 @@ export function integrationsStatus(): Integration[] {
     ai.text
       ? { area: "IA", name: "Génération de textes", state: "operational", detail: `Fournisseur : ${ai.text.provider} (${ai.text.model}).` }
       : { area: "IA", name: "Génération de textes", state: "needs_config", detail: "Sans fournisseur, l'assistant utilise des suggestions guidées (modèles), signalées comme telles.", action: "Définir AI_TEXT_PROVIDER (openai, anthropic ou gemini) et la clé correspondante." },
-    ai.image
-      ? { area: "IA", name: "Génération d'images", state: "operational", detail: `Fournisseur : ${ai.image.provider} (${ai.image.model}).` }
-      : { area: "IA", name: "Génération d'images", state: "needs_config", detail: "Désactivée. Le studio créatif reste utilisable avec les images importées.", action: "Définir AI_IMAGE_PROVIDER=openai et OPENAI_API_KEY." },
     { area: "IA", name: "Génération de vidéos", state: "planned", detail: "Non proposée : l'assistant fournit des scripts et le client importe ses vidéos." },
     ADS_ADAPTERS.META.isConfigured()
       ? { area: "Publicité", name: "Meta — lecture des statistiques", state: "operational", detail: "Jeton configuré. Synchronisation depuis la fiche campagne ou la tâche planifiée." }

@@ -7,7 +7,6 @@ export class AiError extends Error {
 
 export type TextRequest = { system: string; prompt: string; maxTokens?: number };
 export interface TextProvider { readonly id: string; readonly model: string; generateJson(req: TextRequest): Promise<string> }
-export interface ImageProvider { readonly id: string; readonly model: string; generate(prompt: string, size: "square" | "portrait" | "landscape"): Promise<{ bytes: Uint8Array; mime: string }> }
 
 async function postJson(url: string, headers: Record<string, string>, body: unknown, timeoutMs = 60_000) {
   let res: Response;
@@ -66,18 +65,6 @@ class Gemini implements TextProvider {
   }
 }
 
-class OpenAiImages implements ImageProvider {
-  readonly id = "openai";
-  constructor(readonly model: string, private readonly key: string, private readonly baseUrl: string) {}
-  async generate(prompt: string, size: "square" | "portrait" | "landscape") {
-    const dims = { square: "1024x1024", portrait: "1024x1536", landscape: "1536x1024" }[size];
-    const json = await postJson(`${this.baseUrl}/images/generations`, { Authorization: `Bearer ${this.key}` }, { model: this.model, prompt, size: dims, n: 1 }, 120_000);
-    const b64 = json.data?.[0]?.b64_json;
-    if (typeof b64 !== "string") throw new AiError("Aucune image renvoyée par le fournisseur");
-    return { bytes: new Uint8Array(Buffer.from(b64, "base64")), mime: "image/png" };
-  }
-}
-
 const DEFAULT_MODELS: Record<string, string> = { openai: "gpt-4o-mini", anthropic: "claude-haiku-4-5", gemini: "gemini-2.5-flash" };
 
 export function getTextProvider(): TextProvider | null {
@@ -86,11 +73,6 @@ export function getTextProvider(): TextProvider | null {
   if (id === "openai" && env.openaiKey) return new OpenAiCompatible(model, env.openaiKey, env.openaiBaseUrl);
   if (id === "anthropic" && env.anthropicKey) return new Anthropic(model, env.anthropicKey);
   if (id === "gemini" && env.geminiKey) return new Gemini(model, env.geminiKey);
-  return null;
-}
-
-export function getImageProvider(): ImageProvider | null {
-  if (env.aiImageProvider === "openai" && env.openaiKey) return new OpenAiImages(env.aiImageModel || "gpt-image-1", env.openaiKey, env.openaiBaseUrl);
   return null;
 }
 

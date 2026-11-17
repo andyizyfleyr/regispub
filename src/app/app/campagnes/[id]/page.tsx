@@ -1,27 +1,34 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowRight, Check, FileText, Images } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, FileText, Images } from "lucide-react";
 import { AdPreview } from "@/components/app/ad-preview";
 import { CampaignActions, CreativeReview } from "@/components/app/campaign-client-parts";
 import { CampaignSummary } from "@/components/app/campaign-summary";
 import { MetricsView } from "@/components/app/metrics-view";
 import { Thread } from "@/components/app/thread";
+import { PlatformStack } from "@/components/icons";
 import { CampaignStatusBadge, StateBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { EmptyState, Notice, PageHeader, TabsNav } from "@/components/ui/misc";
+import { EmptyState, Notice, TabsNav } from "@/components/ui/misc";
 import { loadCampaignReport } from "@/lib/ads/report";
 import { ROLE_LABELS, type RoleName } from "@/lib/auth/permissions";
 import { requireUser } from "@/lib/auth/session";
 import { readAdCopy } from "@/lib/campaigns/editor-data";
-import { clientCanCancel, PROGRESS_STEPS, progressIndex, STATUS_META, type CampaignStatusName } from "@/lib/campaigns/status";
+import { clientCanCancel, STATUS_META, type CampaignStatusName } from "@/lib/campaigns/status";
 import { getObjective } from "@/lib/catalog/objectives";
 import type { PlatformCode } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
-import { cn, formatDateTime, formatFcfa } from "@/lib/utils";
+import { cn, formatDateTime, formatFcfa, formatPureDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Campagne" };
+
+/** Avancement présenté au client en quatre phases plutôt qu'en statuts internes. */
+const PHASES = ["Paiement", "Préparation", "Validation", "Diffusion"];
+const PHASE_OF: Partial<Record<CampaignStatusName, number>> = {
+  PENDING_PAYMENT: 0, PAID: 1, AWAITING_INFO: 1, IN_PREPARATION: 1, CLIENT_REVIEW: 2, READY_TO_LAUNCH: 2, RUNNING: 3, PAUSED: 3, COMPLETED: 4,
+};
 
 export default async function CampaignPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ onglet?: string }> }) {
   const user = await requireUser();
@@ -50,14 +57,47 @@ export default async function CampaignPage({ params, searchParams }: { params: P
   const lastRead = c.reads[0]?.lastReadAt ?? new Date(0);
   const unread = await db.message.count({ where: { campaignId: c.id, internal: false, senderId: { not: user.id }, createdAt: { gt: lastRead } } });
   const base = `/app/campagnes/${c.id}`;
-  const step = progressIndex(status);
+  const phase = PHASE_OF[status] ?? 0;
   const copy = readAdCopy(c.adCopy);
   const firstImage = creatives.find((a) => a.asset.kind === "IMAGE") ?? c.assets.find((a) => a.asset.kind === "IMAGE");
 
   return (
     <>
-      <PageHeader title={c.name} back={{ href: "/app/campagnes", label: "Mes campagnes" }} eyebrow={<span className="font-mono normal-case tracking-normal">{c.reference}</span>}
-        description={STATUS_META[status].clientHint} actions={<CampaignStatusBadge status={status} />} />
+      <Link href="/app/campagnes" className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pl-2 pr-3 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
+        <ArrowLeft className="size-3.5" />Mes campagnes
+      </Link>
+
+      <header className="mb-5 animate-rise rounded-lg border border-line bg-surface p-5 shadow-card sm:p-6">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <PlatformStack platforms={c.platforms as PlatformCode[]} size="md" />
+          <CampaignStatusBadge status={status} />
+          <span className="ml-auto font-mono text-xs text-muted">{c.reference}</span>
+        </div>
+        <h1 className="mt-4 text-[24px] font-semibold leading-tight sm:text-[30px]">{c.name}</h1>
+        <p className="mt-1.5 max-w-2xl text-muted">{STATUS_META[status].clientHint}</p>
+
+        <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-line pt-5 text-sm lg:grid-cols-4">
+          <div><dt className="text-[13px] text-muted">Objectif</dt><dd className="mt-0.5 font-medium text-ink">{objective?.label ?? "—"}</dd></div>
+          <div><dt className="text-[13px] text-muted">Budget publicitaire</dt><dd className="tnum mt-0.5 font-medium text-ink">{formatFcfa(c.adBudget)}</dd></div>
+          <div><dt className="text-[13px] text-muted">Période</dt><dd className="mt-0.5 font-medium text-ink">{c.startDate ? `${formatPureDate(c.startDate)}${c.endDate ? ` → ${formatPureDate(c.endDate)}` : ""}` : "À définir"}</dd></div>
+          <div><dt className="text-[13px] text-muted">Votre gestionnaire</dt><dd className="mt-0.5 font-medium text-ink">{c.manager?.name ?? "En cours d'attribution"}</dd></div>
+        </dl>
+
+        {status !== "CANCELLED" && (
+          <ol className="mt-5 grid grid-cols-4 gap-2" aria-label="Avancement de la campagne">
+            {PHASES.map((label, i) => {
+              const done = i < phase || status === "COMPLETED";
+              const current = i === phase && status !== "COMPLETED";
+              return (
+                <li key={label} aria-current={current ? "step" : undefined}>
+                  <div className={cn("h-1.5 rounded-full", done ? "bg-green" : current ? "bg-marigold" : "bg-sand")} />
+                  <p className={cn("mt-2 flex items-center gap-1 text-xs sm:text-[13px]", done || current ? "font-medium text-ink" : "text-muted")}>{done && <Check className="size-3.5 shrink-0 text-green" />}{label}</p>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </header>
 
       {status === "PENDING_PAYMENT" && order && (
         <Notice tone="warn" title="Paiement en attente" className="mb-5">
@@ -67,21 +107,6 @@ export default async function CampaignPage({ params, searchParams }: { params: P
       )}
       {status === "AWAITING_INFO" && <Notice tone="warn" title="Nous avons besoin d'informations" className="mb-5">Votre gestionnaire attend un complément pour avancer. <Link href={`${base}?onglet=messages`} className="font-medium underline">Voir les messages</Link></Notice>}
       {pendingReview > 0 && tab !== "creations" && <Notice tone="info" title={`${pendingReview} création${pendingReview > 1 ? "s" : ""} à valider`} className="mb-5">Votre validation est nécessaire avant le lancement. <Link href={`${base}?onglet=creations`} className="font-medium underline">Voir les créations</Link></Notice>}
-
-      {status !== "CANCELLED" && (
-        <ol className="scrollbar-none mb-6 flex gap-1 overflow-x-auto pb-1" aria-label="Avancement de la campagne">
-          {PROGRESS_STEPS.map((s, i) => {
-            const done = i < step || status === "COMPLETED";
-            const current = i === step && status !== "COMPLETED";
-            return (
-              <li key={s} className="min-w-28 flex-1" aria-current={current ? "step" : undefined}>
-                <div className={cn("h-1.5 rounded-full", done ? "bg-green" : current ? "bg-marigold" : "bg-line")} />
-                <p className={cn("mt-2 flex items-center gap-1 text-xs", done || current ? "font-medium text-ink" : "text-muted")}>{done && <Check className="size-3 text-green" />}{STATUS_META[s].label}</p>
-              </li>
-            );
-          })}
-        </ol>
-      )}
 
       <TabsNav current={tab} className="mb-6" tabs={[
         { id: "suivi", label: "Résultats", href: base },

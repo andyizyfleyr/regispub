@@ -13,10 +13,15 @@ const TONES: Record<Tone, string> = {
   accent: "bg-forest text-white",
 };
 
-export function Badge({ tone = "neutral", dot, className, children }: { tone?: Tone; dot?: boolean; className?: string; children: React.ReactNode }) {
+export function Badge({ tone = "neutral", dot, live, className, children }: { tone?: Tone; dot?: boolean; live?: boolean; className?: string; children: React.ReactNode }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium", TONES[tone], className)}>
-      {dot && <span className="size-1.5 rounded-full bg-current" />}
+    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium leading-none", TONES[tone], className)}>
+      {(dot || live) && (
+        <span className="relative flex size-1.5">
+          {live && <span className="absolute inset-0 animate-ping-soft rounded-full bg-current" />}
+          <span className="relative size-1.5 rounded-full bg-current" />
+        </span>
+      )}
       {children}
     </span>
   );
@@ -24,7 +29,7 @@ export function Badge({ tone = "neutral", dot, className, children }: { tone?: T
 
 export function CampaignStatusBadge({ status }: { status: string }) {
   const meta = STATUS_META[status as CampaignStatusName];
-  return <Badge tone={meta?.tone ?? "neutral"} dot>{meta?.label ?? status}</Badge>;
+  return <Badge tone={meta?.tone ?? "neutral"} dot live={status === "RUNNING"}>{meta?.label ?? status}</Badge>;
 }
 
 const GENERIC: Record<string, { label: string; tone: Tone }> = {

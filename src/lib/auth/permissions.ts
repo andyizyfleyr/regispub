@@ -23,7 +23,6 @@ export const PERMISSIONS = {
   "user.manage": "Suspendre ou réactiver des comptes",
   "staff.manage": "Gérer les collaborateurs et leurs rôles",
   "staff.manage_admins": "Nommer des administrateurs",
-  "template.manage": "Gérer les modèles de création",
   "ticket.manage": "Traiter les réclamations",
   "notification.send": "Envoyer des notifications",
   "report.view": "Consulter les rapports d'activité",
@@ -42,7 +41,7 @@ const ROLE_PERMISSIONS: Record<RoleName, Permission[]> = {
     "backoffice.access", "campaign.view_all", "campaign.assign", "campaign.update_status", "campaign.manage_creatives",
     "campaign.message", "revision.manage", "metrics.import", "metrics.validate", "order.view", "payment.view", "report.view",
   ],
-  DESIGNER: ["backoffice.access", "campaign.view_assigned", "campaign.manage_creatives", "campaign.message", "revision.manage", "template.manage"],
+  DESIGNER: ["backoffice.access", "campaign.view_assigned", "campaign.manage_creatives", "campaign.message", "revision.manage"],
   SUPPORT: [
     "backoffice.access", "campaign.view_all", "campaign.message", "order.view", "payment.view", "payment.verify",
     "user.view", "ticket.manage", "notification.send",

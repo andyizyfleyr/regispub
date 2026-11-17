@@ -20,7 +20,7 @@ export function campaignHref(c: { id: string; status: string; mode: string }, ba
 export function CampaignRow({ c, base = "/app", extra }: { c: CampaignRowData; base?: string; extra?: React.ReactNode }) {
   const objective = getObjective(c.objective);
   return (
-    <Link href={campaignHref(c, base)} className="group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-paper sm:px-5">
+    <Link href={campaignHref(c, base)} className="group flex items-center gap-4 px-4 py-4 transition-colors hover:bg-paper sm:px-5">
       <PlatformStack platforms={c.platforms as PlatformCode[]} />
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-ink">{c.name}</p>
