@@ -41,7 +41,6 @@ export default async function StaffNotifications({ searchParams }: { searchParam
                 </div>
                 <Field label="Titre" htmlFor="nt-title"><Input id="nt-title" name="title" required minLength={4} maxLength={90} /><FieldError name="title" /></Field>
                 <Field label="Message" htmlFor="nt-body"><Textarea id="nt-body" name="body" rows={4} required minLength={10} maxLength={600} /><FieldError name="body" /></Field>
-                <Field label="Lien dans l'espace client" htmlFor="nt-link" optional hint="Exemple : /app/creer"><Input id="nt-link" name="link" maxLength={200} placeholder="/app/…" /><FieldError name="link" /></Field>
                 <fieldset className="space-y-2">
                   <legend className="mb-1 text-[13px] font-medium text-ink-soft">Canaux supplémentaires</legend>
                   <ToggleRow label="E-mail" hint={!channels.email ? "Non configuré" : undefined} htmlFor="n-mail"><Switch id="n-mail" name="viaEmail" disabled={!channels.email} /></ToggleRow>

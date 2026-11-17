@@ -65,7 +65,6 @@ export default async function TeamPage() {
             <ActionForm action={createStaffAction} resetOnSuccess className="space-y-4">
               <Field label="Nom complet" htmlFor="st-name"><Input id="st-name" name="name" required maxLength={80} /><FieldError name="name" /></Field>
               <Field label="E-mail" htmlFor="st-email"><Input id="st-email" name="email" type="email" required autoComplete="off" /><FieldError name="email" /></Field>
-              <Field label="Téléphone" htmlFor="st-phone" optional><Input id="st-phone" name="phone" type="tel" inputMode="tel" /><FieldError name="phone" /></Field>
               <Field label="Rôle" htmlFor="st-role"><Select id="st-role" name="role" defaultValue="AD_MANAGER">{roles.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</Select><FieldError name="role" /></Field>
               <Field label="Mot de passe provisoire" htmlFor="st-pw" hint="10 caractères minimum, lettres et chiffres. À transmettre par un canal sûr."><Input id="st-pw" name="password" type="text" required minLength={10} autoComplete="off" className="font-mono text-[13px]" /><FieldError name="password" /></Field>
               <SubmitButton pendingLabel="Création…">Créer le compte</SubmitButton>

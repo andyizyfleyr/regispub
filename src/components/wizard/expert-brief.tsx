@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import type { EditorData, LinkedAsset } from "@/lib/campaigns/editor-data";
-import { getObjective, OBJECTIVE_CATEGORIES, OBJECTIVES, type ObjectiveCategory } from "@/lib/catalog/objectives";
+import { getObjective, OBJECTIVE_CATEGORIES, OBJECTIVES, objectiveShort, type ObjectiveCategory } from "@/lib/catalog/objectives";
 import { PLATFORM_CHOICES, type PlatformCode } from "@/lib/catalog/platforms";
 import { SECTORS } from "@/lib/catalog/targeting";
 import { placeOrderAction, saveCampaignAction } from "@/server/actions/campaigns";
@@ -34,12 +34,20 @@ export function ExpertBrief({ data }: { data: EditorData }) {
   const choice = PLATFORM_CHOICES.find((p) => p.platforms.length === s.platforms.length && p.platforms.every((x) => s.platforms.includes(x)))?.id ?? "meta";
   const available = OBJECTIVES.filter((o) => o.platforms.some((p) => s.platforms.includes(p)));
 
+  // Le nom n'est plus demandé : objectif — entreprise.
+  function autoName() {
+    const auto = [objective ? objectiveShort(objective) : "", s.business.name.trim()].filter(Boolean).join(" — ");
+    const isDefault = !s.name.trim() || /^(Nouvelle campagne|Ma campagne|Campagne confiée à un expert)$/.test(s.name.trim()) || (s.business.name.trim().length > 0 && s.name.endsWith(` — ${s.business.name.trim()}`));
+    const name = (isDefault ? auto || s.name : s.name).slice(0, 80);
+    return name.trim().length >= 2 ? name : "Campagne confiée à un expert";
+  }
+
   async function save(thenOrder: boolean) {
     setError(null);
     if (!s.objective) { setError("Choisissez un objectif."); return; }
     setBusy(thenOrder ? "order" : "save");
     const res = await saveCampaignAction(c.id, {
-      platforms: s.platforms, objective: s.objective, business: s.business, name: s.name, brief: s.brief, productName: s.productName, productPrice: s.productPrice,
+      platforms: s.platforms, objective: s.objective, business: s.business, name: autoName(), brief: s.brief, productName: s.productName, productPrice: s.productPrice,
       destinationWhatsapp: s.destinationWhatsapp, destinationUrl: s.destinationUrl, adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "",
       budgetSplit: s.budgetSplit, serviceCode: s.serviceCode, wizardStep: 7,
     });
@@ -72,10 +80,6 @@ export function ExpertBrief({ data }: { data: EditorData }) {
           <Field label="Décrivez votre besoin" htmlFor="eb-brief" hint={<span className="tnum block text-right">{s.brief.trim().length} / 3 000</span>}>
             <Textarea id="eb-brief" rows={7} maxLength={3000} value={s.brief} onChange={(e) => set({ brief: e.target.value })} placeholder="Je vends des perruques naturelles à Cotonou. Je veux recevoir plus de commandes sur WhatsApp pour la collection de fin d'année. Mes clientes ont entre 20 et 40 ans…" />
           </Field>
-          <div className="space-y-4">
-            <Field label="Produit ou service" htmlFor="eb-product" optional><Input id="eb-product" maxLength={120} value={s.productName} onChange={(e) => set({ productName: e.target.value })} /></Field>
-            <Field label="Nom de la campagne" htmlFor="eb-name"><Input id="eb-name" maxLength={80} value={s.name} onChange={(e) => set({ name: e.target.value })} /></Field>
-          </div>
           </div>
         </Section>
 
@@ -88,13 +92,12 @@ export function ExpertBrief({ data }: { data: EditorData }) {
               </Select>
             </Field>
           )}
-          <div className="space-y-4">
+          {!s.business.id && <div className="space-y-4">
             <Field label="Nom" htmlFor="eb-bname"><Input id="eb-bname" maxLength={80} value={s.business.name} onChange={(e) => set({ business: { ...s.business, name: e.target.value } })} /></Field>
             <Field label="Secteur" htmlFor="eb-sector"><Select id="eb-sector" value={s.business.sector} onChange={(e) => set({ business: { ...s.business, sector: e.target.value } })}><option value="" disabled>Choisir…</option>{SECTORS.map((x) => <option key={x}>{x}</option>)}</Select></Field>
             <Field label="Ville" htmlFor="eb-city"><Input id="eb-city" maxLength={60} value={s.business.city} onChange={(e) => set({ business: { ...s.business, city: e.target.value } })} /></Field>
-          </div>
+          </div>}
           <div className="space-y-4">
-            <Field label="WhatsApp" htmlFor="eb-wa" optional><Input id="eb-wa" inputMode="tel" maxLength={40} value={s.destinationWhatsapp} onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" /></Field>
             <Field label="Lien de votre page" htmlFor="eb-url" optional><Input id="eb-url" type="url" maxLength={300} value={s.destinationUrl} onChange={(e) => set({ destinationUrl: e.target.value })} placeholder="https://facebook.com/votrepage" /></Field>
           </div>
           </div>

@@ -15,7 +15,7 @@ import { Notice } from "@/components/ui/misc";
 import type { AdCopy, EditorData, LinkedAsset, StrategyState } from "@/lib/campaigns/editor-data";
 import { getObjective, objectiveShort } from "@/lib/catalog/objectives";
 import { defaultSplit, PLATFORMS, platformLabel, type PlatformCode } from "@/lib/catalog/platforms";
-import { AGE_BOUNDS, CITIES_BY_COUNTRY, CUSTOMER_CATEGORIES, GENDERS, INTEREST_GROUPS, LANGUAGES, SECTORS, TARGET_COUNTRIES, type Targeting } from "@/lib/catalog/targeting";
+import { AGE_BOUNDS, CITIES_BY_COUNTRY, CUSTOMER_CATEGORIES, GENDERS, INTEREST_GROUPS, SECTORS, TARGET_COUNTRIES, type Targeting } from "@/lib/catalog/targeting";
 import { cn, formatFcfa } from "@/lib/utils";
 import {
   attachAssetAction, detachAssetAction, generateStrategyAction, placeOrderAction, saveCampaignAction, suggestTargetingAction, type CampaignPatch,
@@ -61,9 +61,10 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
 
   /** Nom donné automatiquement tant que le client ne l'a pas personnalisé. */
   function autoName() {
-    const isDefault = !s.name.trim() || DEFAULT_NAMES.includes(s.name) || s.name === objective?.label;
-    const name = isDefault ? (s.productName.trim() || objective?.label || s.name).slice(0, 80) : s.name;
-    return name.trim().length >= 2 ? name : objective?.label ?? "Ma campagne";
+    const auto = [objective ? objectiveShort(objective) : "", s.business.name.trim()].filter(Boolean).join(" — ");
+    const isDefault = !s.name.trim() || DEFAULT_NAMES.includes(s.name) || s.name === objective?.label || (s.business.name.trim().length > 0 && s.name.endsWith(` — ${s.business.name.trim()}`));
+    const name = (isDefault ? s.productName.trim() || auto || s.name : s.name).slice(0, 80);
+    return name.trim().length >= 2 ? name : "Ma campagne";
   }
 
   function patchFor(n: number): CampaignPatch | string {
@@ -281,9 +282,10 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
   const [notice, setNotice] = React.useState<string | null>(null);
   // Une activité déjà connue est résumée sur une ligne : inutile de reposer les mêmes questions.
   const [editBusiness, setEditBusiness] = React.useState(!(s.business.id && s.business.name && s.business.sector && s.business.city));
-  const [showLink, setShowLink] = React.useState(Boolean(s.destinationUrl) || needs.includes("page"));
+  const [showWa] = React.useState(Boolean(s.destinationWhatsapp) || needs.includes("whatsapp"));
+  const [showLink] = React.useState(Boolean(s.destinationUrl) || needs.includes("page"));
+  const [showText, setShowText] = React.useState(Boolean(s.adCopy?.headline || s.adCopy?.body));
   const pack = data.levels.find((l) => l.kind === "PACK");
-  const ctas = Array.from(new Set([...(objective?.config.ctas ?? []), ...(st?.ctas ?? []), "En savoir plus", ...(copy.cta ? [copy.cta] : [])]));
   const alternatives = st ? [...st.texts, ...st.variants].filter((t) => !(t.headline === copy.headline && t.body === copy.body)).slice(0, 4) : [];
 
   async function write() {
@@ -299,6 +301,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
     toast.success("Texte proposé.");
   }
 
+  const textOpen = showText || Boolean(copy.headline || copy.body);
   const summary = "flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3.5 text-sm font-medium text-ink sm:px-5";
 
   return (
@@ -330,30 +333,23 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
               <Field label="Ville" htmlFor="city"><Input id="city" value={s.business.city} maxLength={60} onChange={(e) => setB({ city: e.target.value })} placeholder="Cotonou" /></Field>
             </>
           )}
-          <Field label="Numéro WhatsApp" htmlFor="wa" optional={!needs.includes("whatsapp")}>
-            <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />
-          </Field>
-          {showLink ? (
-            <Field label="Lien de votre page" htmlFor="url" optional={!needs.includes("page")}>
+          {showWa && (
+            <Field label="Numéro WhatsApp" htmlFor="wa">
+              <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />
+            </Field>
+          )}
+          {showLink && (
+            <Field label="Lien de votre page" htmlFor="url">
               <Input id="url" type="url" value={s.destinationUrl} maxLength={300} onChange={(e) => set({ destinationUrl: e.target.value })} placeholder="https://facebook.com/votrepage" />
             </Field>
-          ) : (
-            <button type="button" onClick={() => setShowLink(true)} className="text-[13.5px] font-medium text-green hover:underline">+ Lien de ma page</button>
           )}
         </div>
       </Section>
 
       <Section icon={<Tag />} tone="marigold" title="Votre offre">
         <div className="space-y-4">
-          <Field label="Produit ou service" htmlFor="pname" optional><Input id="pname" value={s.productName} maxLength={120} onChange={(e) => set({ productName: e.target.value })} placeholder="Robes en pagne sur mesure" /></Field>
-          <Field label="Description" htmlFor="pdesc" hint={<span className="tnum block text-right">{s.productDescription.trim().length} / 1 500</span>}>
-            <Textarea id="pdesc" rows={4} value={s.productDescription} maxLength={1500} onChange={(e) => set({ productDescription: e.target.value })} placeholder="Robes cousues main en wax, tailles 36 à 52, livraison à Cotonou et Calavi en 48 h…" />
-          </Field>
-          <Field label="Prix" htmlFor="price" optional className="max-w-[14rem]">
-            <div className="relative">
-              <Input id="price" inputMode="numeric" className="tnum pr-14" value={s.productPrice ? String(s.productPrice) : ""} onChange={(e) => { const n = Number(e.target.value.replace(/\D/g, "")); set({ productPrice: n ? Math.min(n, 1_000_000_000) : null }); }} placeholder="15000" />
-              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[13px] text-muted">FCFA</span>
-            </div>
+          <Field label="Que vendez-vous ?" htmlFor="pdesc" hint={<span className="tnum block text-right">{s.productDescription.trim().length} / 1 500</span>}>
+            <Textarea id="pdesc" rows={4} value={s.productDescription} maxLength={1500} onChange={(e) => set({ productDescription: e.target.value })} placeholder="Robes en wax cousues main, 15 000 F, livraison à Cotonou en 48 h…" />
           </Field>
         </div>
       </Section>
@@ -367,13 +363,19 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
         action={<Button type="button" variant="soft" size="sm" disabled={writing} onClick={write}>{writing ? <LoaderCircle className="animate-spin" /> : <WandSparkles />}{writing ? "Rédaction…" : st ? "Autre proposition" : "Rédiger pour moi"}</Button>}>
         <div className="space-y-4">
           {notice && <Notice tone="info">{notice}</Notice>}
-          <Field label="Texte principal" htmlFor="copy-b" hint={<span className="flex justify-between gap-3"><span>Vide = rédigé par notre équipe.</span><span className="tnum shrink-0">{copy.body.length} / 900</span></span>}>
-            <Textarea id="copy-b" rows={4} value={copy.body} maxLength={900} onChange={(e) => setCopy({ body: e.target.value })} placeholder="Offrez-vous une robe unique, cousue à vos mesures…" />
-          </Field>
-          <Field label="Titre" htmlFor="copy-h"><Input id="copy-h" value={copy.headline} maxLength={90} onChange={(e) => setCopy({ headline: e.target.value })} placeholder="Votre robe sur mesure en 48 h" /></Field>
-          <Field label="Bouton" htmlFor="copy-c">
-            <Select id="copy-c" value={copy.cta} onChange={(e) => setCopy({ cta: e.target.value })}><option value="">Au choix de l&apos;équipe</option>{ctas.map((c) => <option key={c} value={c}>{c}</option>)}</Select>
-          </Field>
+          {textOpen ? (
+            <>
+              <Field label="Texte" htmlFor="copy-b" hint={<span className="tnum block text-right">{copy.body.length} / 900</span>}>
+                <Textarea id="copy-b" rows={4} value={copy.body} maxLength={900} onChange={(e) => setCopy({ body: e.target.value })} placeholder="Offrez-vous une robe unique, cousue à vos mesures…" />
+              </Field>
+              <Field label="Titre" htmlFor="copy-h"><Input id="copy-h" value={copy.headline} maxLength={90} onChange={(e) => setCopy({ headline: e.target.value })} placeholder="Votre robe sur mesure en 48 h" /></Field>
+            </>
+          ) : (
+            <p className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-paper px-4 py-3 text-[13.5px] text-muted">
+              Notre équipe peut l&apos;écrire pour vous.
+              <button type="button" onClick={() => setShowText(true)} className="font-medium text-green hover:underline">Écrire moi-même</button>
+            </p>
+          )}
 
           {alternatives.length > 0 && (
             <details className="group">
@@ -493,9 +495,6 @@ function AudienceStep({ s, set }: StepProps) {
         )}
       </section>
 
-      <Field label="Vos clients, avec vos mots" htmlFor="aud" optional>
-        <Textarea id="aud" rows={2} value={s.audienceNote} maxLength={600} onChange={(e) => set({ audienceNote: e.target.value })} placeholder="Femmes actives de Cotonou qui aiment les tenues en pagne, mariées ou fiancées…" />
-      </Field>
 
       <div className="rounded-lg border border-line bg-surface">
         <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left sm:px-5">
@@ -516,7 +515,6 @@ function AudienceStep({ s, set }: StepProps) {
                   <div className="flex flex-wrap gap-1.5">{cities.map(({ city }) => <Chip key={city} active={t.cities.includes(city)} onClick={() => setT({ cities: toggle(t.cities, city) })}>{city}</Chip>)}</div>
                 </div>
               )}
-              <Field label="Précision" htmlFor="zone" optional><Input id="zone" value={t.zoneNote} maxLength={300} onChange={(e) => setT({ zoneNote: e.target.value })} placeholder="5 km autour de Fidjrossè" /></Field>
             </div>
 
             <div className="space-y-4 border-t border-line pt-6">
@@ -527,14 +525,9 @@ function AudienceStep({ s, set }: StepProps) {
                   {GENDERS.map((g) => <button key={g.id} type="button" aria-pressed={t.gender === g.id} onClick={() => setT({ gender: g.id as Targeting["gender"] })} className={cn("rounded-full px-4 py-2 text-[13.5px] font-medium transition-colors", t.gender === g.id ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>{g.label}</button>)}
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3">
                 <Field label="Âge minimum" htmlFor="ageMin"><Select id="ageMin" value={t.ageMin} onChange={(e) => { const v = Number(e.target.value); setT({ ageMin: v, ageMax: Math.max(v, t.ageMax) }); }}>{AGE_BOUNDS.map((a) => <option key={a} value={a}>{a} ans</option>)}</Select></Field>
                 <Field label="Âge maximum" htmlFor="ageMax"><Select id="ageMax" value={t.ageMax} onChange={(e) => { const v = Number(e.target.value); setT({ ageMax: v, ageMin: Math.min(v, t.ageMin) }); }}>{AGE_BOUNDS.map((a) => <option key={a} value={a}>{a === 65 ? "65 ans et plus" : `${a} ans`}</option>)}</Select></Field>
-                <Field label="Langue" htmlFor="lang"><Select id="lang" value={t.languages[0] ?? "fr"} onChange={(e) => setT({ languages: [e.target.value] })}>{LANGUAGES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}</Select></Field>
-              </div>
-              <div>
-                <p className="mb-2 text-[13px] font-medium text-ink-soft">Types de clients</p>
-                <div className="flex flex-wrap gap-1.5">{CUSTOMER_CATEGORIES.map((c) => <Chip key={c} active={t.categories.includes(c)} onClick={() => setT({ categories: toggle(t.categories, c) })}>{c}</Chip>)}</div>
               </div>
               <p className="text-xs text-muted">18 ans et plus uniquement.</p>
             </div>
@@ -559,7 +552,6 @@ function AudienceStep({ s, set }: StepProps) {
               <ToggleRow icon={<Users />} label="Recibler mes clients" htmlFor="custom-aud">
                 <Switch id="custom-aud" checked={t.customAudience.requested} onCheckedChange={(v) => setT({ customAudience: { ...t.customAudience, requested: v } })} />
               </ToggleRow>
-              {t.customAudience.requested && <Textarea className="mt-3" rows={2} maxLength={500} value={t.customAudience.note} onChange={(e) => setT({ customAudience: { ...t.customAudience, note: e.target.value } })} placeholder="Ex. : personnes ayant déjà écrit à ma page ces 90 derniers jours" aria-label="Précision sur l'audience personnalisée" />}
             </div>
           </div>
         )}
@@ -606,7 +598,6 @@ function BudgetStep({ s, set, data, links, promo, setPromo, onTotal, onEdit }: S
               </li>
             ))}
           </ul>
-          <Field label="Nom de la campagne" htmlFor="cname" className="mt-4"><Input id="cname" value={s.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} /></Field>
         </Section>
 
         <section data-quote className="space-y-2.5">

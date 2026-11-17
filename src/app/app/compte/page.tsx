@@ -63,7 +63,6 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               <ActionForm action={updateProfileAction} className="space-y-4">
                 <Field label="Nom complet" htmlFor="p-name"><Input id="p-name" name="name" required maxLength={80} defaultValue={user.name} autoComplete="name" /><FieldError name="name" /></Field>
                 <Field label="Téléphone" htmlFor="p-phone"><Input id="p-phone" name="phone" type="tel" inputMode="tel" required defaultValue={user.phone ? formatPhone(user.phone) : ""} autoComplete="tel" /><FieldError name="phone" /></Field>
-                <Field label="Type de compte" htmlFor="p-type"><Select id="p-type" name="accountType" defaultValue={user.accountType}><option value="INDIVIDUAL">Particulier</option><option value="PROFESSIONAL">Professionnel</option></Select></Field>
                 <fieldset className="space-y-2">
                   <legend className="mb-1.5 text-[13px] font-medium text-ink">Notifications</legend>
                   <ToggleRow icon={<Mail />} label="E-mail" htmlFor="p-nmail"><Switch id="p-nmail" name="notifyEmail" defaultChecked={user.notifyEmail} /></ToggleRow>
@@ -199,7 +198,8 @@ async function SubscriptionTab({ userId, error }: { userId: string; error?: stri
               <ul className="mt-4 space-y-1.5 text-sm text-ink-soft">{p.features.slice(0, 4).map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-green" />{f}</li>)}</ul>
               <form action={subscribeAction} className="mt-5 flex flex-wrap items-end gap-3">
                 <input type="hidden" name="serviceCode" value={p.code} />
-                {businesses.length > 0 && (
+                {businesses.length === 1 && <input type="hidden" name="businessId" value={businesses[0]!.id} />}
+                {businesses.length > 1 && (
                   <Field label="Entreprise" htmlFor={`sub-${p.id}`} className="min-w-48 flex-1"><Select id={`sub-${p.id}`} name="businessId" defaultValue={businesses[0]!.id}>{businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</Select></Field>
                 )}
                 <Button type="submit" variant="accent">Souscrire</Button>
@@ -228,10 +228,7 @@ async function SubscriptionTab({ userId, error }: { userId: string; error?: stri
 }
 
 async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: string; email: string }) {
-  const [tickets, campaigns] = await Promise.all([
-    db.ticket.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 20 }),
-    db.campaign.findMany({ where: { userId, status: { not: "DRAFT" } }, orderBy: { createdAt: "desc" }, take: 30, select: { id: true, name: true } }),
-  ]);
+  const tickets = await db.ticket.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 20 });
   const wa = whatsapp ? toWhatsappLink(whatsapp) : null;
   return (
     <div className="flex flex-col gap-6">
@@ -258,8 +255,6 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
           <CardBody>
             <ActionForm action={createTicketAction} resetOnSuccess className="space-y-4">
               <Field label="Catégorie" htmlFor="t-cat"><Select id="t-cat" name="category" defaultValue="Campagne">{["Paiement", "Remboursement", "Campagne", "Compte", "Autre"].map((c) => <option key={c}>{c}</option>)}</Select></Field>
-              {campaigns.length > 0 && <Field label="Campagne" htmlFor="t-camp" optional><Select id="t-camp" name="campaignId" defaultValue=""><option value="">Aucune</option>{campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>}
-              <Field label="Objet" htmlFor="t-sub"><Input id="t-sub" name="subject" required minLength={5} maxLength={120} /><FieldError name="subject" /></Field>
               <Field label="Message" htmlFor="t-body"><Textarea id="t-body" name="body" rows={5} required minLength={20} maxLength={3000} placeholder="Pour un paiement, indiquez la référence." /><FieldError name="body" /></Field>
               <SubmitButton pendingLabel="Envoi…">Envoyer</SubmitButton>
             </ActionForm>

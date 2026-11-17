@@ -209,6 +209,9 @@ export function BudgetFields({ data, value, onChange, recommended }: {
   const today = new Date().toISOString().slice(0, 10);
   const presets = [5_000, 10_000, 20_000, 30_000, 50_000, 100_000].filter((v) => v >= limits.minAdBudget);
   const sliderMax = Math.max(300_000, limits.minAdBudget * 10);
+  // Saisie libre : seulement sur demande, ou si le montant enregistré sort des crans du curseur.
+  const [custom, setCustom] = React.useState(value.adBudget > sliderMax || value.adBudget % 1000 !== 0);
+  const durations = Array.from(new Set([...DURATION_PRESETS, ...(value.durationDays > 0 ? [value.durationDays] : [])])).sort((a, b) => a - b);
   const [first, ...rest] = value.platforms;
   const advised = recommended ? Math.max(limits.minAdBudget, recommended.daily * recommended.days) : null;
 
@@ -224,30 +227,35 @@ export function BudgetFields({ data, value, onChange, recommended }: {
   return (
     <div className="space-y-6">
       <div>
-        <label htmlFor="adBudget" className="text-[13px] font-medium text-ink">Budget publicitaire</label>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-[13px] font-medium text-ink">Budget publicitaire</p>
+          <p className="tnum font-display text-[24px] font-semibold leading-none text-ink">{formatFcfa(value.adBudget)}</p>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
           {presets.map((v) => <Chip key={v} active={value.adBudget === v} onClick={() => onChange({ adBudget: v })}><span className="tnum">{formatFcfa(v)}</span>{advised === v && <span className="font-normal opacity-70">· conseillé</span>}</Chip>)}
         </div>
-        <div className="relative mt-2.5">
-          <Input id="adBudget" inputMode="numeric" className="tnum h-12 pr-16 text-base font-semibold" value={value.adBudget ? String(value.adBudget) : ""} placeholder="Autre montant"
-            onChange={(e) => onChange({ adBudget: Math.min(999_999_999, Number(e.target.value.replace(/\D/g, "")) || 0) })} />
-          <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-muted">FCFA</span>
-        </div>
-        <Slider className="mt-3" label="Budget publicitaire" value={value.adBudget} min={limits.minAdBudget} max={sliderMax} step={5000} onChange={(v) => onChange({ adBudget: v })} />
-        <p className="tnum flex justify-between text-[12px] text-muted"><span>{formatFcfa(limits.minAdBudget)}</span><span>{formatFcfa(sliderMax)}</span></p>
+        <Slider className="mt-3" label="Budget publicitaire" value={value.adBudget} min={limits.minAdBudget} max={sliderMax} step={1000} onChange={(v) => onChange({ adBudget: v })} />
+        <p className="tnum flex items-center justify-between text-[12px] text-muted">
+          <span>{formatFcfa(limits.minAdBudget)}</span>
+          {!custom && <button type="button" onClick={() => setCustom(true)} className="text-[13px] font-medium text-green hover:underline">Autre montant</button>}
+          <span>{formatFcfa(sliderMax)}</span>
+        </p>
+        {custom && (
+          <div className="relative mt-2.5">
+            <Input id="adBudget" inputMode="numeric" aria-label="Budget publicitaire en francs CFA" className="tnum h-12 pr-16 text-base font-semibold" value={value.adBudget ? String(value.adBudget) : ""} placeholder="Autre montant"
+              onChange={(e) => onChange({ adBudget: Math.min(999_999_999, Number(e.target.value.replace(/\D/g, "")) || 0) })} />
+            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-muted">FCFA</span>
+          </div>
+        )}
       </div>
 
       <div>
-        <label htmlFor="durationDays" className="text-[13px] font-medium text-ink">Durée</label>
+        <p className="text-[13px] font-medium text-ink">Durée</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          {DURATION_PRESETS.map((d) => <Chip key={d} active={value.durationDays === d} onClick={() => onChange({ durationDays: d })}>{d} jours</Chip>)}
-          <div className="relative w-28">
-            <Input id="durationDays" inputMode="numeric" className="tnum h-10 pr-12" aria-label="Durée en jours" value={value.durationDays ? String(value.durationDays) : ""} onChange={(e) => onChange({ durationDays: Math.min(90, Number(e.target.value.replace(/\D/g, "")) || 0) })} />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-muted">jours</span>
-          </div>
+          {durations.map((d) => <Chip key={d} active={value.durationDays === d} onClick={() => onChange({ durationDays: d })}>{d} jours</Chip>)}
         </div>
         <p className={cn("tnum mt-1.5 text-[13px]", daily > 0 && daily < limits.minDailyBudget ? "text-clay" : "text-muted")}>
-          {daily > 0 ? <>{formatFcfa(daily)} par jour{daily < limits.minDailyBudget ? ` : minimum ${formatFcfa(limits.minDailyBudget)}` : ""}.</> : "De 1 à 90 jours."}
+          {daily > 0 ? <>{formatFcfa(daily)} par jour{daily < limits.minDailyBudget ? ` : minimum ${formatFcfa(limits.minDailyBudget)}` : ""}.</> : "Choisissez une durée."}
         </p>
       </div>
 

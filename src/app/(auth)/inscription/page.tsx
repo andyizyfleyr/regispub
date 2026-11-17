@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Checkbox } from "@/components/ui/controls";
-import { Field, Input, Select } from "@/components/ui/form";
+import { Field, Input } from "@/components/ui/form";
 import { registerAction } from "@/server/actions/auth";
 
 export const metadata: Metadata = { title: "Créer un compte" };
@@ -19,12 +19,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
         <Field label="Adresse e-mail" htmlFor="email"><Input id="email" name="email" type="email" autoComplete="email" required placeholder="vous@exemple.com" /></Field>
         <Field label="Téléphone (WhatsApp)" htmlFor="phone" ><Input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" required placeholder="01 97 00 00 00" /></Field>
         <Field label="Mot de passe" htmlFor="password" hint="8 caractères, une lettre et un chiffre."><Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} /></Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Type de compte" htmlFor="accountType">
-            <Select id="accountType" name="accountType" defaultValue="INDIVIDUAL"><option value="INDIVIDUAL">Particulier</option><option value="PROFESSIONAL">Professionnel</option></Select>
-          </Field>
-          <Field label="Code parrain" htmlFor="referral" optional><Input id="referral" name="referral" defaultValue={sp.parrain ?? ""} className="uppercase" /></Field>
-        </div>
+        {sp.parrain && <input type="hidden" name="referral" value={sp.parrain} />}
         <label className="flex items-start gap-3 text-[13px] text-ink-soft">
           <Checkbox name="terms" required aria-label="Accepter les conditions" />
           <span className="pt-0.5">J&apos;accepte les <Link href="/conditions" className="underline" target="_blank">conditions</Link>. Les résultats ne sont pas garantis.</span>

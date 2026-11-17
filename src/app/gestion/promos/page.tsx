@@ -49,7 +49,6 @@ export default async function PromosPage({ searchParams }: { searchParams: Promi
             <CardBody>
               <ActionForm action={savePromoAction} resetOnSuccess className="space-y-4">
                 <Field label="Code" htmlFor="pr-code"><Input id="pr-code" name="code" required maxLength={24} className="font-mono uppercase" placeholder="RENTREE15" /><FieldError name="code" /></Field>
-                <Field label="Description interne" htmlFor="pr-desc" optional><Input id="pr-desc" name="description" maxLength={160} /></Field>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Type" htmlFor="pr-type"><Select id="pr-type" name="type" defaultValue="PERCENT"><option value="PERCENT">Pourcentage</option><option value="FIXED">Montant fixe (F)</option></Select></Field>
                   <Field label="Valeur" htmlFor="pr-value"><Input id="pr-value" name="value" type="number" inputMode="numeric" min={1} required className="tnum" /><FieldError name="value" /></Field>
@@ -58,7 +57,6 @@ export default async function PromosPage({ searchParams }: { searchParams: Promi
                   <Field label="Début" htmlFor="pr-start" optional><DatePicker id="pr-start" name="startsAt" /></Field>
                   <Field label="Fin" htmlFor="pr-end" optional><DatePicker id="pr-end" name="endsAt" /><FieldError name="endsAt" /></Field>
                 </div>
-                <Field label="Frais de prestation minimum (F)" htmlFor="pr-min" optional><Input id="pr-min" name="minServiceFee" type="number" min={0} step={500} className="tnum" /></Field>
                 <p className="text-xs text-muted">Après remise, les frais de prestation ne descendent jamais sous le plancher de la plateforme.</p>
                 <SubmitButton pendingLabel="Création…">Créer le code</SubmitButton>
               </ActionForm>
