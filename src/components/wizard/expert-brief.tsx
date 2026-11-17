@@ -51,7 +51,7 @@ export function ExpertBrief({ data }: { data: EditorData }) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-7">
+    <div className="mx-auto max-w-3xl space-y-7">
         <Section icon={<ClipboardList />} title="Votre besoin" description="Dites-nous ce que vous voulez obtenir, avec vos mots.">
           <div className="space-y-4">
           <div className="space-y-4">

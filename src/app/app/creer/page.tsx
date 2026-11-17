@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import { Headset } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Headset } from "lucide-react";
 import { CampaignRow } from "@/components/app/campaign-row";
 import { ObjectiveBrowser } from "@/components/app/quick-start";
-import { List, ListRow, SectionTitle } from "@/components/ui/list";
+import { Button } from "@/components/ui/button";
+import { List, SectionTitle } from "@/components/ui/list";
+import { Banner } from "@/components/ui/tile";
 import { PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -30,13 +33,11 @@ export default async function CreatePage() {
 
       <ObjectiveBrowser />
 
-      <section aria-labelledby="expert">
-        <SectionTitle id="expert">Vous préférez déléguer ?</SectionTitle>
-        <List>
-          <ListRow href="/app/expert" icon={<Headset />} tone="green" title="Confier ma publicité à un expert"
-            subtitle={<>Un gestionnaire prépare textes, visuels et ciblage.{managementFee ? <span className="tnum"> Dès {formatFcfa(managementFee)}.</span> : null}</>} />
-        </List>
-      </section>
+      <Banner decoration={<Headset />} className="sm:py-7">
+        <h2 className="text-xl font-semibold text-white">Vous préférez déléguer ?</h2>
+        <p className="mt-1.5 max-w-md text-[15px] text-white/75">Un gestionnaire prépare textes, visuels et ciblage.{managementFee ? <span className="tnum"> Dès {formatFcfa(managementFee)}.</span> : null}</p>
+        <Button asChild variant="accent" className="mt-4"><Link href="/app/expert">Confier à un expert<ArrowRight /></Link></Button>
+      </Banner>
     </div>
   );
 }

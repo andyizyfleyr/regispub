@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Building2, CalendarClock, Gift, LifeBuoy, UserRound } from "lucide-react";
+import { Bell, Building2, CalendarClock, Gift, LifeBuoy, UserRound } from "lucide-react";
 import { BusinessDialog, CopyField, RedeemPoints } from "@/components/app/account-parts";
 import { WhatsappIcon } from "@/components/icons";
 import { ActionButton, ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
@@ -7,7 +7,7 @@ import { StateBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
-import { Figures, List, ListRow } from "@/components/ui/list";
+import { StatTile, Tile, toneAt } from "@/components/ui/tile";
 import { EmptyState, Notice, PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -41,9 +41,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     return (
       <>
         <PageHeader title="Mon compte" description={user.email} />
-        <List>
-          {TABS.map((id) => { const m = MENU[id]; return <ListRow key={id} href={`${base}?onglet=${id}`} icon={<m.icon />} title={m.label} subtitle={m.hint} />; })}
-        </List>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {TABS.map((id, i) => { const m = MENU[id]; return <Tile key={id} href={`${base}?onglet=${id}`} icon={<m.icon />} tone={toneAt(i)} title={m.label} text={m.hint} hideTextOnMobile arrow={false} />; })}
+          <Tile href="/app/notifications" icon={<Bell />} tone="neutral" title="Notifications" text="L'historique de vos alertes" hideTextOnMobile arrow={false} />
+        </div>
       </>
     );
   }
@@ -128,11 +129,11 @@ async function Loyalty({ userId, points, referralCode, settings }: { userId: str
   const now = new Date();
   return (
     <div className="space-y-6">
-      <Figures items={[
-        { label: "Points de fidélité", hint: `Valeur : ${formatFcfa(points * settings.loyaltyPointValue)}`, value: formatNumber(points), strong: true },
-        { label: "Filleuls inscrits", value: formatNumber(referrals) },
-        { label: "Bons disponibles", value: formatNumber(vouchers.filter((v) => v.usedCount < (v.maxUses ?? Infinity) && (!v.endsAt || v.endsAt > now)).length) },
-      ]} />
+      <div className="grid grid-cols-3 gap-3">
+        <StatTile label="Points" value={formatNumber(points)} hint={`Valeur : ${formatFcfa(points * settings.loyaltyPointValue)}`} tone="marigold" />
+        <StatTile label="Filleuls" value={formatNumber(referrals)} />
+        <StatTile label="Bons" value={formatNumber(vouchers.filter((v) => v.usedCount < (v.maxUses ?? Infinity) && (!v.endsAt || v.endsAt > now)).length)} hint="disponibles" />
+      </div>
       <div className="space-y-6">
         <Card>
           <CardHeader title="Programme de fidélité" description={`${settings.loyaltyPointsPer1000} point par tranche de 1 000 F de frais de prestation payés. 1 point = ${formatFcfa(settings.loyaltyPointValue)}.`} />

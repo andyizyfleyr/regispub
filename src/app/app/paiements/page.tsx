@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { ReceiptText } from "lucide-react";
+import { Megaphone, ReceiptText, Wallet } from "lucide-react";
 import { StateBadge } from "@/components/ui/badge";
 import { List, ListRow } from "@/components/ui/list";
+import { StatTile } from "@/components/ui/tile";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -18,11 +19,15 @@ export default async function PaymentsPage() {
   const total = paid._sum.total ?? 0;
   return (
     <>
-      <PageHeader title="Paiements" description={total > 0
-        ? <>Total payé : <span className="tnum font-medium text-ink">{formatFcfa(total)}</span>, dont <span className="tnum">{formatFcfa(paid._sum.adBudget ?? 0)}</span> de budget publicitaire.</>
-        : "Vos commandes et vos reçus."} />
+      <PageHeader title="Paiements" description="Vos commandes et vos reçus." />
+      {total > 0 && (
+        <div className="mb-6 grid grid-cols-2 gap-3">
+          <StatTile label="Total payé" value={formatFcfa(total)} icon={<Wallet />} tone="green" />
+          <StatTile label="Dont budget publicitaire" value={formatFcfa(paid._sum.adBudget ?? 0)} icon={<Megaphone />} tone="marigold" hint="Reversé aux plateformes" />
+        </div>
+      )}
       {orders.length ? (
-        <List>
+        <List className="shadow-card">
           {orders.map((o) => (
             <ListRow key={o.id} href={`/app/paiements/${o.id}`} title={o.campaign?.name ?? o.serviceLabel}
               subtitle={<>{formatDate(o.createdAt)} · <span className="font-mono text-[12.5px]">{o.reference}</span></>}

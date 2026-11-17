@@ -140,7 +140,7 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
   const meta = WIZARD_STEPS[step - 1]!;
 
   return (
-    <div ref={top} className="mx-auto max-w-2xl scroll-mt-24">
+    <div ref={top} className="mx-auto max-w-3xl scroll-mt-24">
       <div className="mb-6 flex items-center justify-between gap-3">
         <button type="button" onClick={quit} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2.5 pr-3.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60">
           <X className="size-3.5" />Enregistrer et quitter

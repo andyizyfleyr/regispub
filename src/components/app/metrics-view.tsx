@@ -1,7 +1,8 @@
-import { BarChart3, ChevronDown } from "lucide-react";
+import { BarChart3, ChevronDown, ClipboardList, Coins, Eye, Heart, MousePointerClick, Percent, Play, Target, TrendingUp, Users, Wallet } from "lucide-react";
 import { PlatformBadge } from "@/components/icons";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Figures } from "@/components/ui/list";
+import { StatTile, toneAt } from "@/components/ui/tile";
 import { EmptyState, Table } from "@/components/ui/misc";
 import type { CampaignReport } from "@/lib/ads/report";
 import { METRIC_LABELS, type MetricKey } from "@/lib/catalog/objectives";
@@ -12,6 +13,11 @@ import { MetricsChart, type ChartSeries } from "./metrics-chart";
 const HINTS: Partial<Record<MetricKey, string>> = {
   impressions: "Nombre de fois où la publicité a été montrée", ctr: "Part des affichages suivis d'un clic", conversions: "Selon l'objectif de la campagne",
   roi: "(Revenus − dépenses) ÷ dépenses",
+};
+
+const METRIC_ICONS: Record<MetricKey, typeof Eye> = {
+  impressions: Eye, reach: Users, clicks: MousePointerClick, ctr: Percent, cpc: Coins, cpm: Coins,
+  engagements: Heart, videoViews: Play, leads: ClipboardList, conversions: Target, spend: Wallet, roi: TrendingUp,
 };
 
 /** Valeur affichée : « — » lorsqu'elle n'est pas mesurée. Jamais d'estimation. */
@@ -52,15 +58,21 @@ export function MetricsView({ report, kpis, adBudget, staff }: { report: Campaig
 
   return (
     <div className="space-y-6">
-      <Figures items={[
-        ...primary.map((k) => ({ label: METRIC_LABELS[k], hint: HINTS[k], value: metricValue(k, report), strong: true })),
-        { label: "Budget dépensé", hint: <>sur <span className="tnum">{formatFcfa(adBudget)}</span>, hors frais de prestation</>, value: formatFcfa(report.totals.spend), strong: true },
-      ]} />
-      {spentShare !== null && (
-        <div className="-mt-3 h-1.5 overflow-hidden rounded-full bg-sand" role="progressbar" aria-valuenow={Math.round(spentShare * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Part du budget dépensée">
-          <div className="h-full rounded-full bg-green" style={{ width: `${spentShare * 100}%` }} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {primary.map((k, i) => { const Icon = METRIC_ICONS[k]; return <StatTile key={k} label={METRIC_LABELS[k]} value={metricValue(k, report)} hint={HINTS[k]} icon={<Icon />} tone={toneAt(i)} />; })}
+      </div>
+      <div className="rounded-xl border border-line bg-surface p-4 shadow-card sm:p-5">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-sm text-ink-soft">Budget dépensé</p>
+          <p className="tnum text-sm text-muted"><span className="font-display text-lg font-semibold text-ink">{formatFcfa(report.totals.spend)}</span> sur {formatFcfa(adBudget)}</p>
         </div>
-      )}
+        {spentShare !== null && (
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-sand" role="progressbar" aria-valuenow={Math.round(spentShare * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Part du budget dépensée">
+            <div className="h-full rounded-full bg-gradient-to-r from-green to-mint" style={{ width: `${spentShare * 100}%` }} />
+          </div>
+        )}
+        <p className="mt-2 text-xs text-muted">Hors frais de prestation.</p>
+      </div>
 
       {series.length > 0 && report.daily.length > 1 && (
         <Card>

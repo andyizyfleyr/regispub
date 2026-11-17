@@ -12,6 +12,7 @@ import { OBJECTIVE_CATEGORIES, OBJECTIVES, type Objective, type ObjectiveCategor
 import { platformFamilies, PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import type { Quote } from "@/lib/pricing/quote";
 import { cn, formatFcfa } from "@/lib/utils";
+import { TILE_TONES, toneAt } from "@/components/ui/tile";
 import { previewQuoteAction } from "@/server/actions/campaigns";
 
 /** Bloc de formulaire : un titre, une phrase d'aide, puis les champs. Les blocs sont séparés par un simple filet. */
@@ -40,18 +41,19 @@ export function Chip({ active, children, onClick, disabled }: { active: boolean;
   );
 }
 
-/** Liste de choix : une ligne par option, la coche à droite. */
-export function ChoiceList({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface", className)}>{children}</div>;
+/** Cartes de choix : une carte par option, la sélection est encadrée en vert. */
+export function ChoiceList({ children, className, cols }: { children: React.ReactNode; className?: string; cols?: 2 | 3 }) {
+  return <div className={cn("grid gap-2.5", cols === 2 && "sm:grid-cols-2", cols === 3 && "sm:grid-cols-3", className)}>{children}</div>;
 }
 
-export function ChoiceRow({ active, onClick, children, leading, multiple, disabled }: { active: boolean; onClick: () => void; children: React.ReactNode; leading?: React.ReactNode; multiple?: boolean; disabled?: boolean }) {
+export function ChoiceRow({ active, onClick, children, leading, multiple, disabled, className }: { active: boolean; onClick: () => void; children: React.ReactNode; leading?: React.ReactNode; multiple?: boolean; disabled?: boolean; className?: string }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled} aria-pressed={active}
-      className={cn("flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-45 sm:px-5", active ? "bg-green-soft/50" : "hover:bg-paper")}>
+      className={cn("flex h-full w-full items-start gap-3.5 rounded-xl border bg-surface p-4 text-left transition-[border-color,box-shadow,background-color] disabled:cursor-not-allowed disabled:opacity-45",
+        active ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card hover:border-line-strong hover:shadow-lift", className)}>
       {leading}
       <span className="min-w-0 flex-1">{children}</span>
-      <span aria-hidden className={cn("flex size-5 shrink-0 items-center justify-center border transition-colors", multiple ? "rounded-[6px]" : "rounded-full", active ? "border-green bg-green text-white" : "border-line-strong bg-surface text-transparent")}><Check className="size-3" strokeWidth={3} /></span>
+      <span aria-hidden className={cn("mt-0.5 flex size-5 shrink-0 items-center justify-center border transition-colors", multiple ? "rounded-[6px]" : "rounded-full", active ? "border-green bg-green text-white" : "border-line-strong bg-surface text-transparent")}><Check className="size-3" strokeWidth={3} /></span>
     </button>
   );
 }
@@ -68,14 +70,21 @@ export function PlatformPicker({ value, onChange, extraFee }: { value: PlatformC
   const families = platformFamilies(value).length;
   return (
     <div>
-      <ChoiceList>
-        {PLATFORM_CODES.map((p) => (
-          <ChoiceRow key={p} multiple active={value.includes(p)} onClick={() => toggle(p)} leading={<PlatformBadge platform={p} size="md" />}>
-            <span className="block font-medium text-ink">{PLATFORMS[p].label}</span>
-            <span className="block text-[13.5px] leading-snug text-muted">{PLATFORM_HINT[p]}</span>
-          </ChoiceRow>
-        ))}
-      </ChoiceList>
+      <div className="grid grid-cols-3 gap-2.5">
+        {PLATFORM_CODES.map((p) => {
+          const active = value.includes(p);
+          return (
+            <button key={p} type="button" onClick={() => toggle(p)} aria-pressed={active}
+              className={cn("relative flex flex-col items-center rounded-xl border bg-surface px-2 py-4 text-center transition-[border-color,box-shadow,background-color] sm:px-4 sm:py-5",
+                active ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card hover:border-line-strong hover:shadow-lift")}>
+              <span aria-hidden className={cn("absolute right-2 top-2 flex size-5 items-center justify-center rounded-[6px] border transition-colors", active ? "border-green bg-green text-white" : "border-line-strong bg-surface text-transparent")}><Check className="size-3" strokeWidth={3} /></span>
+              <PlatformBadge platform={p} size="lg" />
+              <span className="mt-2.5 block text-[15px] font-semibold text-ink">{PLATFORMS[p].label}</span>
+              <span className="mt-0.5 hidden text-[12.5px] leading-snug text-muted sm:block">{PLATFORM_HINT[p]}</span>
+            </button>
+          );
+        })}
+      </div>
       {families > 1 && extraFee ? <p className="tnum mt-3 text-[13px] text-muted">Facebook et Instagram comptent pour une seule plateforme. Avec TikTok en plus : {formatFcfa(extraFee)} de prestation supplémentaire.</p> : null}
     </div>
   );
@@ -97,12 +106,12 @@ export function ObjectivePicker({ value, platforms, baseFees, onChange }: { valu
           ))}
         </div>
       </div>
-      <ChoiceList key={category} className="mt-3 animate-fade">
-        {OBJECTIVES.filter((o) => o.category === category).map((o) => {
+      <ChoiceList key={category} cols={2} className="mt-3 animate-fade">
+        {OBJECTIVES.filter((o) => o.category === category).map((o, i) => {
           const ok = available(o);
           return (
             <ChoiceRow key={o.code} active={value === o.code} onClick={() => onChange(o.code)} disabled={!ok}
-              leading={<span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-green-soft text-green"><ObjectiveIcon name={o.icon} className="size-[18px]" /></span>}>
+              leading={<span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", TILE_TONES[toneAt(i)])}><ObjectiveIcon name={o.icon} className="size-[18px]" /></span>}>
               <span className="block font-medium leading-snug text-ink">{o.label}</span>
               <span className="mt-0.5 block text-[13.5px] leading-snug text-muted">
                 {ok ? o.description : <span className="text-clay">Indisponible sur {platforms.map((p) => PLATFORMS[p].label).join(" + ")}</span>}
@@ -112,8 +121,8 @@ export function ObjectivePicker({ value, platforms, baseFees, onChange }: { valu
         })}
       </ChoiceList>
       {selected && (
-        <p className="tnum mt-3 animate-rise text-[13.5px] leading-relaxed text-muted">
-          <span className="font-medium text-ink-soft">Notre conseil : </span>{selected.recommendation} Prestation dès {formatFcfa(baseFees[selected.serviceCode] ?? 10_000)}.
+        <p className="tnum mt-3 animate-rise rounded-xl bg-marigold-soft/60 px-4 py-3 text-[13.5px] leading-relaxed text-ink-soft">
+          <span className="font-semibold text-ink">Notre conseil : </span>{selected.recommendation} Prestation dès {formatFcfa(baseFees[selected.serviceCode] ?? 10_000)}.
         </p>
       )}
     </div>
