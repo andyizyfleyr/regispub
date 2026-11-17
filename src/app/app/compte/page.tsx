@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bell, BookOpen, Building2, CalendarClock, Check, Gift, LifeBuoy, Mail, Star, Ticket, UserRound, Users } from "lucide-react";
+import { Bell, BookOpen, Building2, CalendarClock, Check, Gift, LifeBuoy, LogOut, Mail, Star, Ticket, UserRound, Users } from "lucide-react";
 import { BusinessDialog, CopyField, RedeemPoints } from "@/components/app/account-parts";
 import { WhatsappIcon } from "@/components/icons";
 import { ActionButton, ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
@@ -8,7 +8,8 @@ import { StateBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
-import { StatTile, Tile, toneAt } from "@/components/ui/tile";
+import { List, ListRow } from "@/components/ui/list";
+import { StatTile } from "@/components/ui/tile";
 import { Switch, ToggleRow } from "@/components/ui/controls";
 import { EmptyState, Notice, PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
@@ -16,19 +17,20 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { formatPhone, toWhatsappLink } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
-import { formatDate, formatDateTime, formatFcfa, formatNumber } from "@/lib/utils";
+import { formatDate, formatDateTime, formatFcfa, formatNumber, initials } from "@/lib/utils";
 import { changePasswordAction, createTicketAction, deleteBusinessAction, updateProfileAction } from "@/server/actions/account";
+import { logoutAction } from "@/server/actions/auth";
 import { subscribeAction } from "@/server/actions/payments";
 
 export const metadata: Metadata = { title: "Mon compte" };
 
 const TABS = ["profil", "entreprises", "fidelite", "abonnement", "support"] as const;
-const MENU: Record<(typeof TABS)[number], { label: string; icon: typeof Gift }> = {
-  profil: { label: "Profil", icon: UserRound },
-  entreprises: { label: "Entreprises", icon: Building2 },
-  fidelite: { label: "Fidélité", icon: Gift },
-  abonnement: { label: "Abonnement", icon: CalendarClock },
-  support: { label: "Aide", icon: LifeBuoy },
+const MENU: Record<(typeof TABS)[number], { label: string; hint: string; icon: typeof Gift; tone: "green" | "marigold" | "sky" | "violet" | "rose" }> = {
+  profil: { label: "Profil", hint: "Nom, téléphone, mot de passe", icon: UserRound, tone: "green" },
+  entreprises: { label: "Entreprises", hint: "Vos pages et comptes", icon: Building2, tone: "marigold" },
+  fidelite: { label: "Fidélité", hint: "Points, parrainage, bons", icon: Gift, tone: "sky" },
+  abonnement: { label: "Abonnement", hint: "Accompagnement mensuel", icon: CalendarClock, tone: "violet" },
+  support: { label: "Aide", hint: "Une question, un problème", icon: LifeBuoy, tone: "rose" },
 };
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ onglet?: string; erreur?: string }> }) {
@@ -40,13 +42,20 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const base = "/app/compte";
 
   if (!tab) {
+    const rows = [...TABS.map((id) => ({ href: `${base}?onglet=${id}`, ...MENU[id] })), { href: "/app/notifications", label: "Notifications", icon: Bell, hint: "Vos messages", tone: "neutral" as const }];
     return (
       <>
-        <PageHeader title="Mon compte" description={user.email} />
-        <div className="grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3">
-          {TABS.map((id, i) => { const m = MENU[id]; return <Tile key={id} href={`${base}?onglet=${id}`} icon={<m.icon />} tone={toneAt(i)} title={m.label} arrow={false} />; })}
-          <Tile href="/app/notifications" icon={<Bell />} tone="neutral" title="Notifications" arrow={false} />
-        </div>
+        <section className="mb-6 flex animate-rise items-center gap-4 rounded-xl border border-line/70 bg-surface p-4 shadow-card sm:p-5">
+          <span className="flex size-16 shrink-0 items-center justify-center rounded-[22px] bg-[linear-gradient(135deg,#0b2a1f,#0b7a53)] font-display text-[22px] font-semibold text-white">{initials(user.name)}</span>
+          <div className="min-w-0">
+            <h1 className="truncate text-[22px] font-semibold leading-tight">{user.name}</h1>
+            <p className="mt-0.5 truncate text-sm text-muted">{user.email}</p>
+          </div>
+        </section>
+        <List>
+          {rows.map((r) => <ListRow key={r.href} href={r.href} icon={<r.icon />} tone={r.tone} title={r.label} subtitle={r.hint} />)}
+        </List>
+        <form action={logoutAction} className="mt-6"><Button type="submit" variant="outline" size="lg" className="w-full text-clay"><LogOut />Se déconnecter</Button></form>
       </>
     );
   }

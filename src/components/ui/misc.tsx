@@ -6,15 +6,15 @@ import { cn } from "@/lib/utils";
 
 export function PageHeader({ title, description, actions, eyebrow, back }: { title: React.ReactNode; description?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode; back?: { href: string; label: string } }) {
   return (
-    <header className="mb-6 flex animate-rise flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-5 flex animate-rise flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {back && (
-          <Link href={back.href} className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pl-2 pr-3 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
-            <ArrowLeft className="size-3.5" />{back.label}
+          <Link href={back.href} className="mb-3 inline-flex h-9 items-center gap-1.5 rounded-full bg-surface pl-2.5 pr-3.5 text-[13px] font-medium text-ink-soft shadow-card transition-colors hover:text-ink">
+            <ArrowLeft className="size-4" />{back.label}
           </Link>
         )}
         {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
-        <h1 className="text-[24px] font-semibold leading-tight sm:text-[28px]">{title}</h1>
+        <h1 className="text-[28px] font-semibold leading-[1.1] sm:text-[34px]">{title}</h1>
         {description && <p className="mt-1.5 max-w-2xl text-muted">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
@@ -24,7 +24,7 @@ export function PageHeader({ title, description, actions, eyebrow, back }: { tit
 
 export function EmptyState({ icon, art, title, description, action, className }: { icon?: React.ReactNode; art?: "megaphone" | "phone" | "chart" | "box"; title: string; description?: React.ReactNode; action?: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex flex-col items-center rounded-2xl border border-dashed border-line-strong bg-surface px-6 text-center", art ? "py-9" : "py-12", className)}>
+    <div className={cn("flex flex-col items-center rounded-xl border border-line/70 bg-surface px-6 text-center shadow-card", art ? "py-9" : "py-12", className)}>
       {art && <Image src={`/img/3d/${art}.webp`} alt="" width={280} height={280} unoptimized className="mb-2 size-36 mix-blend-multiply" />}
       {icon && !art && (
         <div className="relative mb-4 flex size-14 items-center justify-center">
@@ -41,17 +41,17 @@ export function EmptyState({ icon, art, title, description, action, className }:
 }
 
 const NOTICE = {
-  info: { cls: "border-sky/15 bg-sky-soft/70", icon: "bg-sky/10 text-sky", Icon: Info },
-  warn: { cls: "border-marigold/35 bg-marigold-soft/70", icon: "bg-marigold/25 text-[#8a5a00]", Icon: TriangleAlert },
-  danger: { cls: "border-clay/20 bg-clay-soft/70", icon: "bg-clay/10 text-clay", Icon: CircleAlert },
-  ok: { cls: "border-green/20 bg-green-soft/70", icon: "bg-green/10 text-green", Icon: CircleCheck },
+  info: { cls: "bg-sky-soft", icon: "bg-sky text-white", Icon: Info },
+  warn: { cls: "bg-marigold-soft", icon: "bg-marigold text-forest", Icon: TriangleAlert },
+  danger: { cls: "bg-clay-soft", icon: "bg-clay text-white", Icon: CircleAlert },
+  ok: { cls: "bg-green-soft", icon: "bg-green text-white", Icon: CircleCheck },
 } as const;
 
 export function Notice({ tone = "info", title, children, className }: { tone?: keyof typeof NOTICE; title?: string; children?: React.ReactNode; className?: string }) {
   const { cls, icon, Icon } = NOTICE[tone];
   return (
-    <div className={cn("flex gap-3 rounded-md border px-3.5 py-3 text-[13.5px] leading-relaxed", cls, className)}>
-      <span className={cn("mt-px flex size-6 shrink-0 items-center justify-center rounded-full", icon)}><Icon className="size-3.5" /></span>
+    <div className={cn("flex gap-3 rounded-lg px-4 py-3.5 text-[13.5px] leading-relaxed", cls, className)}>
+      <span className={cn("mt-px flex size-7 shrink-0 items-center justify-center rounded-full", icon)}><Icon className="size-3.5" /></span>
       <div className="min-w-0 text-ink-soft">
         {title && <p className="font-medium text-ink">{title}</p>}
         {children}
@@ -69,12 +69,12 @@ const STAT_TONES: Record<StatTone, string> = {
 /** Chiffre clé. Toutes les cartes ont la même forme : libellé, valeur, précision, sur une ligne chacun. */
 export function Stat({ label, value, hint, icon, tone = "neutral", className }: { label: string; value: React.ReactNode; hint?: React.ReactNode; icon?: React.ReactNode; tone?: StatTone; className?: string }) {
   return (
-    <div className={cn("min-w-0 rounded-lg border border-line bg-surface p-3.5 shadow-card sm:p-4", className)}>
+    <div className={cn("min-w-0 rounded-lg border border-line/70 bg-surface p-4 shadow-card", className)}>
       <div className="flex items-center justify-between gap-2">
         <p className="truncate text-[13px] leading-5 text-muted">{label}</p>
-        {icon && <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-md sm:size-8 [&_svg]:size-4", STAT_TONES[tone])}>{icon}</span>}
+        {icon && <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-[10px] [&_svg]:size-4", STAT_TONES[tone])}>{icon}</span>}
       </div>
-      <p className="tnum mt-1.5 truncate font-display text-[21px] font-semibold leading-none text-ink sm:mt-2 sm:text-[24px]">{value}</p>
+      <p className="tnum mt-2 truncate font-display text-[22px] font-semibold leading-none text-ink sm:text-[26px]">{value}</p>
       <p className="mt-1.5 truncate text-xs leading-4 text-muted sm:mt-2" title={typeof hint === "string" ? hint : undefined}>{hint || "\u00a0"}</p>
     </div>
   );
@@ -83,11 +83,11 @@ export function Stat({ label, value, hint, icon, tone = "neutral", className }: 
 /** Onglets en pastilles (liens) : l'onglet actif est porté par l'URL. */
 export function TabsNav({ tabs, current, className }: { tabs: { href: string; label: string; id: string; count?: number; icon?: React.ReactNode }[]; current: string; className?: string }) {
   return (
-    <div className={cn("scrollbar-none -mx-4 mb-6 overflow-x-auto px-4 sm:mx-0 sm:px-0", className)}>
-      <nav className="inline-flex gap-1 rounded-full bg-sand p-1">
+    <div className={cn("scrollbar-none -mx-4 mb-5 overflow-x-auto px-4 py-1 sm:mx-0 sm:px-0", className)}>
+      <nav className="inline-flex gap-1 rounded-full border border-line/70 bg-surface p-1 shadow-card">
         {tabs.map((t) => (
           <Link key={t.id} href={t.href} scroll={false} aria-current={t.id === current ? "page" : undefined}
-            className={cn("flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors", t.id === current ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>
+            className={cn("flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors", t.id === current ? "bg-forest text-white" : "text-muted hover:text-ink")}>
             {t.icon && <span aria-hidden className="[&_svg]:size-4">{t.icon}</span>}
             {t.label}
             {t.count ? <span className="tnum rounded-full bg-marigold px-1.5 text-[11px] font-semibold leading-5 text-forest">{t.count}</span> : null}

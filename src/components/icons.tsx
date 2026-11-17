@@ -91,6 +91,17 @@ export function PlatformStack({ platforms, size = "sm", compact }: { platforms: 
   );
 }
 
+/** Vignette carrée de taille fixe avec les réseaux d'une campagne : sert de repère en tête de ligne. */
+export function PlatformAvatar({ platforms, className }: { platforms: PlatformCode[]; className?: string }) {
+  const list = platforms.slice(0, 3);
+  const dims = list.length <= 1 ? "[&>span]:size-7 [&>span]:rounded-[9px] [&_svg]:size-4" : list.length === 2 ? "[&>span]:size-[18px] [&>span]:rounded-[6px] [&_svg]:size-[11px]" : "[&>span]:size-[17px] [&>span]:rounded-[6px] [&_svg]:size-2.5";
+  return (
+    <span className={cn("flex size-11 shrink-0 flex-wrap content-center items-center justify-center gap-[3px] rounded-[14px] bg-sand", dims, className)} role="img" aria-label={list.map((p) => PLATFORM_NAMES[p]).join(", ") || "Réseaux à choisir"}>
+      {list.length ? list.map((p) => <PlatformBadge key={p} platform={p} size="sm" />) : <Megaphone className="size-5 text-muted" />}
+    </span>
+  );
+}
+
 const OPERATOR_STYLE: Record<OperatorCode, { cls: string; short: string }> = {
   MTN: { cls: "bg-[#FFCB05] text-[#0b2a4a]", short: "MTN" },
   MOOV: { cls: "bg-[#0056A4] text-white", short: "Moov" },

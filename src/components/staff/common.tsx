@@ -24,20 +24,20 @@ export function SearchForm({ action, q, placeholder, hidden }: { action: string;
     <form action={action} className="flex w-full max-w-sm gap-2" role="search">
       {Object.entries(hidden ?? {}).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v} /> : null))}
       <div className="relative flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
-        <Input name="q" defaultValue={q} placeholder={placeholder} aria-label={placeholder} className="pl-9" maxLength={80} />
+        <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" />
+        <Input name="q" defaultValue={q} placeholder={placeholder} aria-label={placeholder} className="rounded-full pl-10" maxLength={80} />
       </div>
-      <Button type="submit" variant="outline">Chercher</Button>
+      <Button type="submit" variant="outline" className="h-12">Chercher</Button>
     </form>
   );
 }
 
 export function FilterChips({ items, current }: { items: { id: string; label: string; href: string; count?: number }[]; current: string }) {
   return (
-    <div className="scrollbar-none -mx-4 flex gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+    <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 py-1 sm:mx-0 sm:flex-wrap sm:px-0">
       {items.map((it) => (
         <Link key={it.id} href={it.href} aria-current={it.id === current ? "true" : undefined}
-          className={cn("shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors", it.id === current ? "border-forest bg-forest text-white" : "border-line bg-surface text-ink-soft hover:border-line-strong")}>
+          className={cn("shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-colors", it.id === current ? "bg-forest text-white shadow-[0_8px_18px_-10px_rgb(11_42_31/0.7)]" : "bg-surface text-ink-soft shadow-card hover:text-ink")}>
           {it.label}{typeof it.count === "number" ? <span className={cn("tnum ml-1.5", it.id === current ? "text-white/70" : "text-muted")}>{it.count}</span> : null}
         </Link>
       ))}

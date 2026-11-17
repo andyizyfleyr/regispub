@@ -11,23 +11,28 @@ import { cn } from "@/lib/utils";
 /** Titre de section avec, au besoin, un lien discret à droite. */
 export function SectionTitle({ id, children, action, className }: { id?: string; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("mb-2.5 flex items-baseline justify-between gap-3", className)}>
-      <h2 id={id} className="text-[15px] font-semibold tracking-normal text-ink [font-family:var(--font-sans)]">{children}</h2>
+    <div className={cn("mb-3 flex items-baseline justify-between gap-3 px-1", className)}>
+      <h2 id={id} className="font-display text-[18px] font-semibold text-ink">{children}</h2>
       {action && <div className="shrink-0 text-[13.5px] font-medium text-green [&_a:hover]:underline">{action}</div>}
     </div>
   );
 }
 
 export function List({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) {
-  return <ul className={cn("divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface", className)} {...props} />;
+  return <ul className={cn("divide-y divide-line overflow-hidden rounded-lg border border-line/70 bg-surface shadow-card", className)} {...props} />;
 }
 
 /** Classes d'une ligne cliquable : à réutiliser pour un bouton de formulaire. */
-export const rowClass = "group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-paper focus-visible:bg-paper focus-visible:outline-none sm:px-5";
+export const rowClass = "group flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-paper focus-visible:bg-paper focus-visible:outline-none sm:px-5";
 
 const ICON_TONES = {
   green: "bg-green-soft text-green",
   marigold: "bg-marigold-soft text-[#9a6400]",
+  sky: "bg-sky-soft text-sky",
+  violet: "bg-violet-soft text-violet",
+  rose: "bg-rose-soft text-rose",
+  clay: "bg-clay-soft text-clay",
+  forest: "bg-forest text-marigold",
   neutral: "bg-sand text-ink-soft",
 } as const;
 
@@ -42,10 +47,10 @@ export function RowBody({ icon, tone = "neutral", title, subtitle, value, meta, 
 }) {
   return (
     <>
-      {icon && <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-md [&_svg]:size-[18px]", ICON_TONES[tone])}>{icon}</span>}
+      {icon && <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-[14px] [&_svg]:size-5", ICON_TONES[tone])}>{icon}</span>}
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-3">
-          <span className="min-w-0 flex-1 truncate font-medium leading-snug text-ink">{title}</span>
+          <span className="min-w-0 flex-1 truncate font-semibold leading-snug text-ink">{title}</span>
           {value && <span className="shrink-0 text-right text-sm">{value}</span>}
         </span>
         {(subtitle || meta) && (
@@ -66,7 +71,7 @@ type RowProps = React.ComponentProps<typeof RowBody> & { href?: string; external
 
 /** Ligne de liste. Avec `href`, toute la ligne est un lien. */
 export function ListRow({ href, external, className, chevron, ...body }: RowProps) {
-  if (!href) return <li className={cn("flex items-center gap-3 px-4 py-3 sm:px-5", className)}><RowBody chevron={chevron ?? false} {...body} /></li>;
+  if (!href) return <li className={cn("flex items-center gap-3.5 px-4 py-3.5 sm:px-5", className)}><RowBody chevron={chevron ?? false} {...body} /></li>;
   const inner = <RowBody chevron={chevron ?? true} {...body} />;
   return (
     <li>

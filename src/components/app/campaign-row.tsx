@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { PlatformStack } from "@/components/icons";
+import { PlatformAvatar } from "@/components/icons";
 import { CampaignStatusBadge } from "@/components/ui/badge";
 import { getObjective, objectiveShort } from "@/lib/catalog/objectives";
 import type { PlatformCode } from "@/lib/catalog/platforms";
@@ -18,25 +18,25 @@ export function campaignHref(c: { id: string; status: string; mode: string }, ba
 }
 
 /**
- * Ligne de campagne, identique sur toutes les listes : le nom et l'état sur la première ligne, l'objectif, le budget
- * et les réseaux sur la seconde. Le texte commence toujours au même endroit et l'état reste calé à droite.
+ * Ligne de campagne, identique sur toutes les listes : une vignette des réseaux, puis le nom et le budget
+ * sur la première ligne, l'objectif et l'état sur la seconde. Tout commence et finit aux mêmes endroits.
  */
 export function CampaignRow({ c, base = "/app", extra }: { c: CampaignRowData; base?: string; extra?: React.ReactNode }) {
   const objective = getObjective(c.objective);
   return (
-    <Link href={campaignHref(c, base)} className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-paper sm:px-5">
+    <Link href={campaignHref(c, base)} className="group flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-paper sm:px-5">
+      <PlatformAvatar platforms={c.platforms as PlatformCode[]} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-3">
-          <p className="min-w-0 flex-1 truncate font-medium leading-snug text-ink">{c.name}</p>
-          <span className="shrink-0"><CampaignStatusBadge status={c.status} short /></span>
+          <p className="min-w-0 flex-1 truncate font-semibold leading-snug text-ink">{c.name}</p>
+          {c.adBudget > 0 && <span className="tnum shrink-0 text-sm font-semibold text-ink">{formatFcfa(c.adBudget)}</span>}
         </div>
         <div className="mt-1 flex items-center gap-3">
           <p className="min-w-0 flex-1 truncate text-[13.5px] leading-snug text-muted">
-            {objective ? objectiveShort(objective) : "Objectif à définir"}
-            {c.adBudget > 0 && <> · <span className="tnum">{formatFcfa(c.adBudget)}</span></>}
+            {objective ? objectiveShort(objective) : c.mode === "EXPERT" ? "Confiée à un expert" : "Objectif à définir"}
             {c.startDate && <span className="hidden sm:inline"> · {formatPureDate(c.startDate)}{c.endDate ? ` → ${formatPureDate(c.endDate)}` : ""}</span>}
           </p>
-          <span className="flex shrink-0"><PlatformStack platforms={c.platforms as PlatformCode[]} compact /></span>
+          <span className="shrink-0"><CampaignStatusBadge status={c.status} short /></span>
         </div>
         {extra && <div className="mt-1 truncate leading-snug">{extra}</div>}
       </div>

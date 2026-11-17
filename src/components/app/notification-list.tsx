@@ -23,10 +23,13 @@ export async function NotificationList({ userId, fallbackHref, embedded }: { use
           <ul className="divide-y divide-line">
             {items.map((n) => (
               <li key={n.id}>
-                <Link href={n.link ?? fallbackHref} className="flex gap-3.5 px-4 sm:px-5 py-4 hover:bg-paper">
-                  <span className={`mt-1.5 size-2 shrink-0 rounded-full ${n.readAt ? "bg-line-strong" : "bg-marigold"}`} />
+                <Link href={n.link ?? fallbackHref} className="flex gap-3.5 px-4 py-4 hover:bg-paper sm:px-5">
+                  <span className={`relative flex size-11 shrink-0 items-center justify-center rounded-[14px] ${n.readAt ? "bg-sand text-muted" : "bg-marigold-soft text-[#9a6400]"}`}>
+                    <Bell className="size-5" />
+                    {!n.readAt && <span aria-hidden className="absolute -right-0.5 -top-0.5 size-3 rounded-full bg-clay ring-2 ring-surface" />}
+                  </span>
                   <span className="min-w-0 flex-1">
-                    <span className={`block text-[14.5px] ${n.readAt ? "text-ink-soft" : "font-medium text-ink"}`}>{n.title}</span>
+                    <span className={`block text-[14.5px] leading-snug ${n.readAt ? "font-medium text-ink-soft" : "font-semibold text-ink"}`}>{n.title}</span>
                     <span className="mt-0.5 block whitespace-pre-line text-[13.5px] text-muted">{n.body}</span>
                     <span className="mt-1 block text-xs text-muted">{formatDateTime(n.createdAt)}</span>
                   </span>

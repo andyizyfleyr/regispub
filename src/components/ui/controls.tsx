@@ -121,7 +121,7 @@ export function DatePicker({ id, name, value, defaultValue, min, max, onChange, 
     <P.Root open={open} onOpenChange={(o) => { setOpen(o); if (o && sel) setView({ y: sel.y, m: sel.m }); }}>
       {name && <input type="hidden" name={name} value={current} />}
       <P.Trigger id={id} type="button"
-        className={cn("flex h-11 w-full items-center gap-2.5 rounded-md border border-line-strong bg-surface px-3.5 text-left text-[15px] text-ink transition-[border-color,box-shadow] hover:border-ink/30 focus:border-green focus:outline-none focus:ring-4 focus:ring-green/12 data-[state=open]:border-green data-[state=open]:ring-4 data-[state=open]:ring-green/12", className)}>
+        className={cn("flex h-12 w-full items-center gap-2.5 rounded-md border border-[var(--field-line)] bg-[var(--field-bg)] px-4 text-left text-[15px] text-ink transition-[border-color,box-shadow] hover:border-ink/30 focus:border-green focus:outline-none focus:ring-4 focus:ring-green/12 data-[state=open]:border-green data-[state=open]:ring-4 data-[state=open]:ring-green/12", className)}>
         <CalendarDays className="size-[18px] shrink-0 text-green" />
         <span className={cn("tnum min-w-0 flex-1 truncate", !sel && "text-muted/70")}>{sel ? `${sel.d} ${SHORT[sel.m]} ${sel.y}` : placeholder}</span>
       </P.Trigger>

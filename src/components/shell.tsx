@@ -65,12 +65,11 @@ function NavLinks({ items, pathname, onNavigate }: { items: NavItem[]; pathname:
             <Link
               href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
               className={cn(
-                "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-[14px] transition-colors",
-                active ? "bg-green-soft font-semibold text-forest" : "text-ink-soft hover:bg-paper hover:text-ink",
+                "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-[14.5px] transition-colors",
+                active ? "bg-forest font-semibold text-white shadow-[0_8px_18px_-10px_rgb(11_42_31/0.7)]" : "text-ink-soft hover:bg-sand hover:text-ink",
               )}
             >
-              {active && <span aria-hidden className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-green" />}
-              <item.icon className={cn("size-[18px] shrink-0 transition-colors", active ? "text-green" : "text-muted group-hover:text-ink-soft")} />
+              <item.icon className={cn("size-[18px] shrink-0 transition-colors", active ? "text-marigold" : "text-muted group-hover:text-ink-soft")} />
               {item.label}
             </Link>
           </React.Fragment>
@@ -81,7 +80,7 @@ function NavLinks({ items, pathname, onNavigate }: { items: NavItem[]; pathname:
 }
 
 function Avatar({ name, className }: { name: string; className?: string }) {
-  return <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full bg-forest text-[12.5px] font-semibold text-white", className)}>{initials(name)}</span>;
+  return <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0b2a1f,#0b7a53)] text-[12.5px] font-semibold text-white", className)}>{initials(name)}</span>;
 }
 
 const menuItem = "flex cursor-pointer items-center gap-2.5 rounded-sm px-2.5 py-2 text-[14px] text-ink-soft outline-none data-[highlighted]:bg-paper data-[highlighted]:text-ink [&_svg]:size-4 [&_svg]:text-muted";
@@ -92,9 +91,9 @@ function UserMenu({ user, area, compact }: { user: { name: string; roleLabel: st
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
         aria-label="Menu du compte"
-        className={cn("flex items-center gap-3 rounded-md text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-green", compact ? "rounded-full" : "w-full border border-line p-2 hover:border-line-strong hover:bg-paper")}
+        className={cn("flex items-center gap-3 rounded-md text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-green", compact ? "rounded-full ring-2 ring-surface" : "w-full bg-paper p-2 hover:bg-sand")}
       >
-        <Avatar name={user.name} className={compact ? "size-8 text-[11.5px]" : undefined} />
+        <Avatar name={user.name} className={compact ? "size-10 text-[12.5px]" : undefined} />
         {!compact && (
           <>
             <span className="min-w-0 flex-1">
@@ -106,7 +105,7 @@ function UserMenu({ user, area, compact }: { user: { name: string; roleLabel: st
         )}
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content align={compact ? "end" : "start"} side={compact ? "bottom" : "top"} sideOffset={8} className="z-50 w-60 animate-pop rounded-md border border-line bg-surface p-1.5 shadow-pop">
+        <DropdownMenu.Content align={compact ? "end" : "start"} side={compact ? "bottom" : "top"} sideOffset={8} className="z-50 w-60 animate-pop rounded-lg border border-line/70 bg-surface p-1.5 shadow-pop">
           <div className="px-2.5 pb-2 pt-1.5">
             <p className="truncate text-[13.5px] font-semibold text-ink">{user.name}</p>
             <p className="truncate text-xs text-muted">{user.roleLabel}</p>
@@ -140,12 +139,12 @@ export function AppShell({ area, user, unread, allowed, children }: {
   const title = EXTRA_TITLES.find(([re]) => re.test(pathname))?.[1] ?? all.find((i) => isActive(pathname, i))?.label ?? (client ? "Accueil" : "Gestion");
 
   const bell = (
-    <Link href={notifHref} className="relative flex size-10 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-sand hover:text-ink" aria-label={`Notifications${unread ? ` (${unread} non lues)` : ""}`}>
+    <Link href={notifHref} className="relative flex size-10 items-center justify-center rounded-full bg-surface text-ink-soft shadow-card transition-colors hover:text-ink" aria-label={`Notifications${unread ? ` (${unread} non lues)` : ""}`}>
       <Bell className="size-5" />
       {unread > 0 && (
-        <span className="absolute right-1 top-1 flex">
+        <span className="absolute -right-0.5 -top-0.5 flex">
           <span aria-hidden className="absolute inset-0 animate-ping-soft rounded-full bg-clay" />
-          <span className="tnum relative flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-clay px-1 text-[10px] font-semibold text-white ring-2 ring-surface">{unread > 9 ? "9+" : unread}</span>
+          <span className="tnum relative flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-clay px-1 text-[10px] font-semibold text-white ring-2 ring-canvas">{unread > 9 ? "9+" : unread}</span>
         </span>
       )}
     </Link>
@@ -153,14 +152,14 @@ export function AppShell({ area, user, unread, allowed, children }: {
 
   const createButton = (onNavigate?: () => void) => (
     <Link href="/app/creer" onClick={onNavigate} aria-current={creating ? "page" : undefined}
-      className="flex h-11 items-center justify-center gap-2 rounded-md bg-marigold text-sm font-semibold text-forest shadow-glow transition-[background-color,transform] hover:bg-marigold-600 active:scale-[0.98]">
+      className="flex h-12 items-center justify-center gap-2 rounded-full bg-marigold text-sm font-semibold text-forest shadow-glow transition-[background-color,transform] hover:bg-marigold-600 active:scale-[0.98]">
       <Plus className="size-[18px]" strokeWidth={2.4} />Créer une publicité
     </Link>
   );
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]">
-      <aside className="no-print sticky top-0 hidden h-dvh flex-col border-r border-line bg-surface p-4 lg:flex">
+    <div className="min-h-dvh bg-canvas lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <aside className="no-print sticky top-0 hidden h-dvh flex-col border-r border-line/70 bg-surface p-4 lg:flex">
         <div className="mb-5 flex h-10 items-center justify-between px-2">
           <Link href={home}><Logo /></Link>
           {!client && <span className="rounded-full bg-forest px-2.5 py-1 text-[11px] font-semibold text-white">Gestion</span>}
@@ -172,11 +171,11 @@ export function AppShell({ area, user, unread, allowed, children }: {
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="no-print sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface/85 px-3 backdrop-blur-md sm:px-4 lg:h-16 lg:px-8">
+        <header className="no-print sticky top-0 z-30 flex h-16 items-center justify-between gap-3 bg-canvas/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-2">
             {!client && (
               <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger className="flex size-10 items-center justify-center rounded-full text-ink-soft hover:bg-sand lg:hidden" aria-label="Ouvrir le menu"><Menu className="size-5" /></DialogTrigger>
+                <DialogTrigger className="flex size-10 items-center justify-center rounded-full bg-surface text-ink-soft shadow-card lg:hidden" aria-label="Ouvrir le menu"><Menu className="size-5" /></DialogTrigger>
                 <DialogContent title="Menu" side="left"><NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} /></DialogContent>
               </Dialog>
             )}
@@ -187,33 +186,34 @@ export function AppShell({ area, user, unread, allowed, children }: {
               <span className="truncate font-medium text-ink">{title}</span>
             </p>
           </div>
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-2.5">
             {bell}
             <span className="lg:hidden"><UserMenu user={user} area={area} compact /></span>
           </div>
         </header>
 
-        <main className={cn("mx-auto w-full flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-9", client ? "max-w-4xl" : "max-w-6xl", client && !immersive && "pb-28 lg:pb-9")}>{children}</main>
+        <main className={cn("mx-auto w-full flex-1 px-4 pb-8 pt-2 sm:px-6 lg:px-8 lg:pb-10 lg:pt-4", client ? "max-w-4xl" : "max-w-6xl", client && !immersive && "pb-32 lg:pb-10")}>{children}</main>
 
         {client && !immersive && <PullToRefresh />}
 
         {client && !immersive && (
-          <nav className="no-print safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 items-end border-t border-line bg-surface/90 px-1 pt-1.5 backdrop-blur-md lg:hidden" aria-label="Navigation principale">
-            {[CLIENT_NAV[0]!, CLIENT_NAV[1]!].map((item) => <BottomLink key={item.id} item={item} active={isActive(pathname, item)} />)}
-            <Link href="/app/creer" aria-current={creating ? "page" : undefined} className="-mt-6 flex flex-col items-center gap-0.5 pb-1 text-[10.5px] font-semibold text-forest">
-              <span className="flex size-[3.25rem] items-center justify-center rounded-full bg-marigold shadow-glow ring-4 ring-surface transition-transform active:scale-95"><Plus className="size-6" strokeWidth={2.4} /></span>
-              Créer
-            </Link>
-            <BottomLink item={CLIENT_NAV[2]!} active={isActive(pathname, CLIENT_NAV[2]!)} />
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger className="flex flex-col items-center gap-0.5 py-1 text-[10.5px] text-muted">
-                <span className="flex h-7 w-12 items-center justify-center rounded-full"><Ellipsis className="size-5" /></span>Plus
-              </DialogTrigger>
-              <DialogContent title="Menu" side="bottom">
-                <div className="mb-3">{createButton(() => setOpen(false))}</div>
-                <NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} />
-              </DialogContent>
-            </Dialog>
+          <nav className="no-print pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden" aria-label="Navigation principale">
+            <div className="pointer-events-auto mx-auto grid max-w-md grid-cols-5 items-center rounded-[28px] border border-line/70 bg-surface/95 px-1.5 py-1.5 shadow-pop backdrop-blur-xl">
+              {[CLIENT_NAV[0]!, CLIENT_NAV[1]!].map((item) => <BottomLink key={item.id} item={item} active={isActive(pathname, item)} />)}
+              <Link href="/app/creer" aria-current={creating ? "page" : undefined} aria-label="Créer une publicité" className="-mt-8 flex flex-col items-center">
+                <span className="flex size-[3.75rem] items-center justify-center rounded-full bg-marigold text-forest shadow-glow ring-[5px] ring-canvas transition-transform active:scale-95"><Plus className="size-7" strokeWidth={2.4} /></span>
+              </Link>
+              <BottomLink item={CLIENT_NAV[2]!} active={isActive(pathname, CLIENT_NAV[2]!)} />
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger className="flex flex-col items-center gap-0.5 py-1 text-[10.5px] font-medium text-muted">
+                  <span className="flex h-8 w-12 items-center justify-center rounded-full"><Ellipsis className="size-[22px]" /></span>Plus
+                </DialogTrigger>
+                <DialogContent title="Menu" side="bottom">
+                  <div className="mb-3">{createButton(() => setOpen(false))}</div>
+                  <NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} />
+                </DialogContent>
+              </Dialog>
+            </div>
           </nav>
         )}
       </div>
@@ -223,8 +223,8 @@ export function AppShell({ area, user, unread, allowed, children }: {
 
 function BottomLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
-    <Link href={item.href} aria-current={active ? "page" : undefined} className={cn("flex flex-col items-center gap-0.5 py-1 text-[10.5px]", active ? "font-semibold text-forest" : "text-muted")}>
-      <span className={cn("flex h-7 w-12 items-center justify-center rounded-full transition-colors", active && "bg-green-soft text-green")}><item.icon className="size-5" /></span>
+    <Link href={item.href} aria-current={active ? "page" : undefined} className={cn("flex flex-col items-center gap-0.5 py-1 text-[10.5px]", active ? "font-semibold text-forest" : "font-medium text-muted")}>
+      <span className={cn("flex h-8 w-12 items-center justify-center rounded-full transition-colors", active && "bg-forest text-marigold")}><item.icon className="size-[22px]" strokeWidth={active ? 2.2 : 1.9} /></span>
       {item.short ?? item.label}
     </Link>
   );

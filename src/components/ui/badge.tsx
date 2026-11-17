@@ -15,7 +15,7 @@ const TONES: Record<Tone, string> = {
 
 export function Badge({ tone = "neutral", dot, live, className, children }: { tone?: Tone; dot?: boolean; live?: boolean; className?: string; children: React.ReactNode }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium leading-none", TONES[tone], className)}>
+    <span className={cn("inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-xs font-semibold leading-none", TONES[tone], className)}>
       {(dot || live) && (
         <span className="relative flex size-1.5">
           {live && <span className="absolute inset-0 animate-ping-soft rounded-full bg-current" />}
