@@ -11,8 +11,8 @@
 | Étape | Contenu | Aide apportée |
 | --- | --- | --- |
 | 1. Objectif | Plateformes (Facebook et Instagram présélectionnés) et résultat attendu | Objectifs classés par famille, tarif de la prestation affiché, conseil et repère de budget |
-| 2. Votre annonce | Entreprise, offre, photo ou vidéo, texte de l'annonce | Aperçu en direct sur chaque plateforme ; bouton « Rédiger pour moi » (origine indiquée : IA ou modèles de l'équipe) |
-| 3. Audience | Zone, profil, centres d'intérêt | Audience proposée d'office à partir de l'activité ; réglages détaillés repliés |
+| 2. Votre annonce | Entreprise, offre, photo ou vidéo, texte de l'annonce | Aperçu en direct sur chaque plateforme ; le client écrit son texte ou le laisse à notre équipe |
+| 3. Audience | Zone, profil, centres d'intérêt | Audience de départ remplie selon le secteur et la ville (table fixe `lib/catalog/audience-defaults`, sans IA) ; réglages détaillés repliés |
 | 4. Budget | Budget, durée, date de début, niveau d'accompagnement, code promotionnel, récapitulatif | Montants et durées prédéfinis ; devis recalculé par le serveur à chaque changement |
 
 ### Je confie ma publicité à un expert
@@ -55,4 +55,4 @@ Le nom du profil Facebook à ajouter se règle dans Gestion → Paramètres (« 
 
 ## Autour de la campagne
 
-Assistant marketing (diagnostic, calendrier, idées, légendes, hashtags), historique des paiements et reçus, fidélité, parrainage, accompagnement mensuel, support par ticket.
+Historique des paiements et reçus, fidélité, parrainage, accompagnement mensuel, support par ticket.

@@ -10,7 +10,8 @@ Règles : icônes linéaires (lucide), peu de texte, coins arrondis, beaucoup d'
 | Infobulle | `Tip`, `InfoTip` | `src/components/ui/controls.tsx` |
 | Menu déroulant (s'écrit comme un `<select>`) | `Select` | `src/components/ui/select.tsx` |
 | Champ, saisie | `Field`, `Input`, `Textarea` | `src/components/ui/form.tsx` |
-| Étiquette de statut | `Badge`, `CampaignStatusBadge` | `src/components/ui/badge.tsx` |
+| Pastille d'état | `StatusIcon` (bulle), `CampaignStatusIcon`, `StateIcon`, `ToneIcon` | `src/components/ui/status-icon.tsx`, `src/components/ui/badge.tsx` |
+| Étiquette (hors état) | `Badge` | `src/components/ui/badge.tsx` |
 | Carte, tuile, chiffre clé, bandeau | `Card`, `Tile`, `StatTile`, `Banner` | `src/components/ui/card.tsx`, `tile.tsx` |
 | Liste | `List`, `ListRow` | `src/components/ui/list.tsx` |
 | Ligne de campagne | `CampaignRow` | `src/components/app/campaign-row.tsx` |
@@ -66,5 +67,25 @@ Sur téléphone (moins de 640 px de large), toute l'interface est réduite d'env
 ## Accueil client et barre du haut
 
 - **Accueil** : le bandeau vert, puis « À faire », puis « Vos campagnes ». Pas de raccourcis sous le bandeau : le menu du bas suffit.
-- **« Vos campagnes » (accueil)** : l'état est un pictogramme seul (`CampaignRow statusIcon`, composant `CampaignStatusIcon`), sans texte. Le libellé reste donné aux lecteurs d'écran. Les autres listes gardent le badge avec texte.
+- **« Vos campagnes »** : l'état est une pastille (voir « États : pastilles rondes »), comme partout ailleurs.
 - **Barre du haut sur téléphone** : logo et cloche uniquement, pas d'avatar. Le client passe par « Plus » → « Mon compte » (bouton « Se déconnecter » en bas de la page). L'équipe retrouve son compte en bas du menu latéral.
+
+## États : pastilles rondes
+
+Un état ne s'écrit jamais en toutes lettres dans une liste, un tableau ou un en-tête : c'est une **petite pastille ronde colorée** (24 px, 22 px sur téléphone) avec un pictogramme. Le libellé s'ouvre dans une bulle.
+
+- **Ordinateur** : la bulle s'ouvre au survol de la souris.
+- **Téléphone** : la bulle s'ouvre après un appui long (0,4 s) et reste environ 2 secondes. Elle se ferme si la page défile ou si l'on touche ailleurs. Un appui court ouvre la ligne comme d'habitude ; l'appui long n'ouvre ni la ligne ni le menu du navigateur.
+- **Lecteurs d'écran** : le libellé est dans `aria-label`.
+
+| Cas | Composant |
+| --- | --- |
+| État d'une campagne | `<CampaignStatusIcon status={…} />` |
+| Commande, paiement, remboursement, validation, demande de modification, réclamation, abonnement, envoi, import | `<StateIcon kind="order" value={…} />` |
+| Autre état (intégration, code promo, prestation, accès, compte suspendu) | `<ToneIcon tone="ok" label="Actif" />` : la couleur choisit le pictogramme, `icon` permet d'en fournir un autre |
+| En-tête de page | `PageHeader status={…}` pose la pastille à droite du titre |
+
+Couleurs : vert = bon, jaune = action attendue, bleu = en cours, rouge = problème, gris = neutre ou terminé (`src/components/ui/tones.ts`).
+
+Restent en texte, parce que ce ne sont pas des pastilles d'état : les filtres (« En cours », « Terminées »…), le menu « Nouveau statut » de l'équipe, l'historique d'une campagne, la légende du graphique des rapports et le bilan imprimable. `Badge` ne sert plus à afficher un état.
+

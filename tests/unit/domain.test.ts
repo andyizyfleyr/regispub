@@ -164,3 +164,27 @@ describe("comptes du client sur les réseaux", () => {
     expect(missingAccounts(["FACEBOOK"], null)).toEqual(["FACEBOOK"]);
   });
 });
+
+describe("audience de départ et garde-fous (sans IA)", () => {
+  it("propose une audience selon le secteur et la ville", async () => {
+    const { defaultAudience } = await import("@/lib/catalog/audience-defaults");
+    const { INTEREST_GROUPS, CUSTOMER_CATEGORIES } = await import("@/lib/catalog/targeting");
+    const known = new Set(INTEREST_GROUPS.flatMap((g) => g.items));
+    const beauty = defaultAudience({ sector: "Beauté et cosmétiques", city: "Cotonou" });
+    expect(beauty.cities).toEqual(["Cotonou"]);
+    expect(beauty.gender).toBe("FEMALE");
+    expect(beauty.ageMin).toBeLessThan(beauty.ageMax);
+    expect(beauty.interests.length).toBeGreaterThan(0);
+    expect(beauty.interests.every((i) => known.has(i))).toBe(true);
+    expect(beauty.categories.every((c) => CUSTOMER_CATEGORIES.includes(c))).toBe(true);
+    const unknown = defaultAudience({ sector: "Secteur inconnu" });
+    expect(unknown.cities).toEqual([]);
+    expect(unknown.gender).toBe("ALL");
+  });
+
+  it("signale les formulations refusées par les plateformes", async () => {
+    const { policyWarnings } = await import("@/lib/campaigns/policy");
+    expect(policyWarnings("Résultat garanti à 100 %")).toHaveLength(1);
+    expect(policyWarnings("Robes en wax cousues main, livraison à Cotonou.")).toEqual([]);
+  });
+});

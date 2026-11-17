@@ -3,8 +3,7 @@
 import { ACCOUNT_FIELDS, normalizeAccount } from "@/lib/catalog/accounts";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { policyWarnings, strategySchema, type BusinessContext, type Strategy, type TargetingAdvice } from "@/lib/ai/schemas";
-import { runAiTask } from "@/lib/ai/service";
+import { policyWarnings } from "@/lib/campaigns/policy";
 import { audit } from "@/lib/audit";
 import { can, canViewCampaign } from "@/lib/auth/permissions";
 import { assertUser } from "@/lib/auth/session";
@@ -78,7 +77,6 @@ const patchSchema = z.object({
   destinationWhatsapp: text(40),
   destinationUrl: text(300),
   brief: text(3000).min(30, "Décrivez votre besoin en quelques phrases (30 caractères minimum)."),
-  strategy: strategySchema,
   adCopy: z.object({ headline: text(90), body: text(900), cta: text(40) }),
   targeting: targetingSchema,
   adBudget: z.number().int().min(0),
@@ -113,7 +111,7 @@ export async function saveCampaignAction(campaignId: string, input: CampaignPatc
       const bad = unsupportedPlatforms(objective, platforms);
       if (platforms.length && bad.length === platforms.length) throw new UserError(`« ${objective.label} » n'est pas disponible sur ${platformLabel(bad)}.`);
       data.objective = objective.code;
-      if (objective.code !== campaign.objective) { data.strategy = null; data.adCopy = null; }
+      if (objective.code !== campaign.objective) data.adCopy = null;
       if (campaign.name === "Nouvelle campagne" || campaign.name === "Campagne confiée à un expert") data.name = truncate(objective.label, 80);
     }
     if (p.business) {
@@ -150,7 +148,6 @@ export async function saveCampaignAction(campaignId: string, input: CampaignPatc
       if (p.destinationUrl && !/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(p.destinationUrl)) throw new UserError("Le lien de votre page doit commencer par https://");
       data.destinationUrl = p.destinationUrl || null;
     }
-    if (p.strategy) data.strategy = { ...(campaign.strategy as object | null ?? {}), ...p.strategy, edited: true };
     if (p.adCopy) data.adCopy = p.adCopy;
     if (p.targeting) {
       const allowed = new Set(p.targeting.countries.flatMap((c) => CITIES_BY_COUNTRY[c] ?? []));
@@ -181,47 +178,6 @@ export async function saveCampaignAction(campaignId: string, input: CampaignPatc
     await db.campaign.update({ where: { id: campaign.id }, data });
     const warnings = policyWarnings([p.productDescription, p.productName, p.brief, p.adCopy?.headline, p.adCopy?.body].filter(Boolean).join(" "));
     return { warnings };
-  });
-}
-
-async function contextFor(campaignId: string, userId: string): Promise<{ ctx: BusinessContext; campaign: Awaited<ReturnType<typeof ownedEditable>> }> {
-  const campaign = await ownedEditable(campaignId, userId);
-  const business = campaign.businessId ? await db.business.findUnique({ where: { id: campaign.businessId } }) : null;
-  const objective = getObjective(campaign.objective);
-  const targeting = campaign.targeting as { countries?: string[] } | null;
-  return {
-    campaign,
-    ctx: {
-      businessName: business?.name ?? campaign.name, sector: business?.sector ?? "", description: business?.description ?? undefined,
-      productName: campaign.productName ?? undefined, productDescription: campaign.productDescription ?? campaign.brief ?? undefined, productPrice: campaign.productPrice,
-      city: business?.city ?? undefined, country: TARGET_COUNTRIES.find((c) => c.code === (targeting?.countries?.[0] ?? business?.country ?? "BJ"))?.name,
-      audienceNote: campaign.audienceNote ?? undefined, objectiveLabel: objective?.label, objectiveCode: objective?.code, platforms: campaign.platforms,
-    } as BusinessContext,
-  };
-}
-
-/** Étape 4 : analyse et propositions. Le résultat indique toujours s'il vient d'un modèle d'IA ou de suggestions guidées. */
-export async function generateStrategyAction(campaignId: string) {
-  return safeAction(async () => {
-    const user = await assertUser();
-    const { ctx, campaign } = await contextFor(campaignId, user.id);
-    if (!campaign.objective || !campaign.productDescription) throw new UserError("Renseignez d'abord votre objectif et la description de votre offre.");
-    const res = await runAiTask<Strategy>("strategy", ctx, user, campaign.id);
-    if (!res.ok) throw new UserError(res.error);
-    const strategy = { ...res.data, engine: res.engine, generatedAt: new Date().toISOString() };
-    const first = res.data.texts[0];
-    await db.campaign.update({ where: { id: campaign.id }, data: { strategy, adCopy: first ? { headline: first.headline, body: first.body, cta: first.cta } : undefined } });
-    return { strategy, engine: res.engine, notice: res.notice ?? null, adCopy: first ?? null };
-  });
-}
-
-export async function suggestTargetingAction(campaignId: string) {
-  return safeAction(async () => {
-    const user = await assertUser();
-    const { ctx, campaign } = await contextFor(campaignId, user.id);
-    const res = await runAiTask<TargetingAdvice>("targeting", ctx, user, campaign.id);
-    if (!res.ok) throw new UserError(res.error);
-    return { advice: res.data, engine: res.engine };
   });
 }
 
@@ -337,7 +293,7 @@ export async function duplicateCampaignAction(campaignId: string) {
     data: {
       reference: makeReference("CMP"), userId: user.id, businessId: c.businessId, mode: c.mode, name: truncate(`${c.name} (copie)`, 80), platforms: c.platforms, objective: c.objective, serviceCode: c.serviceCode,
       productName: c.productName, productDescription: c.productDescription, productPrice: c.productPrice, audienceNote: c.audienceNote, destinationWhatsapp: c.destinationWhatsapp,
-      destinationUrl: c.destinationUrl, brief: c.brief, targeting: c.targeting ?? undefined, strategy: c.strategy ?? undefined, adCopy: c.adCopy ?? undefined, adBudget: c.adBudget,
+      destinationUrl: c.destinationUrl, brief: c.brief, targeting: c.targeting ?? undefined, adCopy: c.adCopy ?? undefined, adBudget: c.adBudget,
       budgetSplit: c.budgetSplit ?? undefined, durationDays: c.durationDays, startDate: addDays(todayUtc(), 2), endDate: c.durationDays ? addDays(todayUtc(), 1 + c.durationDays) : null, wizardStep: c.wizardStep,
       assets: { create: c.assets.map((a) => ({ assetId: a.assetId, role: a.role, addedById: user.id })) },
     },

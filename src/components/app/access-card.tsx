@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Check, ExternalLink, Eye, EyeOff, KeyRound, LoaderCircle, Lock, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformBadge } from "@/components/icons";
-import { Badge } from "@/components/ui/badge";
+import { ToneIcon } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/form";
@@ -52,7 +52,7 @@ export function AccessCard({ campaignId, items, agency }: { campaignId: string; 
               <div className="flex items-center gap-3">
                 <PlatformBadge platform={it.platform} />
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 text-sm font-medium text-ink"><span className="w-[4.5rem] shrink-0">{PLATFORMS[it.platform].label}</span><Badge tone={meta.tone}>{meta.label}</Badge></p>
+                  <p className="flex items-center gap-2 text-sm font-medium text-ink"><span className="w-[4.5rem] shrink-0">{PLATFORMS[it.platform].label}</span><ToneIcon tone={meta.tone} label={meta.label} /></p>
                   {it.account && <p className="mt-0.5 truncate text-[0.8125rem] text-muted">{it.account}</p>}
                 </div>
                 {act ? (

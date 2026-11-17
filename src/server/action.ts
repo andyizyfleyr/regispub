@@ -1,7 +1,6 @@
 import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 import { ForbiddenError } from "@/lib/auth/session";
-import { AiError } from "@/lib/ai/providers";
 import { DomainError } from "@/lib/errors";
 import { createLogger } from "@/lib/logger";
 import { QuoteError } from "@/lib/pricing/quote";
@@ -27,7 +26,6 @@ export function formDataToObject(formData: FormData) {
 export function toActionError(error: unknown): ActionState {
   unstable_rethrow(error);
   if (error instanceof ForbiddenError || error instanceof UserError || error instanceof DomainError || error instanceof QuoteError) return { ok: false, error: error.message };
-  if (error instanceof AiError) return { ok: false, error: error.userMessage };
   log.error("action en échec", { error });
   return { ok: false, error: "Une erreur inattendue est survenue. Réessayez ; si le problème persiste, contactez le support." };
 }

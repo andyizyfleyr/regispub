@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { RoleSelect } from "@/components/staff/admin-panels";
 import { ActionButton, ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
-import { Badge } from "@/components/ui/badge";
+import { ToneIcon } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/form";
 import { PageHeader, Table } from "@/components/ui/misc";
@@ -28,7 +28,7 @@ export default async function TeamPage() {
                 const manageable = u.id !== actor.id && canManageAccount(actor.role, u.role);
                 return (
                   <tr key={u.id}>
-                    <td><span className="block font-medium text-ink">{u.name}{u.id === actor.id && <span className="ml-1.5 text-xs font-normal text-muted">(vous)</span>}</span><span className="block text-xs text-muted">{u.email}</span>{u.status === "SUSPENDED" && <Badge tone="danger">Suspendu</Badge>}</td>
+                    <td><span className="block font-medium text-ink">{u.name}{u.id === actor.id && <span className="ml-1.5 text-xs font-normal text-muted">(vous)</span>}</span><span className="block text-xs text-muted">{u.email}</span>{u.status === "SUSPENDED" && <ToneIcon tone="danger" label="Suspendu" className="mt-1" />}</td>
                     <td>{manageable ? <RoleSelect userId={u.id} role={u.role} roles={roles.map((r) => ({ id: r, label: ROLE_LABELS[r] }))} /> : ROLE_LABELS[u.role]}</td>
                     <td className="tnum">{u._count.managedCampaigns}</td>
                     <td className="whitespace-nowrap text-muted">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "Jamais"}</td>

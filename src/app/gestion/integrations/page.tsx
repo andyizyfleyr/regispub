@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Badge, type Tone } from "@/components/ui/badge";
+import { Check, FlaskConical, KeyRound, ShieldAlert, Clock } from "lucide-react";
+import { ToneIcon, type Tone } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Notice, PageHeader } from "@/components/ui/misc";
 import { requirePermission } from "@/lib/auth/session";
@@ -9,6 +10,8 @@ import { integrationsStatus, STATE_LABELS, type IntegrationState } from "@/lib/i
 export const metadata: Metadata = { title: "Intégrations" };
 
 const TONES: Record<IntegrationState, Tone> = { operational: "ok", simulation: "warn", needs_config: "neutral", needs_authorization: "info", planned: "neutral" };
+
+const ICONS: Record<IntegrationState, React.ReactNode> = { operational: <Check aria-hidden />, simulation: <FlaskConical aria-hidden />, needs_config: <KeyRound aria-hidden />, needs_authorization: <ShieldAlert aria-hidden />, planned: <Clock aria-hidden /> };
 
 export default async function IntegrationsPage() {
   await requirePermission("integration.view");
@@ -32,7 +35,7 @@ export default async function IntegrationsPage() {
                     <p className="mt-0.5 text-[0.8125rem] text-ink-soft">{i.detail}</p>
                     {i.action && <p className="mt-1.5 text-[0.8125rem] text-muted"><span className="font-medium text-ink-soft">Pour l&apos;activer :</span> {i.action}</p>}
                   </div>
-                  <Badge tone={TONES[i.state]} dot>{STATE_LABELS[i.state]}</Badge>
+                  <ToneIcon tone={TONES[i.state]} label={STATE_LABELS[i.state]} icon={ICONS[i.state]} />
                 </li>
               ))}
             </ul>

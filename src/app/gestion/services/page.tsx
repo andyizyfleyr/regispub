@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ServiceDialog } from "@/components/staff/admin-panels";
-import { Badge } from "@/components/ui/badge";
+import { EyeOff } from "lucide-react";
+import { ToneIcon } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Notice, PageHeader, Table } from "@/components/ui/misc";
 import { requirePermission } from "@/lib/auth/session";
@@ -39,7 +40,7 @@ export default async function ServicesPage() {
                     <td><span className="block font-medium text-ink">{s.name}</span><span className="block max-w-md text-xs text-muted">{s.description}</span></td>
                     <td className="font-mono text-xs text-muted">{s.code}</td>
                     <td className="tnum whitespace-nowrap font-medium">{formatFcfa(s.fee)}{s.periodDays ? <span className="font-normal text-muted"> / {s.periodDays} j</span> : null}</td>
-                    <td><Badge tone={s.active ? "ok" : "neutral"}>{s.active ? "Proposée" : "Masquée"}</Badge></td>
+                    <td><ToneIcon tone={s.active ? "ok" : "neutral"} label={s.active ? "Proposée" : "Masquée"} icon={s.active ? undefined : <EyeOff aria-hidden />} /></td>
                     <td className="text-right"><ServiceDialog minFee={minFee} service={{ id: s.id, code: s.code, name: s.name, description: s.description, kind: s.kind, fee: s.fee, periodDays: s.periodDays, features: s.features, active: s.active, sortOrder: s.sortOrder }} /></td>
                   </tr>
                 ))}

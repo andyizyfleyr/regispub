@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
 import {
   Bell, ChartColumn, ChevronsUpDown, CreditCard, Ellipsis, FolderKanban, Headset, House, LifeBuoy, LogOut, Megaphone, Menu, PlugZap, Plus,
-  ReceiptText, ScrollText, Send, Settings, ShieldCheck, Sparkles, Tags, TicketPercent, UserRound, Users, Wallet, type LucideIcon,
+  ReceiptText, ScrollText, Send, Settings, ShieldCheck, Tags, TicketPercent, UserRound, Users, Wallet, type LucideIcon,
 } from "lucide-react";
 import { Logo } from "@/components/icons";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -20,7 +20,6 @@ const CLIENT_NAV: NavItem[] = [
   { id: "home", href: "/app", label: "Accueil", icon: House, exact: true },
   { id: "campaigns", href: "/app/campagnes", label: "Mes campagnes", short: "Campagnes", icon: Megaphone },
   { id: "payments", href: "/app/paiements", label: "Paiements", icon: Wallet },
-  { id: "assistant", href: "/app/assistant", label: "Assistant marketing", short: "Assistant", icon: Sparkles },
   { id: "account", href: "/app/compte", label: "Mon compte", short: "Compte", icon: UserRound },
   { id: "expert", href: "/app/expert", label: "Confier à un expert", icon: Headset },
 ];

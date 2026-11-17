@@ -8,7 +8,7 @@ import { CampaignActions, CreativeReview } from "@/components/app/campaign-clien
 import { CampaignSummary } from "@/components/app/campaign-summary";
 import { MetricsView } from "@/components/app/metrics-view";
 import { Thread } from "@/components/app/thread";
-import { CampaignStatusBadge, StateBadge } from "@/components/ui/badge";
+import { CampaignStatusIcon, StateIcon } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { List, ListRow, SectionTitle } from "@/components/ui/list";
@@ -94,9 +94,9 @@ export default async function CampaignPage({ params, searchParams }: { params: P
       </Link>
 
       <header className="mb-6 animate-rise">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="text-[1.5rem] font-semibold leading-tight sm:text-[1.75rem]">{c.name}</h1>
-          <CampaignStatusBadge status={status} />
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <h1 className="min-w-0 text-[1.5rem] font-semibold leading-tight sm:text-[1.75rem]">{c.name}</h1>
+          <CampaignStatusIcon status={status} />
         </div>
         <p className="mt-1.5 text-muted">{STATUS_META[status].clientHint}</p>
         {status !== "CANCELLED" && (
@@ -192,7 +192,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
               <List>
                 {c.revisions.map((r) => (
                   <li key={r.id} className="px-4 py-3.5 text-sm sm:px-5">
-                    <div className="flex items-start justify-between gap-3"><p className="whitespace-pre-wrap text-ink">{r.description}</p><StateBadge kind="revision" value={r.status} /></div>
+                    <div className="flex items-start justify-between gap-3"><p className="whitespace-pre-wrap text-ink">{r.description}</p><StateIcon kind="revision" value={r.status} /></div>
                     {r.response && <p className="mt-2 rounded-md bg-sand px-3 py-2 text-[0.8125rem] text-ink-soft">Réponse : {r.response}</p>}
                     <p className="mt-1.5 text-xs text-muted">{formatDateTime(r.createdAt)}</p>
                   </li>

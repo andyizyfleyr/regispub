@@ -9,7 +9,7 @@ Navigateur ──► Pages serveur (lecture directe en base, droits vérifiés �
            ──► Server Actions (validation Zod → contrôle des droits → logique métier src/lib)
 Prestataire de paiement ──► /api/webhooks/payments/{provider} ──► re-vérification chez le prestataire
 Vercel Cron ──► /api/cron/quotidien ──► paiements en attente, statistiques, entretien
-src/lib ──► PostgreSQL (Prisma) · stockage (disque ou S3) · IA · e-mail / WhatsApp · API publicitaires
+src/lib ──► PostgreSQL (Prisma) · stockage (disque ou S3) · e-mail / WhatsApp · API publicitaires
 ```
 
 ## Couches
@@ -28,8 +28,6 @@ Chaque service externe est derrière une interface ; l'absence de configuration 
 | Interface | Implémentations | Sans configuration |
 | --- | --- | --- |
 | `PaymentProvider` (`lib/payments`) | FedaPay, simulateur | Paiement indisponible en production ; simulateur en développement |
-| Fournisseur de texte (`lib/ai`) | OpenAI (et compatibles), Anthropic, Gemini | Suggestions guidées, marquées `engine: "rules"` |
-| Fournisseur d'images | OpenAI | Bouton masqué |
 | Stockage (`lib/storage`) | Disque local, S3 | Disque local |
 | Canaux de notification | In-app, Resend, WhatsApp Cloud API | In-app seul ; les envois externes sont consignés « non envoyés » |
 | Adaptateurs publicitaires (`lib/ads`) | Meta Insights, TikTok Reporting (lecture) | Import CSV et saisie manuelle |

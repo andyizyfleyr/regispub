@@ -28,12 +28,6 @@ export const env = {
   get fedapaySecretKey() { return str("FEDAPAY_SECRET_KEY"); },
   get fedapayWebhookSecret() { return str("FEDAPAY_WEBHOOK_SECRET"); },
 
-  get aiTextProvider() { return str("AI_TEXT_PROVIDER").toLowerCase(); },
-  get aiTextModel() { return str("AI_TEXT_MODEL"); },
-  get openaiKey() { return str("OPENAI_API_KEY"); },
-  get openaiBaseUrl() { return str("OPENAI_BASE_URL", "https://api.openai.com/v1").replace(/\/$/, ""); },
-  get anthropicKey() { return str("ANTHROPIC_API_KEY"); },
-  get geminiKey() { return str("GEMINI_API_KEY"); },
 
   get storageDriver() { return str("STORAGE_DRIVER", "local").toLowerCase(); },
   get storageLocalDir() { return str("STORAGE_LOCAL_DIR", ".data/uploads"); },

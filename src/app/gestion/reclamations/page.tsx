@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LifeBuoy } from "lucide-react";
 import { TicketPanel } from "@/components/staff/admin-panels";
 import { FilterChips } from "@/components/staff/common";
-import { StateBadge } from "@/components/ui/badge";
+import { StateIcon } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
 import { requirePermission } from "@/lib/auth/session";
@@ -35,7 +35,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
               {tickets.map((t) => (
                 <li key={t.id}>
                   <Link href={`${base}?${view === "closes" ? "vue=closes&" : ""}id=${t.id}`} scroll={false} className={cn("block px-4 py-3 text-sm hover:bg-paper", t.id === selected?.id && "bg-green-soft/60")}>
-                    <span className="flex items-start justify-between gap-2"><span className="min-w-0 truncate font-medium text-ink">{t.subject}</span><StateBadge kind="ticket" value={t.status} /></span>
+                    <span className="flex items-start justify-between gap-2"><span className="min-w-0 truncate font-medium text-ink">{t.subject}</span><StateIcon kind="ticket" value={t.status} /></span>
                     <span className="mt-0.5 block text-xs text-muted">{t.user.name} · {t.category} · {formatDateTime(t.createdAt)}</span>
                   </Link>
                 </li>
@@ -48,7 +48,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
               <CardBody className="space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div><h2 className="text-lg font-semibold">{selected.subject}</h2><p className="text-xs text-muted"><span className="font-mono">{selected.reference}</span> · {selected.category} · {formatDateTime(selected.createdAt)}{selected.assignee ? ` · suivie par ${selected.assignee.name}` : ""}</p></div>
-                  <StateBadge kind="ticket" value={selected.status} />
+                  <StateIcon kind="ticket" value={selected.status} />
                 </div>
                 <p className="whitespace-pre-wrap rounded-md bg-paper p-4 text-sm text-ink-soft">{selected.body}</p>
                 <div className="text-sm">

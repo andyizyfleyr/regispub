@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { PlatformAvatar } from "@/components/icons";
-import { CampaignStatusBadge, CampaignStatusIcon } from "@/components/ui/badge";
+import { CampaignStatusIcon } from "@/components/ui/badge";
 import { getObjective, objectiveShort } from "@/lib/catalog/objectives";
 import type { PlatformCode } from "@/lib/catalog/platforms";
 import { formatFcfa, formatPureDate } from "@/lib/utils";
@@ -19,9 +19,9 @@ export function campaignHref(c: { id: string; status: string; mode: string }, ba
 
 /**
  * Ligne de campagne, identique sur toutes les listes : une vignette des réseaux, puis le nom et le budget
- * sur la première ligne, l'objectif et l'état sur la seconde. Tout commence et finit aux mêmes endroits.
+ * sur la première ligne, l'objectif et la pastille d'état sur la seconde. Tout commence et finit aux mêmes endroits.
  */
-export function CampaignRow({ c, base = "/app", extra, statusIcon }: { c: CampaignRowData; base?: string; extra?: React.ReactNode; /** État en pictogramme seul, sans texte. */ statusIcon?: boolean }) {
+export function CampaignRow({ c, base = "/app", extra }: { c: CampaignRowData; base?: string; extra?: React.ReactNode }) {
   const objective = getObjective(c.objective);
   return (
     <Link href={campaignHref(c, base)} className="group flex items-center gap-3 px-3.5 py-3 transition-colors hover:bg-paper sm:gap-3.5 sm:px-5 sm:py-3.5">
@@ -36,7 +36,7 @@ export function CampaignRow({ c, base = "/app", extra, statusIcon }: { c: Campai
             {objective ? objectiveShort(objective) : c.mode === "EXPERT" ? "Confiée à un expert" : "Objectif à définir"}
             {c.startDate && <span className="hidden sm:inline"> · {formatPureDate(c.startDate)}{c.endDate ? ` → ${formatPureDate(c.endDate)}` : ""}</span>}
           </p>
-          <span className="shrink-0">{statusIcon ? <CampaignStatusIcon status={c.status} /> : <CampaignStatusBadge status={c.status} short />}</span>
+          <span className="shrink-0"><CampaignStatusIcon status={c.status} /></span>
         </div>
         {extra && <div className="mt-1 truncate leading-snug">{extra}</div>}
       </div>

@@ -1,14 +1,11 @@
 import { accountsOf, type Accounts } from "@/lib/catalog/accounts";
 import "server-only";
-import { aiStatus } from "@/lib/ai/service";
-import type { Strategy } from "@/lib/ai/schemas";
 import { normalizeSplit, type PlatformCode } from "@/lib/catalog/platforms";
 import { DEFAULT_TARGETING, type Targeting } from "@/lib/catalog/targeting";
 import { db } from "@/lib/db";
 import { loadSettings } from "@/lib/settings";
 import { isRecord, toIsoDate } from "@/lib/utils";
 
-export type StrategyState = Strategy & { engine?: "ai" | "rules"; edited?: boolean };
 export type AdCopy = { headline: string; body: string; cta: string };
 export type LinkedAsset = { linkId: string; assetId: string; role: string; name: string; kind: string; format: string | null; approval: string };
 export type LibraryAsset = { id: string; name: string; kind: string; source: string; format: string | null };
@@ -17,7 +14,7 @@ export type EditorData = {
   campaign: {
     id: string; reference: string; mode: "SELF_SERVICE" | "EXPERT"; status: string; name: string; platforms: PlatformCode[]; objective: string | null; serviceCode: string | null;
     businessId: string | null; productName: string; productDescription: string; productPrice: number | null; audienceNote: string; destinationWhatsapp: string; destinationUrl: string; brief: string;
-    targeting: Targeting; strategy: StrategyState | null; adCopy: AdCopy | null; adBudget: number; budgetSplit: Record<string, number>; durationDays: number | null; startDate: string | null; wizardStep: number;
+    targeting: Targeting; adCopy: AdCopy | null; adBudget: number; budgetSplit: Record<string, number>; durationDays: number | null; startDate: string | null; wizardStep: number;
   };
   businesses: { id: string; name: string; sector: string; city: string; accounts?: Accounts }[];
   levels: { code: string; name: string; description: string; fee: number; kind: string; features: string[] }[];
@@ -25,7 +22,6 @@ export type EditorData = {
   limits: { minAdBudget: number; minDailyBudget: number; maxAdBudget: number; extraPlatformFee: number; minServiceFee: number };
   links: LinkedAsset[];
   library: LibraryAsset[];
-  ai: { text: string | null };
   promoCode: string | null;
 };
 
@@ -59,14 +55,13 @@ export async function loadEditorData(campaignId: string, userId: string): Promis
     loadSettings(),
     db.asset.findMany({ where: { ownerId: userId }, orderBy: { createdAt: "desc" }, take: 60 }),
   ]);
-  const ai = aiStatus();
   const platforms = c.platforms as PlatformCode[];
   return {
     campaign: {
       id: c.id, reference: c.reference, mode: c.mode, status: c.status, name: c.name, platforms, objective: c.objective, serviceCode: c.serviceCode, businessId: c.businessId,
       productName: c.productName ?? "", productDescription: c.productDescription ?? "", productPrice: c.productPrice, audienceNote: c.audienceNote ?? "",
       destinationWhatsapp: c.destinationWhatsapp ?? "", destinationUrl: c.destinationUrl ?? "", brief: c.brief ?? "", targeting: readTargeting(c.targeting),
-      strategy: isRecord(c.strategy) && Array.isArray(c.strategy.texts) ? (c.strategy as unknown as StrategyState) : null, adCopy: readAdCopy(c.adCopy),
+      adCopy: readAdCopy(c.adCopy),
       adBudget: c.adBudget, budgetSplit: normalizeSplit(platforms, c.budgetSplit), durationDays: c.durationDays, startDate: c.startDate ? toIsoDate(c.startDate) : null, wizardStep: c.wizardStep,
     },
     businesses: businesses.map((b) => ({ id: b.id, name: b.name, sector: b.sector, city: b.city ?? "", accounts: accountsOf(b) })),
@@ -75,7 +70,6 @@ export async function loadEditorData(campaignId: string, userId: string): Promis
     limits: { minAdBudget: settings.minAdBudget, minDailyBudget: settings.minDailyBudget, maxAdBudget: settings.maxAdBudget, extraPlatformFee: settings.extraPlatformFee, minServiceFee: settings.minServiceFee },
     links: c.assets.map((l) => ({ linkId: l.id, assetId: l.assetId, role: l.role, name: l.asset.name, kind: l.asset.kind, format: l.asset.format, approval: l.approval })),
     library: library.map((a) => ({ id: a.id, name: a.name, kind: a.kind, source: a.source, format: a.format })),
-    ai: { text: ai.text?.provider ?? null },
     promoCode: c.orders[0]?.promoCode?.code ?? null,
   };
 }

@@ -63,8 +63,6 @@ model User {
   loyaltyEntries    LoyaltyEntry[]
   promoRedemptions  PromoRedemption[]
   ownedPromoCodes   PromoCode[]
-  aiGenerations     AiGeneration[]
-  calendarEntries   CalendarEntry[]
   revisionRequests  RevisionRequest[]
 
   @@index([role])
@@ -116,7 +114,6 @@ model Business {
   campaigns       Campaign[]
   assets          Asset[]
   subscriptions   Subscription[]
-  calendarEntries CalendarEntry[]
   accesses        AccountAccess[]
 
   @@index([ownerId])
@@ -269,7 +266,6 @@ model Campaign {
   brief               String?
 
   targeting    Json?
-  strategy     Json?
   adCopy       Json?
   adBudget     Int       @default(0)
   budgetSplit  Json?
@@ -741,7 +737,7 @@ model Ticket {
   @@index([status])
 }
 
-// ─────────────────────────── Création & IA ───────────────────────────
+// ─────────────────────────── Création ───────────────────────────
 
 model CreativeTemplate {
   id        String   @id @default(cuid())
@@ -754,38 +750,6 @@ model CreativeTemplate {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model AiGeneration {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  campaignId String?
-  kind       String
-  provider   String // nom du fournisseur IA, ou « rules » pour les suggestions guidées
-  model      String?
-  input      Json
-  output     Json
-  createdAt  DateTime @default(now())
-
-  @@index([userId, kind, createdAt])
-}
-
-model CalendarEntry {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  businessId String?
-  business   Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
-  date       DateTime  @db.Date
-  platform   Platform
-  title      String
-  caption    String?
-  hashtags   String[]
-  done       Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-
-  @@index([userId, date])
 }
 
 // ─────────────────────────── Plateforme ───────────────────────────

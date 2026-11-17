@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CircleCheck } from "lucide-react";
 import { CampaignRow } from "@/components/app/campaign-row";
-import { StateBadge } from "@/components/ui/badge";
+import { StateIcon } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ListRow } from "@/components/ui/list";
 import { EmptyState, Notice, PageHeader, Stat } from "@/components/ui/misc";
@@ -77,7 +77,7 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
               <ul className="divide-y divide-line">
                 {lastPayments.map((p) => (
                   <ListRow key={p.id} title={p.user.name} subtitle={formatDateTime(p.createdAt)}
-                    value={<span className="tnum font-semibold text-ink">{formatFcfa(p.amount)}</span>} meta={<StateBadge kind="payment" value={p.status} />} />
+                    value={<span className="tnum font-semibold text-ink">{formatFcfa(p.amount)}</span>} meta={<StateIcon kind="payment" value={p.status} />} />
                 ))}
               </ul>
             ) : <p className="px-4 sm:px-5 py-6 text-sm text-muted">Aucun paiement.</p>}

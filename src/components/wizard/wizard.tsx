@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleCheck, Eye, Heart, ImageIcon, ImagePlus, Lightbulb, ListChecks, LoaderCircle, MapPin, Megaphone, Pencil, Share2, SlidersHorizontal, Sparkles, Store, Tag, Target, Trash2, Type, Users, Wallet, WandSparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, CircleCheck, Eye, Heart, ImageIcon, ImagePlus, ListChecks, LoaderCircle, MapPin, Megaphone, Pencil, Share2, SlidersHorizontal, Sparkles, Store, Tag, Target, Trash2, Type, Users, Wallet, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdPreview } from "@/components/app/ad-preview";
 import { AssetThumb, Uploader } from "@/components/app/uploader";
@@ -12,13 +12,14 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Switch, Tip, ToggleRow } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
-import type { AdCopy, EditorData, LinkedAsset, StrategyState } from "@/lib/campaigns/editor-data";
+import type { AdCopy, EditorData, LinkedAsset } from "@/lib/campaigns/editor-data";
 import { getObjective, objectiveShort } from "@/lib/catalog/objectives";
 import { defaultSplit, PLATFORMS, platformLabel, type PlatformCode } from "@/lib/catalog/platforms";
+import { defaultAudience } from "@/lib/catalog/audience-defaults";
 import { AGE_BOUNDS, CITIES_BY_COUNTRY, CUSTOMER_CATEGORIES, GENDERS, INTEREST_GROUPS, SECTORS, TARGET_COUNTRIES, type Targeting } from "@/lib/catalog/targeting";
 import { cn, formatFcfa } from "@/lib/utils";
 import {
-  attachAssetAction, detachAssetAction, generateStrategyAction, placeOrderAction, saveCampaignAction, suggestTargetingAction, type CampaignPatch,
+  attachAssetAction, detachAssetAction, placeOrderAction, saveCampaignAction, type CampaignPatch,
 } from "@/server/actions/campaigns";
 import { AccountFields, BudgetFields, Chip, LevelPicker, ObjectivePicker, PlatformPicker, QuotePanel, Section, Stepper, useQuote } from "./parts";
 import { accountDisplay, missingAccountMessage, missingAccounts, type Accounts } from "@/lib/catalog/accounts";
@@ -132,12 +133,12 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
   function setPlatforms(platforms: PlatformCode[]) {
     const o = getObjective(s.objective);
     const lost = o && platforms.length > 0 && !o.platforms.some((p) => platforms.includes(p));
-    set({ platforms, budgetSplit: defaultSplit(platforms), ...(lost ? { objective: null, strategy: null, adCopy: null } : {}) });
+    set({ platforms, budgetSplit: defaultSplit(platforms), ...(lost ? { objective: null, adCopy: null } : {}) });
   }
 
   function setObjective(code: string) {
     const o = getObjective(code);
-    set({ objective: code, ...(code !== s.objective ? { strategy: null, adCopy: null, adBudget: o ? o.config.recommendedDailyBudget * o.config.recommendedDays : s.adBudget, durationDays: o?.config.recommendedDays ?? s.durationDays } : {}) });
+    set({ objective: code, ...(code !== s.objective ? { adCopy: null, adBudget: o ? o.config.recommendedDailyBudget * o.config.recommendedDays : s.adBudget, durationDays: o?.config.recommendedDays ?? s.durationDays } : {}) });
   }
 
   const reached = Math.min(LAST, Math.max(c0.wizardStep, step));
@@ -169,7 +170,7 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
             </Section>
           </div>
         )}
-        {step === 2 && <AdStep s={s} set={set} data={data} links={links} setLinks={setLinks} save={() => saveStep(2, 2)} />}
+        {step === 2 && <AdStep s={s} set={set} data={data} links={links} setLinks={setLinks} />}
         {step === 3 && <AudienceStep s={s} set={set} />}
         {step === 4 && <BudgetStep s={s} set={set} data={data} links={links} promo={promo} setPromo={setPromo} onTotal={setTotal} onEdit={go} />}
       </div>
@@ -273,16 +274,13 @@ function PhonePreview({ s, links }: { s: State; links: LinkedAsset[] }) {
   );
 }
 
-function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: EditorData; links: LinkedAsset[]; setLinks: SetLinks; save: () => Promise<boolean> }) {
+function AdStep({ s, set, data, links, setLinks }: StepProps & { data: EditorData; links: LinkedAsset[]; setLinks: SetLinks }) {
   const objective = getObjective(s.objective);
   const needs = objective?.config.requires ?? [];
   const media = links.filter((l) => l.role === "CREATIVE" || l.role === "PRODUCT_MEDIA");
   const setB = (patch: Partial<State["business"]>) => set({ business: { ...s.business, ...patch } });
   const copy = s.adCopy ?? emptyCopy;
   const setCopy = (patch: Partial<AdCopy>) => set({ adCopy: { ...copy, ...patch } });
-  const st = s.strategy;
-  const [writing, setWriting] = React.useState(false);
-  const [notice, setNotice] = React.useState<string | null>(null);
   // Une activité déjà connue est résumée sur une ligne : inutile de reposer les mêmes questions.
   const [editBusiness, setEditBusiness] = React.useState(!(s.business.id && s.business.name && s.business.sector && s.business.city));
   const [showWa] = React.useState(Boolean(s.destinationWhatsapp) || needs.includes("whatsapp"));
@@ -292,20 +290,6 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
   const knownAccounts = s.platforms.map((p) => s.business.accounts?.[p]).filter((v): v is string => Boolean(v)).map(accountDisplay);
   const [showText, setShowText] = React.useState(Boolean(s.adCopy?.headline || s.adCopy?.body));
   const pack = data.levels.find((l) => l.kind === "PACK");
-  const alternatives = st ? [...st.texts, ...st.variants].filter((t) => !(t.headline === copy.headline && t.body === copy.body)).slice(0, 4) : [];
-
-  async function write() {
-    if ((copy.headline.trim() || copy.body.trim()) && !window.confirm("Remplacer votre texte actuel par une nouvelle proposition ?")) return;
-    // La proposition s'appuie sur les informations enregistrées : on enregistre d'abord.
-    if (!(await save())) return;
-    setWriting(true);
-    const res = await generateStrategyAction(s.id);
-    setWriting(false);
-    if (!res.ok) { toast.error(res.error); return; }
-    setNotice((res.data.notice as string | null) ?? null);
-    set({ strategy: res.data.strategy as StrategyState, adCopy: (res.data.adCopy as AdCopy | null) ?? s.adCopy });
-    toast.success("Texte proposé.");
-  }
 
   const textOpen = showText || Boolean(copy.headline || copy.body);
   const summary = "flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3.5 text-sm font-medium text-ink sm:px-5";
@@ -367,10 +351,8 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
         {media.length === 0 && pack && <p className="mt-3 text-[0.84375rem] text-muted">Pas de visuel ? Choisissez « {pack.name} » à l&apos;étape 4.</p>}
       </Section>
 
-      <Section icon={<Type />} tone="violet" title="Texte"
-        action={<Button type="button" variant="soft" size="sm" disabled={writing} onClick={write}>{writing ? <LoaderCircle className="animate-spin" /> : <WandSparkles />}{writing ? "Rédaction…" : st ? "Autre proposition" : "Rédiger pour moi"}</Button>}>
+      <Section icon={<Type />} tone="violet" title="Texte">
         <div className="space-y-4">
-          {notice && <Notice tone="info">{notice}</Notice>}
           {textOpen ? (
             <>
               <Field label="Texte" htmlFor="copy-b" hint={<span className="tnum block text-right">{copy.body.length} / 900</span>}>
@@ -383,41 +365,6 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
               Notre équipe peut l&apos;écrire pour vous.
               <button type="button" onClick={() => setShowText(true)} className="font-medium text-green hover:underline">Écrire moi-même</button>
             </p>
-          )}
-
-          {alternatives.length > 0 && (
-            <details className="group">
-              <summary className={summary}><span className="flex items-center gap-2.5"><Sparkles className="size-4 text-violet" />{alternatives.length} autre{alternatives.length > 1 ? "s" : ""} texte{alternatives.length > 1 ? "s" : ""}</span><ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
-              <div className="mt-2 divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
-                {alternatives.map((t, i) => (
-                  <button key={i} type="button" onClick={() => set({ adCopy: { headline: t.headline, body: t.body, cta: t.cta } })} className="block w-full px-4 py-3.5 text-left transition-colors hover:bg-paper sm:px-5">
-                    <span className="block text-sm font-medium leading-snug text-ink">{t.headline}</span>
-                    <span className="mt-0.5 line-clamp-2 block text-[0.84375rem] leading-snug text-muted">{t.body}</span>
-                    <span className="mt-1.5 block text-[0.8125rem] font-medium text-green">Utiliser</span>
-                  </button>
-                ))}
-              </div>
-            </details>
-          )}
-
-          {st && (st.hooks.length > 0 || st.visualConcepts.length > 0) && (
-            <details className="group">
-              <summary className={summary}><span className="flex items-center gap-2.5"><Lightbulb className="size-4 text-[#9a6400]" />Idées</span><ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
-              <div className="mt-2 space-y-4 rounded-lg border border-line bg-surface px-4 py-4 text-[0.84375rem] sm:px-5">
-                {st.hooks.length > 0 && (
-                  <div>
-                    <p className="mb-1.5 font-medium text-ink">Accroches</p>
-                    <ul className="space-y-1 text-ink-soft">{st.hooks.slice(0, 4).map((h, i) => <li key={i} className="flex gap-2"><Check className="mt-0.5 size-3.5 shrink-0 text-green" />{h}</li>)}</ul>
-                  </div>
-                )}
-                {st.visualConcepts.length > 0 && (
-                  <div>
-                    <p className="mb-1.5 font-medium text-ink">Visuels</p>
-                    <ul className="space-y-1.5 text-ink-soft">{st.visualConcepts.slice(0, 3).map((v, i) => <li key={i}><span className="text-ink">{v.title}</span><span className="block text-[0.8125rem] text-muted">{v.description}</span></li>)}</ul>
-                  </div>
-                )}
-              </div>
-            </details>
           )}
 
           <details className="group">
@@ -437,38 +384,21 @@ function AudienceStep({ s, set }: StepProps) {
   const latest = React.useRef(t);
   latest.current = t;
   const setT = (patch: Partial<Targeting>) => set({ targeting: { ...latest.current, ...patch } });
-  const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
-  const [rationale, setRationale] = React.useState<{ text: string; engine: string } | null>(null);
   const cities = t.countries.flatMap((c) => (CITIES_BY_COUNTRY[c] ?? []).map((city) => ({ city, country: c })));
   const pristine = !t.interests.length && !t.cities.length && !t.categories.length;
 
-  const suggest = React.useCallback(async (silent = false) => {
-    setLoading(true);
-    const res = await suggestTargetingAction(s.id);
-    setLoading(false);
-    if (!res.ok) { if (!silent) toast.error(res.error); return; }
-    const a = res.data.advice as { cities: string[]; ageMin: number; ageMax: number; gender: Targeting["gender"]; interests: string[]; categories: string[]; rationale: string };
-    const now = latest.current;
-    const allowedCities = new Set(now.countries.flatMap((c) => CITIES_BY_COUNTRY[c] ?? []));
-    const known = new Set(INTEREST_GROUPS.flatMap((g) => g.items));
-    const snap = (v: number) => AGE_BOUNDS.reduce((best, b) => (Math.abs(b - v) < Math.abs(best - v) ? b : best), AGE_BOUNDS[0] as number);
-    set({
-      targeting: {
-        ...now, cities: a.cities.filter((c) => allowedCities.has(c)), ageMin: Math.min(snap(a.ageMin), snap(a.ageMax)), ageMax: Math.max(snap(a.ageMin), snap(a.ageMax)), gender: a.gender,
-        interests: a.interests.filter((i) => known.has(i)), categories: a.categories.filter((c) => CUSTOMER_CATEGORIES.includes(c)),
-      },
-    });
-    setRationale({ text: a.rationale, engine: res.data.engine as string });
-  }, [s.id, set]);
-
-  // Première visite : l'audience est proposée d'office, le client n'a rien à régler.
-  const asked = React.useRef(false);
+  // Première visite : audience de départ selon le secteur et la ville de l'entreprise. Le client peut tout changer.
+  const started = React.useRef(false);
   React.useEffect(() => {
-    if (asked.current || !pristine) return;
-    asked.current = true;
-    void suggest(true);
-  }, [pristine, suggest]);
+    if (started.current || !pristine) return;
+    started.current = true;
+    const d = defaultAudience({ sector: s.business.sector, city: s.business.city });
+    const now = latest.current;
+    const allowed = new Set(now.countries.flatMap((c) => CITIES_BY_COUNTRY[c] ?? []));
+    const snap = (v: number) => AGE_BOUNDS.reduce((best, b) => (Math.abs(b - v) < Math.abs(best - v) ? b : best), AGE_BOUNDS[0] as number);
+    set({ targeting: { ...now, cities: d.cities.filter((c) => allowed.has(c)), ageMin: snap(d.ageMin), ageMax: snap(d.ageMax), gender: d.gender, interests: d.interests, categories: d.categories.filter((c) => CUSTOMER_CATEGORIES.includes(c)) } });
+  }, [pristine, s.business.sector, s.business.city, set]);
 
   const zone = t.cities.length ? t.cities.slice(0, 3).join(", ") + (t.cities.length > 3 ? ` +${t.cities.length - 3}` : "") : t.countries.map((c) => TARGET_COUNTRIES.find((x) => x.code === c)?.name ?? c).join(", ");
   const gender = GENDERS.find((g) => g.id === t.gender)?.label ?? "Tout le monde";
@@ -477,13 +407,8 @@ function AudienceStep({ s, set }: StepProps) {
   return (
     <div className="space-y-6">
       <section aria-labelledby="audience">
-        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <h2 id="audience" className="text-[0.9375rem] font-semibold tracking-normal [font-family:var(--font-sans)]">{loading ? "Analyse…" : "Audience proposée"}</h2>
-          <button type="button" disabled={loading} onClick={() => suggest()} className="inline-flex items-center gap-1.5 text-[0.84375rem] font-medium text-green hover:underline disabled:opacity-60">
-            {loading ? <LoaderCircle className="size-4 animate-spin" /> : <WandSparkles className="size-4" />}Reproposer
-          </button>
-        </div>
-        <ul className={cn("grid gap-2.5 transition-opacity sm:grid-cols-3", loading && "opacity-50")}>
+        <h2 id="audience" className="mb-2.5 text-[0.9375rem] font-semibold tracking-normal [font-family:var(--font-sans)]">Votre audience</h2>
+        <ul className="grid gap-2.5 sm:grid-cols-3">
           {[
             { icon: <MapPin />, tone: "bg-green-soft text-green", label: "Zone", value: zone || "À définir" },
             { icon: <Users />, tone: "bg-sky-soft text-sky", label: "Profil", value: `${gender}, ${t.ageMin}–${t.ageMax >= 65 ? "65+" : t.ageMax} ans` },
@@ -495,12 +420,6 @@ function AudienceStep({ s, set }: StepProps) {
             </li>
           ))}
         </ul>
-        {rationale && (
-          <details className="group mt-2.5 text-[0.84375rem] text-muted">
-            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-medium text-ink-soft [&::-webkit-details-marker]:hidden"><Lightbulb className="size-4 text-[#9a6400]" />Pourquoi ?<ChevronDown className="size-3.5 transition-transform group-open:rotate-180" /></summary>
-            <p className="mt-1.5 leading-relaxed">{rationale.text}</p>
-          </details>
-        )}
       </section>
 
 

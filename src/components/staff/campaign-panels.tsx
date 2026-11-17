@@ -6,7 +6,7 @@ import { Check, CloudDownload, Copy, Eye, EyeOff, FileUp, Send, Trash2, X } from
 import { toast } from "sonner";
 import { AssetThumb, Uploader } from "@/components/app/uploader";
 import { PlatformBadge } from "@/components/icons";
-import { Badge, StateBadge } from "@/components/ui/badge";
+import { StateIcon, ToneIcon } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DatePicker, Switch } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
@@ -112,7 +112,7 @@ export function CreativesPanel({ campaignId, items, canManage }: { campaignId: s
               <div className="space-y-2.5 p-3.5">
                 <div className="flex items-start justify-between gap-2">
                   <p className="min-w-0 truncate text-sm font-medium" title={it.name}>{it.name}</p>
-                  {it.role === "CREATIVE" ? <StateBadge kind="approval" value={it.approval} /> : <span className="shrink-0 text-xs text-muted">{it.role === "BRIEF_FILE" ? "Brief" : "Média produit"}</span>}
+                  {it.role === "CREATIVE" ? <StateIcon kind="approval" value={it.approval} /> : <span className="shrink-0 text-xs text-muted">{it.role === "BRIEF_FILE" ? "Brief" : "Média produit"}</span>}
                 </div>
                 <p className="text-xs text-muted">{it.byClient ? "Fourni par le client" : "Ajouté par l'équipe"} · <a className="text-green hover:underline" href={`/api/files/${it.assetId}?telecharger`}>Télécharger</a></p>
                 {it.feedback && <p className="rounded-md bg-marigold-soft px-3 py-2 text-[0.8125rem] text-ink">Retour du client : {it.feedback}</p>}
@@ -139,7 +139,7 @@ export function RevisionItem({ id, description, status, response, requester, cre
     <li className="space-y-3 px-4 sm:px-5 py-4 text-sm">
       <div className="flex items-start justify-between gap-3">
         <div><p className="whitespace-pre-wrap text-ink">{description}</p><p className="mt-1 text-xs text-muted">{requester} · {formatDateTime(createdAt)}</p></div>
-        <StateBadge kind="revision" value={status} />
+        <StateIcon kind="revision" value={status} />
       </div>
       {open && canManage ? (
         <div className="space-y-2">
@@ -265,7 +265,7 @@ export function AccessPanel({ campaignId, items, canReveal, canReview }: { campa
                 <span className="block text-xs text-muted">{PLATFORMS[it.platform].label}</span>
                 {it.url ? <a href={it.url} target="_blank" rel="noreferrer nofollow" className="block truncate font-medium text-green hover:underline">{accountDisplay(it.url)}</a> : <span className="block font-medium text-clay">Compte non fourni</span>}
               </span>
-              <Badge tone={meta.tone}>{meta.staffLabel}</Badge>
+              <ToneIcon tone={meta.tone} label={meta.staffLabel} />
             </div>
             {it.method && it.state !== "TODO" && (
               <p className="text-[0.8125rem] text-ink-soft">{METHOD_LABELS[it.method].staff}{it.method === "INVITE" && it.hasSecret ? " (code de vidéo)" : ""}{it.updatedAt ? ` · ${formatDateTime(it.updatedAt)}` : ""}</p>

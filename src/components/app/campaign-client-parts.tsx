@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Copy, MessageSquareWarning, PenLine, Printer, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AssetThumb } from "@/components/app/uploader";
-import { StateBadge } from "@/components/ui/badge";
+import { StateIcon } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/form";
@@ -76,7 +76,7 @@ export function CreativeReview({ items }: { items: ReviewItem[] }) {
           <div className="min-w-0 flex-1 space-y-2.5">
             <div>
               <p className="truncate text-sm font-medium" title={it.name}>{it.name}</p>
-              <div className="mt-1">{it.approval !== "NOT_REQUIRED" ? <StateBadge kind="approval" value={it.approval} /> : <span className="text-[0.8125rem] text-muted">{it.byTeam ? "Par notre équipe" : "Par vous"}</span>}</div>
+              <div className="mt-1">{it.approval !== "NOT_REQUIRED" ? <StateIcon kind="approval" value={it.approval} /> : <span className="text-[0.8125rem] text-muted">{it.byTeam ? "Par notre équipe" : "Par vous"}</span>}</div>
             </div>
             {it.feedback && <p className="rounded-md bg-sand px-3 py-2 text-[0.8125rem] text-ink-soft"><MessageSquareWarning className="mr-1.5 inline size-3.5" />{it.feedback}</p>}
             {it.approval === "PENDING" && (editing === it.linkId ? (

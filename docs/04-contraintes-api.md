@@ -40,9 +40,7 @@ L'import d'un export CSV et la saisie d'une journée sont opérationnels. Les li
 
 ## Intelligence artificielle
 
-- Textes : OpenAI (ou service compatible via `OPENAI_BASE_URL`), Anthropic, Gemini. Écrit, non testé sans clé. Les sorties sont validées par un schéma ; en cas d'échec ou sans clé, l'assistant renvoie des suggestions guidées et l'indique.
-- Images : OpenAI. Écrit, non testé sans clé.
-- Vidéos : non proposé.
+Aucune. L'assistance par IA a été retirée en novembre 2026 : l'application n'appelle aucun service de génération de texte, d'image ou de vidéo, et aucune clé n'est à fournir.
 
 ## Notifications
 

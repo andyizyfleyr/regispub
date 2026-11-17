@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, Clock3, Megaphone, Plus, Undo2, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StateBadge } from "@/components/ui/badge";
+import { StateIcon } from "@/components/ui/badge";
 import { List, ListRow } from "@/components/ui/list";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
@@ -47,7 +47,7 @@ export default async function PaymentsPage() {
               <ListRow key={o.id} href={`/app/paiements/${o.id}`} icon={<st.icon />} tone={st.tone} title={o.campaign?.name ?? o.serviceLabel}
                 subtitle={formatDate(o.createdAt)}
                 value={<span className="tnum font-semibold text-ink">{formatFcfa(o.total)}</span>}
-                meta={<StateBadge kind="order" value={o.status} />} />
+                meta={<StateIcon kind="order" value={o.status} />} />
             );
           })}
         </List>

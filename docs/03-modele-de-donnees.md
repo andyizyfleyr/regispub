@@ -54,4 +54,6 @@ Les ratios (CTR, CPC, CPM, coût par résultat, ROI) ne sont pas stockés : ils 
 
 ## Relation client et exploitation
 
-`LoyaltyEntry`, `ReferralReward`, `Ticket`, `Notification`, `NotificationDelivery` (un enregistrement par canal, avec le motif en cas d'échec), `AiGeneration` (historique et quota), `CalendarEntry`, `AuditLog`, `RateLimit`.
+`LoyaltyEntry`, `ReferralReward`, `Ticket`, `Notification`, `NotificationDelivery` (un enregistrement par canal, avec le motif en cas d'échec), `AuditLog`, `RateLimit`.
+
+La migration `20261119000000_remove_ai` a supprimé les tables `AiGeneration` et `CalendarEntry` ainsi que la colonne `Campaign.strategy` (retrait de l'assistance par IA). Le texte de l'annonce reste dans `Campaign.adCopy`.
