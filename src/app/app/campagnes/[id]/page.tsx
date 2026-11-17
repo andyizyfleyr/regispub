@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, BarChart3, ChevronDown, CircleCheck, CircleDot, CircleX, Eye, FileText, Flag, Images, Info, MessageSquareText, Megaphone, Paintbrush, Pause, PencilLine, Rocket, Wallet } from "lucide-react";
+import { AccessCard, type AccessItem } from "@/components/app/access-card";
 import { AdPreview } from "@/components/app/ad-preview";
 import { CampaignActions, CreativeReview } from "@/components/app/campaign-client-parts";
 import { CampaignSummary } from "@/components/app/campaign-summary";
@@ -17,11 +18,15 @@ import { Timeline } from "@/components/ui/timeline";
 import { loadCampaignReport } from "@/lib/ads/report";
 import { ROLE_LABELS, type RoleName } from "@/lib/auth/permissions";
 import { requireUser } from "@/lib/auth/session";
+import { loadAccessRows } from "@/lib/campaigns/access";
 import { readAdCopy } from "@/lib/campaigns/editor-data";
-import { clientCanCancel, STATUS_META, type CampaignStatusName } from "@/lib/campaigns/status";
+import { ACTIVE_STATUSES, clientCanCancel, STATUS_META, type CampaignStatusName } from "@/lib/campaigns/status";
+import { accessState } from "@/lib/catalog/access";
+import { accountDisplay, accountsOf } from "@/lib/catalog/accounts";
 import { getObjective } from "@/lib/catalog/objectives";
 import type { PlatformCode } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
+import { getSettings } from "@/lib/settings";
 import { cn, formatDateTime, formatFcfa } from "@/lib/utils";
 
 const STATUS_ICONS: Partial<Record<CampaignStatusName, typeof Wallet>> = {
@@ -45,7 +50,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
   const c = await db.campaign.findFirst({
     where: { id, userId: user.id },
     include: {
-      business: { select: { name: true, sector: true } }, manager: { select: { name: true } },
+      business: { select: { name: true, sector: true, facebookUrl: true, instagramUrl: true, tiktokUrl: true } }, manager: { select: { name: true } },
       assets: { include: { asset: { select: { id: true, name: true, kind: true, format: true, ownerId: true } } }, orderBy: { createdAt: "desc" } },
       statusEvents: { orderBy: { createdAt: "desc" }, take: 20 },
       revisions: { orderBy: { createdAt: "desc" }, take: 10 },
@@ -67,6 +72,19 @@ export default async function CampaignPage({ params, searchParams }: { params: P
   const base = `/app/campagnes/${c.id}`;
   const phase = PHASE_OF[status] ?? 0;
   const copy = readAdCopy(c.adCopy);
+  // Accès aux comptes : demandé dès le paiement, tant que la publicité n'est pas lancée (ou s'il reste quelque chose à faire).
+  const platforms = c.platforms as PlatformCode[];
+  const accessRows = (ACTIVE_STATUSES as string[]).includes(status) ? await loadAccessRows(c.businessId) : [];
+  const accounts = accountsOf(c.business);
+  const accessItems: AccessItem[] = platforms.map((p) => {
+    const row = accessRows.find((r) => r.platform === p);
+    const state = accessState(accessRows, p, c.id);
+    return { platform: p, account: accounts[p] ? accountDisplay(accounts[p]).replace(/^[^/]+\//, "") : "", state, method: state === "TODO" ? null : row?.method ?? null, note: row?.note ?? null };
+  });
+  const launched = status === "RUNNING" || status === "PAUSED";
+  const showAccess = (ACTIVE_STATUSES as string[]).includes(status) && platforms.length > 0
+    && (!launched || accessItems.some((i) => i.state === "TODO" || i.state === "PROBLEM" || i.method === "LOGIN"));
+  const agency = showAccess ? await getSettings().then((s) => s.agencyFacebookName || s.companyName) : "";
   const firstImage = creatives.find((a) => a.asset.kind === "IMAGE") ?? c.assets.find((a) => a.asset.kind === "IMAGE");
 
   return (
@@ -102,6 +120,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
           <Link href={`/app/paiements/${order.id}`} className="inline-flex items-center gap-1 font-medium underline">Payer <span className="tnum">{formatFcfa(order.total)}</span><ArrowRight className="size-3.5" /></Link>
         </Notice>
       )}
+      {showAccess && <AccessCard campaignId={c.id} items={accessItems} agency={agency} />}
       {status === "AWAITING_INFO" && <Notice tone="warn" title="Une précision est attendue" className="mb-5"><Link href={`${base}?onglet=messages`} className="inline-flex items-center gap-1 font-medium underline">Répondre<ArrowRight className="size-3.5" /></Link></Notice>}
       {pendingReview > 0 && tab !== "creations" && <Notice tone="info" title={`${pendingReview} création${pendingReview > 1 ? "s" : ""} à valider`} className="mb-5"><Link href={`${base}?onglet=creations`} className="inline-flex items-center gap-1 font-medium underline">Voir<ArrowRight className="size-3.5" /></Link></Notice>}
 

@@ -1,3 +1,4 @@
+import { purgeIdleLogins } from "@/lib/campaigns/access";
 import { accountsOf, missingAccountMessage, missingAccounts } from "@/lib/catalog/accounts";
 import { DomainError } from "@/lib/errors";
 import "server-only";
@@ -152,6 +153,11 @@ export async function changeCampaignStatus(args: { campaignId: string; to: Campa
     return res.count;
   });
   await audit({ actorId: args.actor.id, action: "campaign.status_changed", entity: "Campaign", entityId: campaign.id, meta: { from, to: args.to } });
+  // Fin ou annulation : les identifiants confiés par le client sont effacés s'il n'a plus de campagne active.
+  if (args.to === "COMPLETED" || args.to === "CANCELLED") {
+    const purged = await purgeIdleLogins(campaign.businessId);
+    if (purged) await audit({ actorId: args.actor.id, action: "access.purged", entity: "Business", entityId: campaign.businessId ?? undefined, meta: { count: purged, reason: args.to } });
+  }
   const important = ["AWAITING_INFO", "CLIENT_REVIEW", "RUNNING", "COMPLETED", "CANCELLED", "PAUSED"].includes(args.to);
   await notify({
     userId: campaign.userId, type: `campaign.${args.to.toLowerCase()}`, title: `${campaign.name} : ${STATUS_META[args.to].label.toLowerCase()}`,

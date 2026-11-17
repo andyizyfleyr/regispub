@@ -21,6 +21,7 @@ export type PlatformSettings = {
   companyTaxId: string;
   supportWhatsapp: string;
   supportEmail: string;
+  agencyFacebookName: string; // nom du profil Facebook que les clients ajoutent à leur page
 };
 
 export const DEFAULT_SETTINGS: PlatformSettings = {
@@ -41,6 +42,7 @@ export const DEFAULT_SETTINGS: PlatformSettings = {
   companyTaxId: "",
   supportWhatsapp: "",
   supportEmail: "",
+  agencyFacebookName: "",
 };
 
 const int = (v: unknown, fallback: number, min: number, max: number) => {
@@ -70,5 +72,6 @@ export function sanitizeSettings(raw: Record<string, unknown>): PlatformSettings
     companyTaxId: text(raw.companyTaxId, d.companyTaxId, 40),
     supportWhatsapp: text(raw.supportWhatsapp, d.supportWhatsapp, 30),
     supportEmail: text(raw.supportEmail, d.supportEmail, 120),
+    agencyFacebookName: text(raw.agencyFacebookName, d.agencyFacebookName, 80),
   };
 }

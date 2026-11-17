@@ -2,19 +2,22 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Check, CloudDownload, FileUp, Send, Trash2, X } from "lucide-react";
+import { Check, CloudDownload, Copy, Eye, EyeOff, FileUp, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AssetThumb, Uploader } from "@/components/app/uploader";
-import { StateBadge } from "@/components/ui/badge";
+import { PlatformBadge } from "@/components/icons";
+import { Badge, StateBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DatePicker, Switch } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import { STATUS_META, type CampaignStatusName } from "@/lib/campaigns/status";
+import { ACCESS_STATE_META, METHOD_LABELS, type AccessMethod, type AccessState } from "@/lib/catalog/access";
+import { accountDisplay } from "@/lib/catalog/accounts";
 import { PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import { formatDateTime } from "@/lib/utils";
 import {
-  assignCampaignAction, discardPendingMetricsAction, handleRevisionAction, importMetricsAction, saveExternalRefsAction, saveMetricRowAction, staffAttachCreativeAction,
+  assignCampaignAction, discardPendingMetricsAction, handleRevisionAction, importMetricsAction, revealAccessAction, reviewAccessAction, saveExternalRefsAction, saveMetricRowAction, staffAttachCreativeAction,
   staffChangeStatusAction, staffRemoveCreativeAction, staffSubmitCreativeAction, syncMetricsAction, validateMetricsAction,
 } from "@/server/actions/staff-campaigns";
 
@@ -222,5 +225,82 @@ export function MetricsPanel({ campaignId, platforms, pending, canImport, canVal
         </div>
       )}
     </div>
+  );
+}
+
+export type StaffAccessItem = { platform: PlatformCode; url: string; state: AccessState; method: AccessMethod | null; hasSecret: boolean; note: string | null; updatedAt: string | null };
+
+/** Comptes du client et accès donnés : c'est ici que l'équipe récupère de quoi lancer la campagne. */
+export function AccessPanel({ campaignId, items, canReveal, canReview }: { campaignId: string; items: StaffAccessItem[]; canReveal: boolean; canReview: boolean }) {
+  const { busy, run } = useRun();
+  const [shown, setShown] = React.useState<Record<string, { login: string; password: string | null }>>({});
+  const [problem, setProblem] = React.useState<PlatformCode | null>(null);
+  const [note, setNote] = React.useState("");
+
+  // Les identifiants affichés disparaissent d'eux-mêmes après une minute.
+  React.useEffect(() => {
+    if (!Object.keys(shown).length) return;
+    const timer = setTimeout(() => setShown({}), 60_000);
+    return () => clearTimeout(timer);
+  }, [shown]);
+
+  async function reveal(p: PlatformCode) {
+    if (shown[p]) { setShown(({ [p]: _hidden, ...rest }) => rest); return; }
+    const res = await revealAccessAction(campaignId, p);
+    if (!res.ok) { toast.error(res.error); return; }
+    setShown((prev) => ({ ...prev, [p]: res.data as { login: string; password: string | null } }));
+  }
+  const copy = async (value: string, label: string) => { try { await navigator.clipboard.writeText(value); toast.success(`${label} copié.`); } catch { toast.error("Copie impossible."); } };
+
+  return (
+    <ul className="divide-y divide-line">
+      {items.map((it) => {
+        const meta = ACCESS_STATE_META[it.state];
+        const secret = shown[it.platform];
+        return (
+          <li key={it.platform} className="space-y-2.5 px-5 py-3.5 text-sm">
+            <div className="flex items-center gap-3">
+              <PlatformBadge platform={it.platform} size="sm" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs text-muted">{PLATFORMS[it.platform].label}</span>
+                {it.url ? <a href={it.url} target="_blank" rel="noreferrer nofollow" className="block truncate font-medium text-green hover:underline">{accountDisplay(it.url)}</a> : <span className="block font-medium text-clay">Compte non fourni</span>}
+              </span>
+              <Badge tone={meta.tone}>{meta.staffLabel}</Badge>
+            </div>
+            {it.method && it.state !== "TODO" && (
+              <p className="text-[13px] text-ink-soft">{METHOD_LABELS[it.method].staff}{it.method === "INVITE" && it.hasSecret ? " (code de vidéo)" : ""}{it.updatedAt ? ` · ${formatDateTime(it.updatedAt)}` : ""}</p>
+            )}
+            {it.state === "PROBLEM" && it.note && <p className="rounded-md bg-clay-soft px-3 py-2 text-[13px] text-ink">Dit au client : {it.note}</p>}
+            {secret && (
+              <dl className="space-y-1.5 rounded-lg border border-line bg-paper p-3 text-[13px]">
+                {([[it.method === "LOGIN" ? "Identifiant" : "Code", secret.login], ...(secret.password !== null ? [["Mot de passe", secret.password]] : [])] as [string, string][]).map(([label, value]) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <dt className="w-24 shrink-0 text-muted">{label}</dt>
+                    <dd className="min-w-0 flex-1 select-all break-all font-mono text-ink">{value}</dd>
+                    <button type="button" onClick={() => copy(value, label)} aria-label={`Copier : ${label}`} className="flex size-8 shrink-0 items-center justify-center rounded-full text-green hover:bg-green-soft"><Copy className="size-3.5" /></button>
+                  </div>
+                ))}
+              </dl>
+            )}
+            {(canReveal || canReview) && (
+              <div className="flex flex-wrap gap-2">
+                {canReveal && it.hasSecret && <Button size="sm" variant="outline" disabled={busy} onClick={() => reveal(it.platform)}>{secret ? <EyeOff /> : <Eye />}{secret ? "Masquer" : it.method === "LOGIN" ? "Voir les identifiants" : "Voir le code"}</Button>}
+                {canReview && it.state !== "VERIFIED" && <Button size="sm" disabled={busy} onClick={() => run(() => reviewAccessAction(campaignId, it.platform, true, ""), "Accès vérifié.")}><Check />{it.state === "TODO" ? "J'ai déjà l'accès" : "Accès OK"}</Button>}
+                {canReview && it.state !== "TODO" && problem !== it.platform && <Button size="sm" variant="ghost" disabled={busy} onClick={() => { setProblem(it.platform); setNote(""); }}><X />Problème</Button>}
+              </div>
+            )}
+            {problem === it.platform && (
+              <div className="space-y-2">
+                <Textarea rows={2} maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} aria-label="Message au client" placeholder="Ex. : Facebook demande un code, envoyez-le-nous sur WhatsApp." />
+                <div className="flex gap-2">
+                  <Button size="sm" variant="danger" disabled={busy || note.trim().length < 5} onClick={async () => { if (await run(() => reviewAccessAction(campaignId, it.platform, false, note), "Client prévenu.")) setProblem(null); }}>Prévenir le client</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setProblem(null)}>Fermer</Button>
+                </div>
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }

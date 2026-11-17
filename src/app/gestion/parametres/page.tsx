@@ -63,6 +63,7 @@ export default async function SettingsPage() {
             {text("companyAddress", "Adresse")}
             {text("supportEmail", "E-mail du support")}
             {text("supportWhatsapp", "WhatsApp du support", "Format international, par exemple +229 01 97 00 00 00.")}
+            {text("agencyFacebookName", "Votre profil Facebook", "Nom exact. Les clients le cherchent pour vous ajouter à leur page.")}
           </CardBody>
         </Card>
         <SubmitButton size="lg" pendingLabel="Enregistrement…">Enregistrer les paramètres</SubmitButton>

@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { syncCampaignMetrics, readExternalRefs } from "@/lib/ads/sync";
+import { purgeIdleLogins } from "@/lib/campaigns/access";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { createLogger } from "@/lib/logger";
@@ -60,7 +61,9 @@ async function housekeeping() {
     db.rateLimit.deleteMany({ where: { windowStart: { lt: addDays(now, -2) } } }),
     db.passwordResetToken.deleteMany({ where: { expiresAt: { lt: addDays(now, -1) } } }),
   ]);
-  return { alerts, subscriptionsExpired: expired.count, cleaned: sessions.count + limits.count + tokens.count };
+  // Filet de sécurité : identifiants confiés par des clients qui n'ont plus aucune campagne active.
+  const logins = await purgeIdleLogins();
+  return { alerts, subscriptionsExpired: expired.count, cleaned: sessions.count + limits.count + tokens.count, loginsPurged: logins };
 }
 
 async function syncMetrics() {

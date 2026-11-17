@@ -1,3 +1,6 @@
+import { loadAccessRows } from "@/lib/campaigns/access";
+import { accessToGive } from "@/lib/catalog/access";
+import type { PlatformCode } from "@/lib/catalog/platforms";
 import { DomainError } from "@/lib/errors";
 import "server-only";
 import { createHash } from "node:crypto";
@@ -275,9 +278,12 @@ async function settlePayment(paymentId: string, providerStatus: string) {
 
   log.info("paiement encaissé", { paymentId, orderId: order.id, invoice: outcome.invoiceNumber, amount: payment.amount });
   await audit({ action: "payment.settled", entity: "Order", entityId: order.id, meta: { paymentId, invoice: outcome.invoiceNumber, amount: payment.amount, provider: payment.provider } });
+  // Tant que le client n'a pas ouvert l'accès à ses comptes, la publicité ne peut pas être lancée : on le lui dit tout de suite.
+  const paidCampaign = order.campaignId ? await db.campaign.findUnique({ where: { id: order.campaignId }, select: { id: true, platforms: true, businessId: true } }) : null;
+  const needsAccess = paidCampaign ? accessToGive(await loadAccessRows(paidCampaign.businessId), paidCampaign.platforms as PlatformCode[], paidCampaign.id).length > 0 : false;
   await notify({
-    userId: order.userId, type: "payment.succeeded", title: "Paiement confirmé",
-    body: `Nous avons bien reçu ${formatFcfa(payment.amount)} pour la commande ${order.reference}. Votre reçu ${outcome.invoiceNumber} est disponible.`,
+    userId: order.userId, type: "payment.succeeded", title: needsAccess ? "Paiement confirmé. Donnez-nous l'accès" : "Paiement confirmé",
+    body: `Nous avons bien reçu ${formatFcfa(payment.amount)} pour la commande ${order.reference}. Votre reçu ${outcome.invoiceNumber} est disponible.${needsAccess ? " Dernière étape : donnez-nous l'accès à votre page pour que nous lancions votre publicité." : ""}`,
     link: order.campaignId ? `/app/campagnes/${order.campaignId}` : `/app/paiements/${order.id}`, email: true, whatsapp: true,
   });
   if (order.campaignId) {

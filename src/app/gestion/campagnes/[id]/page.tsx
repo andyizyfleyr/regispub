@@ -4,10 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { Link as LinkIcon, MessageCircle } from "lucide-react";
 import { CampaignSummary } from "@/components/app/campaign-summary";
 import { AssetThumb } from "@/components/app/uploader";
-import { PlatformBadge } from "@/components/icons";
 import { MetricsView } from "@/components/app/metrics-view";
 import { Thread } from "@/components/app/thread";
-import { AssignPanel, CreativesPanel, ExternalRefsPanel, MetricsPanel, RevisionItem, StatusPanel } from "@/components/staff/campaign-panels";
+import { AccessPanel, AssignPanel, CreativesPanel, ExternalRefsPanel, MetricsPanel, RevisionItem, StatusPanel } from "@/components/staff/campaign-panels";
 import { CampaignStatusBadge, StateBadge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { DefinitionList, EmptyState, Notice, PageHeader, Table, TabsNav } from "@/components/ui/misc";
@@ -18,9 +17,11 @@ import { readExternalRefs } from "@/lib/ads/sync";
 import type { Strategy } from "@/lib/ai/schemas";
 import { can, canViewCampaign, ROLE_LABELS, type RoleName } from "@/lib/auth/permissions";
 import { requireStaff } from "@/lib/auth/session";
+import { loadAccessRows } from "@/lib/campaigns/access";
 import { readAdCopy } from "@/lib/campaigns/editor-data";
 import { STATUS_META, staffTransitions, type CampaignStatusName } from "@/lib/campaigns/status";
 import { getObjective } from "@/lib/catalog/objectives";
+import { accessState, accessToGive } from "@/lib/catalog/access";
 import { accountDisplay, accountsOf } from "@/lib/catalog/accounts";
 import { PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
@@ -53,6 +54,8 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
   const platforms = c.platforms as PlatformCode[];
   const objective = getObjective(c.objective);
   const lastRead = c.reads[0]?.lastReadAt ?? new Date(0);
+  const accessRows = await loadAccessRows(c.businessId);
+  const accessMissing = accessToGive(accessRows, platforms, c.id);
   const [unread, pendingMetrics, actors] = await Promise.all([
     db.message.count({ where: { campaignId: c.id, senderId: { not: user.id }, createdAt: { gt: lastRead } } }),
     db.metricSnapshot.count({ where: { campaignId: c.id, validated: false } }),
@@ -142,17 +145,10 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
 
           <aside className="space-y-6">
             <Card>
-              <CardHeader title="Comptes du client" description="Lancez la publicité sur ces comptes." />
-              <ul className="divide-y divide-line">
-                {platforms.map((p) => { const url = accounts[p]; return (
-                  <li key={p} className="flex items-center gap-3 px-5 py-3 text-sm">
-                    <PlatformBadge platform={p} size="sm" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-xs text-muted">{PLATFORMS[p].label}</span>
-                      {url ? <a href={url} target="_blank" rel="noreferrer nofollow" className="block truncate font-medium text-green hover:underline">{accountDisplay(url)}</a> : <span className="block font-medium text-clay">Non fourni — à demander</span>}
-                    </span>
-                  </li>
-                ); })}
+              <CardHeader title="Comptes du client" description={accessMissing.length ? `Accès manquant : ${accessMissing.map((p) => PLATFORMS[p].label).join(", ")}.` : "Lancez la publicité sur ces comptes."} />
+              <AccessPanel campaignId={c.id} canReveal={can(user.role, "access.reveal")} canReview={can(user.role, "campaign.update_status")}
+                items={platforms.map((p) => { const row = accessRows.find((r) => r.platform === p); const state = accessState(accessRows, p, c.id); return { platform: p, url: accounts[p] ?? "", state, method: state === "TODO" ? null : row?.method ?? null, hasSecret: state !== "TODO" && Boolean(row?.hasSecret), note: row?.note ?? null, updatedAt: row?.updatedAt.toISOString() ?? null }; })} />
+              <ul className="divide-y divide-line border-t border-line empty:hidden">
                 {c.destinationWhatsapp && <li className="flex items-center gap-3 px-5 py-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-green-soft text-green"><MessageCircle className="size-3.5" /></span><span className="min-w-0 flex-1"><span className="block text-xs text-muted">WhatsApp des clients</span><span className="tnum block font-medium text-ink">{formatPhone(c.destinationWhatsapp)}</span></span></li>}
                 {c.destinationUrl && <li className="flex items-center gap-3 px-5 py-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-sand text-ink-soft"><LinkIcon className="size-3.5" /></span><span className="min-w-0 flex-1"><span className="block text-xs text-muted">Lien de destination</span><a href={c.destinationUrl} target="_blank" rel="noreferrer nofollow" className="block truncate font-medium text-green hover:underline">{accountDisplay(c.destinationUrl)}</a></span></li>}
               </ul>

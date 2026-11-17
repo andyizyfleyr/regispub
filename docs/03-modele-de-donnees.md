@@ -23,6 +23,7 @@ Source de vérité : `prisma/schema.prisma` (PostgreSQL). Les montants sont des 
 
 | Modèle | Contenu |
 | --- | --- |
+| `AccountAccess` | Accès à un compte social d'une entreprise (un par réseau) : option choisie (ajout à la page ou identifiants), état (envoyé, vérifié, problème), identifiants chiffrés, message de l'équipe. |
 | `Campaign` | Mode (libre-service ou expert), plateformes, objectif, produit, textes, ciblage, budget, dates, statut, gestionnaire et designer, identifiants externes Meta / TikTok |
 | `CampaignStatusEvent` | Historique des statuts (auteur, note) |
 | `Asset`, `CampaignAsset` | Fichiers et leur rôle dans une campagne (média produit, pièce du brief, création) avec l'état de validation par le client |

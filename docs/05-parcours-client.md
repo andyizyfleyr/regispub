@@ -27,6 +27,17 @@ Un brief d'une page : objectif en clair, description, public visé, budget, dur�
 4. Validation sur le téléphone. La page suit l'état et propose « Vérifier maintenant ».
 5. Paiement confirmé : reçu téléchargeable, campagne « Payée ». Paiement refusé ou expiré : motif affiché, nouvelle tentative possible, rien n'est encaissé.
 
+## Donner l'accès aux comptes
+
+L'équipe lance la publicité sur les comptes du client : il doit donc lui en ouvrir l'accès. Dès le paiement, la fiche de la campagne affiche « Donnez-nous l'accès », avec une ligne par réseau choisi et deux options :
+
+1. **Je vous ajoute** (conseillé) : le client ajoute le profil Facebook de l'agence à sa page (Instagram passe par la page Facebook liée) ; sur TikTok, il colle le code de la vidéo à promouvoir. Il garde son mot de passe. Il termine par « C'est fait ».
+2. **Je donne mes identifiants** : identifiant et mot de passe du compte. Ils sont chiffrés (AES-256-GCM, clé dérivée de `APP_SECRET`), lisibles par les seuls rôles ayant le droit `access.reveal`, chaque lecture étant journalisée, et effacés dès que le client n'a plus de campagne active (à la clôture ou à l'annulation, plus un contrôle quotidien). Le client peut les effacer lui-même à tout moment.
+
+L'équipe est prévenue, vérifie l'accès dans « Comptes du client » puis marque « Accès OK » ou « Problème » avec un message, que le client reçoit. Un accès donné reste valable pour les campagnes suivantes (sauf le code de vidéo TikTok, propre à une campagne).
+
+Le nom du profil Facebook à ajouter se règle dans Gestion → Paramètres (« Votre profil Facebook »). Le texte des étapes est dans `src/lib/catalog/access.ts` : les menus des réseaux changent, il faut le relire de temps en temps.
+
 ## Suivre
 
 - **Fil d'avancement** : En attente de paiement → Payé → En préparation → À valider → Prête → En cours → Terminée.

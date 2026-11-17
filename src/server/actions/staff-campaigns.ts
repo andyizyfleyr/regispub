@@ -7,10 +7,12 @@ import { can, canViewCampaign, type Permission } from "@/lib/auth/permissions";
 import { assertPermission } from "@/lib/auth/session";
 import { changeCampaignStatus } from "@/lib/campaigns/service";
 import { ALL_STATUSES, type CampaignStatusName } from "@/lib/campaigns/status";
-import { PLATFORM_CODES, type PlatformCode } from "@/lib/catalog/platforms";
+import { inviteNeedsCode } from "@/lib/catalog/access";
+import { PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
 import { notify } from "@/lib/notifications/service";
 import { parseIsoDate, todayUtc, truncate } from "@/lib/utils";
+import { unseal } from "@/lib/vault";
 import { safeAction, UserError } from "@/server/action";
 
 /** Vérifie la permission puis le droit de voir cette campagne (un designer n'accède qu'à celles qui lui sont attribuées). */
@@ -31,6 +33,10 @@ export async function staffChangeStatusAction(campaignId: string, to: string, no
       if (!Object.keys(readExternalRefs(campaign.externalRefs)).length) throw new UserError("Renseignez l'identifiant de la campagne créée sur Meta ou TikTok avant de la déclarer en cours.");
     }
     await changeCampaignStatus({ campaignId, to: to as CampaignStatusName, actor, note: truncate(note ?? "", 600) });
+    // La publicité tourne : les accès encore « à vérifier » ont donc fonctionné.
+    if (to === "RUNNING" && campaign.businessId) {
+      await db.accountAccess.updateMany({ where: { businessId: campaign.businessId, platform: { in: campaign.platforms }, status: "SENT" }, data: { status: "VERIFIED", verifiedAt: new Date() } });
+    }
   });
 }
 
@@ -223,5 +229,52 @@ export async function syncMetricsAction(campaignId: string) {
     const res = await syncCampaignMetrics(campaignId);
     await audit({ actorId: actor.id, action: "metrics.synced", entity: "Campaign", entityId: campaignId, meta: { synced: res.synced } });
     return res;
+  });
+}
+
+/** Affiche les identifiants confiés par le client. Réservé aux rôles autorisés ; chaque consultation est journalisée. */
+export async function revealAccessAction(campaignId: string, platform: string) {
+  return safeAction(async () => {
+    const { actor, campaign } = await staffCampaign(campaignId, "access.reveal");
+    if (!campaign.businessId || !PLATFORM_CODES.includes(platform as PlatformCode)) throw new UserError("Accès introuvable.");
+    const row = await db.accountAccess.findUnique({ where: { businessId_platform: { businessId: campaign.businessId, platform: platform as PlatformCode } } });
+    if (!row || !row.loginEnc) throw new UserError("Le client n'a pas confié d'identifiants pour ce compte.");
+    const login = unseal(row.loginEnc);
+    const password = row.secretEnc ? unseal(row.secretEnc) : null;
+    if (login === null || (row.secretEnc && password === null)) throw new UserError("Identifiants illisibles (clé de chiffrement modifiée). Demandez au client de les renvoyer.");
+    await audit({ actorId: actor.id, action: "access.revealed", entity: "Campaign", entityId: campaign.id, meta: { platform, method: row.method } });
+    return { login, password };
+  });
+}
+
+/** L'équipe confirme que l'accès fonctionne, ou signale un problème au client. */
+export async function reviewAccessAction(campaignId: string, platform: string, ok: boolean, note: string) {
+  return safeAction(async () => {
+    const { actor, campaign } = await staffCampaign(campaignId, "campaign.update_status");
+    if (!campaign.businessId || !PLATFORM_CODES.includes(platform as PlatformCode)) throw new UserError("Accès introuvable.");
+    const message = truncate((note ?? "").trim(), 300);
+    if (!ok && message.length < 5) throw new UserError("Expliquez au client ce qui ne fonctionne pas.");
+    const p = platform as PlatformCode;
+    const where = { businessId_platform: { businessId: campaign.businessId, platform: p } };
+    const row = await db.accountAccess.findUnique({ where, select: { method: true, campaignId: true } });
+    // Code de vidéo TikTok d'une autre campagne : il ne compte pas pour celle-ci.
+    const usable = row && !(row.method === "INVITE" && inviteNeedsCode(p) && row.campaignId !== campaign.id);
+    if (!ok) {
+      if (!usable) throw new UserError("Le client n'a pas encore donné cet accès.");
+      await db.accountAccess.update({ where, data: { status: "PROBLEM", verifiedAt: null, note: message } });
+    } else if (usable) {
+      await db.accountAccess.update({ where, data: { status: "VERIFIED", verifiedAt: new Date(), note: null } });
+    } else {
+      // Accès obtenu hors de la plateforme (le client vous a ajouté sans cliquer sur « C'est fait », ou par WhatsApp).
+      const data = { method: "INVITE", status: "VERIFIED", verifiedAt: new Date(), note: null, loginEnc: null, secretEnc: null, campaignId: inviteNeedsCode(p) ? campaign.id : null };
+      await db.accountAccess.upsert({ where, create: { businessId: campaign.businessId, platform: p, ...data }, update: data });
+    }
+    await audit({ actorId: actor.id, action: ok ? "access.verified" : "access.problem", entity: "Campaign", entityId: campaign.id, meta: { platform } });
+    if (!ok) {
+      await notify({
+        userId: campaign.userId, type: "access.problem", title: `Accès ${PLATFORMS[platform as PlatformCode].label} à refaire`,
+        body: message, link: `/app/campagnes/${campaign.id}`, email: true, whatsapp: true,
+      });
+    }
   });
 }

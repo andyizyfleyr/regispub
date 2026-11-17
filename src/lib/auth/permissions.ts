@@ -10,6 +10,7 @@ export const PERMISSIONS = {
   "campaign.update_status": "Mettre à jour les statuts",
   "campaign.manage_creatives": "Préparer et soumettre les créations",
   "campaign.message": "Échanger avec les clients",
+  "access.reveal": "Voir les identifiants confiés par les clients",
   "revision.manage": "Traiter les demandes de modification",
   "metrics.import": "Saisir ou importer des statistiques",
   "metrics.validate": "Valider les statistiques publiées",
@@ -39,7 +40,7 @@ const ROLE_PERMISSIONS: Record<RoleName, Permission[]> = {
   ADMIN: ALL.filter((p) => p !== "staff.manage_admins"),
   AD_MANAGER: [
     "backoffice.access", "campaign.view_all", "campaign.assign", "campaign.update_status", "campaign.manage_creatives",
-    "campaign.message", "revision.manage", "metrics.import", "metrics.validate", "order.view", "payment.view", "report.view",
+    "campaign.message", "revision.manage", "metrics.import", "metrics.validate", "order.view", "payment.view", "report.view", "access.reveal",
   ],
   DESIGNER: ["backoffice.access", "campaign.view_assigned", "campaign.manage_creatives", "campaign.message", "revision.manage"],
   SUPPORT: [

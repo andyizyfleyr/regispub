@@ -117,8 +117,35 @@ model Business {
   assets          Asset[]
   subscriptions   Subscription[]
   calendarEntries CalendarEntry[]
+  accesses        AccountAccess[]
 
   @@index([ownerId])
+}
+
+/// Accès donné par le client à l'un de ses comptes, pour que l'équipe y lance la publicité.
+/// INVITE : le client a ajouté l'agence à sa page (ou fourni le code d'une vidéo TikTok).
+/// LOGIN : le client a confié son identifiant et son mot de passe, chiffrés ; ils sont effacés à la fin de ses campagnes.
+model AccountAccess {
+  id         String    @id @default(cuid())
+  businessId String
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  platform   Platform
+  method     String
+  /// SENT (à vérifier par l'équipe), VERIFIED, PROBLEM (à refaire par le client)
+  status     String    @default("SENT")
+  /// Identifiant de connexion ou code de vidéo TikTok, chiffré (AES-256-GCM)
+  loginEnc   String?
+  /// Mot de passe chiffré (AES-256-GCM)
+  secretEnc  String?
+  /// Campagne concernée quand l'accès ne vaut que pour elle (code de vidéo TikTok)
+  campaignId String?
+  /// Message de l'équipe quand l'accès ne fonctionne pas
+  note       String?
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([businessId, platform])
 }
 
 // ─────────────────────────── Catalogue & tarification ───────────────────────────
