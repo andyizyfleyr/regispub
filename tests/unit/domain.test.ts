@@ -137,3 +137,30 @@ describe("import CSV de rapports publicitaires", () => {
     expect(parseMetricsCsv("jourx;impressions\n1;2", "FACEBOOK").errors[0]).toMatch(/date/);
   });
 });
+
+describe("comptes du client sur les réseaux", () => {
+  it("accepte un lien, un domaine sans https ou un @nom", async () => {
+    const { normalizeAccount } = await import("@/lib/catalog/accounts");
+    expect(normalizeAccount("FACEBOOK", "https://www.facebook.com/atelierawa")).toBe("https://www.facebook.com/atelierawa");
+    expect(normalizeAccount("FACEBOOK", "facebook.com/atelierawa")).toBe("https://facebook.com/atelierawa");
+    expect(normalizeAccount("FACEBOOK", "m.facebook.com/profile.php?id=100012345")).toBe("https://m.facebook.com/profile.php?id=100012345");
+    expect(normalizeAccount("INSTAGRAM", "@atelier.awa")).toBe("https://www.instagram.com/atelier.awa");
+    expect(normalizeAccount("TIKTOK", "atelier_awa")).toBe("https://www.tiktok.com/@atelier_awa");
+    expect(normalizeAccount("TIKTOK", "  ")).toBe("");
+  });
+
+  it("refuse un texte qui n'est ni un lien ni un nom de compte", async () => {
+    const { normalizeAccount } = await import("@/lib/catalog/accounts");
+    expect(normalizeAccount("FACEBOOK", "Atelier Awa Couture")).toBeNull();
+    expect(normalizeAccount("INSTAGRAM", "https://")).toBeNull();
+    expect(normalizeAccount("TIKTOK", "@")).toBeNull();
+  });
+
+  it("signale les réseaux choisis sans compte", async () => {
+    const { accountsOf, missingAccounts } = await import("@/lib/catalog/accounts");
+    const accounts = accountsOf({ facebookUrl: "https://www.facebook.com/awa", instagramUrl: null, tiktokUrl: " " });
+    expect(missingAccounts(["FACEBOOK", "INSTAGRAM", "TIKTOK"], accounts)).toEqual(["INSTAGRAM", "TIKTOK"]);
+    expect(missingAccounts(["FACEBOOK"], accounts)).toEqual([]);
+    expect(missingAccounts(["FACEBOOK"], null)).toEqual(["FACEBOOK"]);
+  });
+});

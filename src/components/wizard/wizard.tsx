@@ -20,7 +20,8 @@ import { cn, formatFcfa } from "@/lib/utils";
 import {
   attachAssetAction, detachAssetAction, generateStrategyAction, placeOrderAction, saveCampaignAction, suggestTargetingAction, type CampaignPatch,
 } from "@/server/actions/campaigns";
-import { BudgetFields, Chip, LevelPicker, ObjectivePicker, PlatformPicker, QuotePanel, Section, Stepper, useQuote } from "./parts";
+import { AccountFields, BudgetFields, Chip, LevelPicker, ObjectivePicker, PlatformPicker, QuotePanel, Section, Stepper, useQuote } from "./parts";
+import { accountDisplay, missingAccountMessage, missingAccounts, type Accounts } from "@/lib/catalog/accounts";
 
 export const WIZARD_STEPS = [
   { title: "Objectif", heading: "Que voulez-vous obtenir ?", icon: <Target /> },
@@ -31,7 +32,7 @@ export const WIZARD_STEPS = [
 const LAST = WIZARD_STEPS.length;
 const DEFAULT_NAMES = ["Nouvelle campagne", "Campagne confiée à un expert"];
 
-type State = EditorData["campaign"] & { business: { id: string | null; name: string; sector: string; city: string } };
+type State = EditorData["campaign"] & { business: { id: string | null; name: string; sector: string; city: string; accounts?: Accounts } };
 type SetLinks = React.Dispatch<React.SetStateAction<LinkedAsset[]>>;
 
 const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
@@ -74,6 +75,8 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
         if (!s.objective) return "Choisissez un objectif pour continuer.";
         return { platforms: s.platforms, objective: s.objective };
       case 2: {
+        const noAccount = missingAccounts(s.platforms, s.business.accounts);
+        if (noAccount.length) return missingAccountMessage(noAccount[0]!);
         const copy = s.adCopy;
         const hasCopy = Boolean(copy && (copy.headline.trim() || copy.body.trim()));
         return {
@@ -283,7 +286,10 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
   // Une activité déjà connue est résumée sur une ligne : inutile de reposer les mêmes questions.
   const [editBusiness, setEditBusiness] = React.useState(!(s.business.id && s.business.name && s.business.sector && s.business.city));
   const [showWa] = React.useState(Boolean(s.destinationWhatsapp) || needs.includes("whatsapp"));
-  const [showLink] = React.useState(Boolean(s.destinationUrl) || needs.includes("page"));
+  const [showLink] = React.useState(Boolean(s.destinationUrl));
+  // Comptes déjà connus : rien à ressaisir. Sinon un champ par réseau choisi.
+  const [askAccounts] = React.useState(missingAccounts(s.platforms, s.business.accounts).length > 0);
+  const knownAccounts = s.platforms.map((p) => s.business.accounts?.[p]).filter((v): v is string => Boolean(v)).map(accountDisplay);
   const [showText, setShowText] = React.useState(Boolean(s.adCopy?.headline || s.adCopy?.body));
   const pack = data.levels.find((l) => l.kind === "PACK");
   const alternatives = st ? [...st.texts, ...st.variants].filter((t) => !(t.headline === copy.headline && t.body === copy.body)).slice(0, 4) : [];
@@ -313,6 +319,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
               <span className="min-w-0">
                 <span className="block truncate font-medium text-ink">{s.business.name}</span>
                 <span className="block truncate text-[13.5px] text-muted">{[s.business.sector, s.business.city].filter(Boolean).join(" · ")}</span>
+                {!askAccounts && knownAccounts.length > 0 && <span className="mt-0.5 block truncate text-[13px] text-green">{knownAccounts.join(" · ")}</span>}
               </span>
               <button type="button" onClick={() => setEditBusiness(true)} className="shrink-0 rounded-full px-2.5 py-1 text-[13.5px] font-medium text-green hover:bg-green-soft">Modifier</button>
             </div>
@@ -333,6 +340,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
               <Field label="Ville" htmlFor="city"><Input id="city" value={s.business.city} maxLength={60} onChange={(e) => setB({ city: e.target.value })} placeholder="Cotonou" /></Field>
             </>
           )}
+          {(askAccounts || editBusiness) && <AccountFields platforms={s.platforms} value={s.business.accounts} onChange={(accounts) => setB({ accounts })} />}
           {showWa && (
             <Field label="Numéro WhatsApp" htmlFor="wa">
               <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />

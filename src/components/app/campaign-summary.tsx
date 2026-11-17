@@ -27,7 +27,7 @@ export function CampaignSummary({ c, compact }: { c: SummaryCampaign; compact?: 
       { label: "Plateformes", value: <span className="flex flex-wrap items-center gap-x-3 gap-y-1">{platforms.map((p) => <span key={p} className="flex items-center gap-1.5"><PlatformBadge platform={p} size="sm" />{PLATFORMS[p].label}{platforms.length > 1 && c.adBudget > 0 ? <span className="tnum text-muted">{split[p] ?? 0} %</span> : null}</span>)}</span> },
       { label: "Objectif", value: objective?.label },
       { label: "Entreprise", value: c.business ? `${c.business.name} · ${c.business.sector}` : null },
-      { label: "Produit ou service", value: c.productName ? `${c.productName}${c.productPrice ? ` — ${formatFcfa(c.productPrice)}` : ""}` : null },
+      ...(c.productName ? [{ label: "Produit ou service", value: `${c.productName}${c.productPrice ? ` — ${formatFcfa(c.productPrice)}` : ""}` }] : []),
       { label: "Budget publicitaire", value: c.adBudget ? <span className="tnum">{formatFcfa(c.adBudget)}{c.durationDays ? ` · ${formatFcfa(Math.floor(c.adBudget / c.durationDays))} / jour` : ""}</span> : null },
       { label: "Diffusion", value: c.startDate ? `${formatPureDate(c.startDate)}${c.endDate ? ` → ${formatPureDate(c.endDate)}` : ""}${c.durationDays ? ` (${c.durationDays} j)` : ""}` : c.durationDays ? `${c.durationDays} jours` : null },
       { label: "Zone", value: [countries, t.cities.join(", "), t.zoneNote].filter(Boolean).join(" · ") },

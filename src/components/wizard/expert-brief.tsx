@@ -12,7 +12,8 @@ import { getObjective, OBJECTIVE_CATEGORIES, OBJECTIVES, objectiveShort, type Ob
 import { PLATFORM_CHOICES, type PlatformCode } from "@/lib/catalog/platforms";
 import { SECTORS } from "@/lib/catalog/targeting";
 import { placeOrderAction, saveCampaignAction } from "@/server/actions/campaigns";
-import { BudgetFields, LevelPicker, QuotePanel, Section, useQuote } from "./parts";
+import { missingAccountMessage, missingAccounts, type Accounts } from "@/lib/catalog/accounts";
+import { AccountFields, BudgetFields, LevelPicker, QuotePanel, Section, useQuote } from "./parts";
 import { MediaGrid } from "./wizard";
 
 export function ExpertBrief({ data }: { data: EditorData }) {
@@ -20,7 +21,7 @@ export function ExpertBrief({ data }: { data: EditorData }) {
   const c = data.campaign;
   const b0 = data.businesses.find((b) => b.id === c.businessId) ?? data.businesses[0] ?? null;
   const [s, setS] = React.useState({
-    ...c, business: b0 ? { ...b0 } : { id: null as string | null, name: "", sector: "", city: "Cotonou" },
+    ...c, business: (b0 ? { ...b0 } : { id: null, name: "", sector: "", city: "Cotonou" }) as { id: string | null; name: string; sector: string; city: string; accounts?: Accounts },
     platforms: c.platforms.length ? c.platforms : (["FACEBOOK", "INSTAGRAM"] as PlatformCode[]), adBudget: c.adBudget || 30_000, durationDays: c.durationDays ?? 10,
     serviceCode: (c.serviceCode ?? data.levels.find((l) => l.kind === "MANAGEMENT")?.code ?? data.levels[0]?.code ?? null) as string | null,
   });
@@ -45,6 +46,8 @@ export function ExpertBrief({ data }: { data: EditorData }) {
   async function save(thenOrder: boolean) {
     setError(null);
     if (!s.objective) { setError("Choisissez un objectif."); return; }
+    const noAccount = missingAccounts(s.platforms, s.business.accounts);
+    if (thenOrder && noAccount.length) { setError(missingAccountMessage(noAccount[0]!)); return; }
     setBusy(thenOrder ? "order" : "save");
     const res = await saveCampaignAction(c.id, {
       platforms: s.platforms, objective: s.objective, business: s.business, name: autoName(), brief: s.brief, productName: s.productName, productPrice: s.productPrice,
@@ -98,7 +101,7 @@ export function ExpertBrief({ data }: { data: EditorData }) {
             <Field label="Ville" htmlFor="eb-city"><Input id="eb-city" maxLength={60} value={s.business.city} onChange={(e) => set({ business: { ...s.business, city: e.target.value } })} /></Field>
           </div>}
           <div className="space-y-4">
-            <Field label="Lien de votre page" htmlFor="eb-url" optional><Input id="eb-url" type="url" maxLength={300} value={s.destinationUrl} onChange={(e) => set({ destinationUrl: e.target.value })} placeholder="https://facebook.com/votrepage" /></Field>
+            <AccountFields platforms={s.platforms} value={s.business.accounts} onChange={(accounts) => set({ business: { ...s.business, accounts } })} />
           </div>
           </div>
         </Section>

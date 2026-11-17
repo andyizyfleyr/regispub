@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Link as LinkIcon, MessageCircle } from "lucide-react";
 import { CampaignSummary } from "@/components/app/campaign-summary";
+import { AssetThumb } from "@/components/app/uploader";
+import { PlatformBadge } from "@/components/icons";
 import { MetricsView } from "@/components/app/metrics-view";
 import { Thread } from "@/components/app/thread";
 import { AssignPanel, CreativesPanel, ExternalRefsPanel, MetricsPanel, RevisionItem, StatusPanel } from "@/components/staff/campaign-panels";
@@ -18,7 +21,8 @@ import { requireStaff } from "@/lib/auth/session";
 import { readAdCopy } from "@/lib/campaigns/editor-data";
 import { STATUS_META, staffTransitions, type CampaignStatusName } from "@/lib/campaigns/status";
 import { getObjective } from "@/lib/catalog/objectives";
-import { PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
+import { accountDisplay, accountsOf } from "@/lib/catalog/accounts";
+import { PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
 import { formatPhone, toWhatsappLink } from "@/lib/phone";
 import { formatDateTime, formatFcfa, formatNumber, formatPureDate, isRecord, todayUtc, toIsoDate } from "@/lib/utils";
@@ -61,6 +65,8 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
   const copy = readAdCopy(c.adCopy);
   const strategy = isRecord(c.strategy) ? (c.strategy as unknown as Partial<Strategy>) : null;
   const wa = c.user.phone ? toWhatsappLink(c.user.phone) : null;
+  const accounts = accountsOf(c.business);
+  const clientFiles = c.assets.filter((a) => a.addedById === c.userId);
 
   return (
     <>
@@ -79,6 +85,19 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="min-w-0 space-y-6">
             <Card><CardHeader title="Configuration demandée" /><CardBody><CampaignSummary c={c} /></CardBody></Card>
+
+            {clientFiles.length > 0 && (
+              <Card>
+                <CardHeader title={`Fichiers du client (${clientFiles.length})`} action={<Link href={`${base}?onglet=creations`} className="text-[13px] font-medium text-green hover:underline">Tout voir</Link>} />
+                <CardBody>
+                  <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 xl:grid-cols-5">
+                    {clientFiles.slice(0, 10).map((a) => (
+                      <li key={a.id}><a href={`/api/files/${a.asset.id}`} target="_blank" rel="noreferrer" title={a.asset.name} className="block overflow-hidden rounded-lg border border-line bg-sand"><AssetThumb id={a.asset.id} kind={a.asset.kind} name={a.asset.name} className="aspect-square w-full" /></a></li>
+                    ))}
+                  </ul>
+                </CardBody>
+              </Card>
+            )}
 
             {objective && (
               <Card>
@@ -123,6 +142,22 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
 
           <aside className="space-y-6">
             <Card>
+              <CardHeader title="Comptes du client" description="Lancez la publicité sur ces comptes." />
+              <ul className="divide-y divide-line">
+                {platforms.map((p) => { const url = accounts[p]; return (
+                  <li key={p} className="flex items-center gap-3 px-5 py-3 text-sm">
+                    <PlatformBadge platform={p} size="sm" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs text-muted">{PLATFORMS[p].label}</span>
+                      {url ? <a href={url} target="_blank" rel="noreferrer nofollow" className="block truncate font-medium text-green hover:underline">{accountDisplay(url)}</a> : <span className="block font-medium text-clay">Non fourni — à demander</span>}
+                    </span>
+                  </li>
+                ); })}
+                {c.destinationWhatsapp && <li className="flex items-center gap-3 px-5 py-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-green-soft text-green"><MessageCircle className="size-3.5" /></span><span className="min-w-0 flex-1"><span className="block text-xs text-muted">WhatsApp des clients</span><span className="tnum block font-medium text-ink">{formatPhone(c.destinationWhatsapp)}</span></span></li>}
+                {c.destinationUrl && <li className="flex items-center gap-3 px-5 py-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-sand text-ink-soft"><LinkIcon className="size-3.5" /></span><span className="min-w-0 flex-1"><span className="block text-xs text-muted">Lien de destination</span><a href={c.destinationUrl} target="_blank" rel="noreferrer nofollow" className="block truncate font-medium text-green hover:underline">{accountDisplay(c.destinationUrl)}</a></span></li>}
+              </ul>
+            </Card>
+            <Card>
               <CardHeader title="Statut" />
               <CardBody>
                 {can(user.role, "campaign.update_status") ? <StatusPanel campaignId={c.id} status={status} next={staffTransitions(status)} /> : <p className="text-sm text-muted">Votre rôle ne permet pas de modifier le statut.</p>}
@@ -146,7 +181,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
                 <a href={`mailto:${c.user.email}`} className="block truncate text-green hover:underline">{c.user.email}</a>
                 {c.user.phone && (wa ? <a href={wa} target="_blank" rel="noreferrer" className="tnum block text-green hover:underline">{formatPhone(c.user.phone)}</a> : <p className="tnum">{formatPhone(c.user.phone)}</p>)}
                 {c.business && <p className="pt-2 text-[13px] text-ink-soft">{c.business.name} · {c.business.sector}{c.business.city ? ` · ${c.business.city}` : ""}</p>}
-                {c.business && [c.business.facebookUrl, c.business.instagramUrl, c.business.tiktokUrl, c.business.website].filter(Boolean).map((u) => <a key={u} href={u!} target="_blank" rel="noreferrer nofollow" className="block truncate text-[13px] text-green hover:underline">{u}</a>)}
+                {c.business && [...PLATFORM_CODES.filter((p) => !platforms.includes(p)).map((p) => accounts[p]), c.business.website].filter(Boolean).map((u) => <a key={u} href={u!} target="_blank" rel="noreferrer nofollow" className="block truncate text-[13px] text-green hover:underline">{u}</a>)}
               </CardBody>
             </Card>
             {order && can(user.role, "order.view") && (

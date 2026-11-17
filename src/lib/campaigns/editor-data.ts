@@ -1,3 +1,4 @@
+import { accountsOf, type Accounts } from "@/lib/catalog/accounts";
 import "server-only";
 import { aiStatus } from "@/lib/ai/service";
 import type { Strategy } from "@/lib/ai/schemas";
@@ -18,7 +19,7 @@ export type EditorData = {
     businessId: string | null; productName: string; productDescription: string; productPrice: number | null; audienceNote: string; destinationWhatsapp: string; destinationUrl: string; brief: string;
     targeting: Targeting; strategy: StrategyState | null; adCopy: AdCopy | null; adBudget: number; budgetSplit: Record<string, number>; durationDays: number | null; startDate: string | null; wizardStep: number;
   };
-  businesses: { id: string; name: string; sector: string; city: string }[];
+  businesses: { id: string; name: string; sector: string; city: string; accounts?: Accounts }[];
   levels: { code: string; name: string; description: string; fee: number; kind: string; features: string[] }[];
   baseFees: Record<string, number>;
   limits: { minAdBudget: number; minDailyBudget: number; maxAdBudget: number; extraPlatformFee: number; minServiceFee: number };
@@ -68,7 +69,7 @@ export async function loadEditorData(campaignId: string, userId: string): Promis
       strategy: isRecord(c.strategy) && Array.isArray(c.strategy.texts) ? (c.strategy as unknown as StrategyState) : null, adCopy: readAdCopy(c.adCopy),
       adBudget: c.adBudget, budgetSplit: normalizeSplit(platforms, c.budgetSplit), durationDays: c.durationDays, startDate: c.startDate ? toIsoDate(c.startDate) : null, wizardStep: c.wizardStep,
     },
-    businesses: businesses.map((b) => ({ id: b.id, name: b.name, sector: b.sector, city: b.city ?? "" })),
+    businesses: businesses.map((b) => ({ id: b.id, name: b.name, sector: b.sector, city: b.city ?? "", accounts: accountsOf(b) })),
     levels: services.filter((s) => s.kind === "PACK" || s.kind === "MANAGEMENT").map((s) => ({ code: s.code, name: s.name, description: s.description, fee: s.fee, kind: s.kind, features: s.features })),
     baseFees: Object.fromEntries(services.filter((s) => s.kind === "CAMPAIGN").map((s) => [s.code, Math.max(s.fee, settings.minServiceFee)])),
     limits: { minAdBudget: settings.minAdBudget, minDailyBudget: settings.minDailyBudget, maxAdBudget: settings.maxAdBudget, extraPlatformFee: settings.extraPlatformFee, minServiceFee: settings.minServiceFee },

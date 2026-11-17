@@ -1,5 +1,7 @@
 "use server";
 
+import { ACCOUNT_FIELDS, normalizeAccount } from "@/lib/catalog/accounts";
+import { PLATFORM_CODES, PLATFORMS } from "@/lib/catalog/platforms";
 import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { hashPassword, passwordIssues, verifyPassword } from "@/lib/auth/password";
@@ -41,11 +43,21 @@ export const saveBusinessAction = formAction(
   z.object({
     id: z.string().optional(), name: z.string().trim().min(2, "Indiquez le nom de l'entreprise.").max(80), sector: z.string().refine((s) => SECTORS.includes(s), "Choisissez un secteur."),
     description: z.string().trim().max(1000).optional(), country: z.string().refine((c) => TARGET_COUNTRIES.some((t) => t.code === c), "Pays non proposé.").optional(),
-    city: z.string().trim().max(60).optional(), whatsapp: z.string().trim().max(40).optional(), facebookUrl: optionalUrl.optional(), instagramUrl: optionalUrl.optional(), tiktokUrl: optionalUrl.optional(), website: optionalUrl.optional(),
+    city: z.string().trim().max(60).optional(), whatsapp: z.string().trim().max(40).optional(), facebookUrl: z.string().trim().max(300).optional(), instagramUrl: z.string().trim().max(300).optional(), tiktokUrl: z.string().trim().max(300).optional(), website: optionalUrl.optional(),
   }),
   async (input) => {
     const user = await assertUser();
     if (input.whatsapp && !toWhatsappLink(input.whatsapp)) return { ok: false, error: "Numéro WhatsApp invalide.", fieldErrors: { whatsapp: "Exemple : 01 97 00 00 00" } };
+    // Comptes sur les réseaux : lien, « facebook.com/page » ou « @compte ».
+    const accounts: Partial<Record<"facebookUrl" | "instagramUrl" | "tiktokUrl", string | null>> = {};
+    for (const code of PLATFORM_CODES) {
+      const column = ACCOUNT_FIELDS[code].column;
+      const raw = input[column];
+      if (raw === undefined) continue;
+      const url = normalizeAccount(code, raw);
+      if (url === null) return { ok: false, error: `Compte ${PLATFORMS[code].label} : collez le lien ou le @nom de votre compte.`, fieldErrors: { [column]: "Lien ou @nom" } };
+      accounts[column] = url || null;
+    }
     // Le formulaire ne demande plus que l'essentiel : un champ absent garde sa valeur enregistrée.
     const data = {
       name: input.name, sector: input.sector,
@@ -53,9 +65,7 @@ export const saveBusinessAction = formAction(
       ...(input.description !== undefined && { description: input.description || null }),
       ...(input.city !== undefined && { city: input.city || null }),
       ...(input.whatsapp !== undefined && { whatsapp: input.whatsapp || null }),
-      ...(input.facebookUrl !== undefined && { facebookUrl: input.facebookUrl || null }),
-      ...(input.instagramUrl !== undefined && { instagramUrl: input.instagramUrl || null }),
-      ...(input.tiktokUrl !== undefined && { tiktokUrl: input.tiktokUrl || null }),
+      ...accounts,
       ...(input.website !== undefined && { website: input.website || null }),
     };
     if (input.id) {

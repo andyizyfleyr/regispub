@@ -1,5 +1,6 @@
 "use client";
 
+import { ACCOUNT_FIELDS, type Accounts } from "@/lib/catalog/accounts";
 import * as React from "react";
 import { Check, ChevronDown, Lightbulb, LoaderCircle, Megaphone, ShoppingBag, TicketPercent, Users } from "lucide-react";
 import { ObjectiveIcon, OperatorChip, PlatformBadge } from "@/components/icons";
@@ -330,5 +331,24 @@ export function Stepper({ steps, current, reached, onSelect, disabled }: { steps
         );
       })}
     </ol>
+  );
+}
+
+/** Comptes du client, un champ par réseau choisi : c'est là que l'équipe lance la publicité. */
+export function AccountFields({ platforms, value, onChange }: { platforms: PlatformCode[]; value: Accounts | undefined; onChange: (next: Accounts) => void }) {
+  if (!platforms.length) return null;
+  return (
+    <div className="space-y-4">
+      {platforms.map((p) => (
+        <Field key={p} label={ACCOUNT_FIELDS[p].label} htmlFor={`acc-${p}`}>
+          <div className="relative">
+            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2"><PlatformBadge platform={p} size="sm" /></span>
+            <Input id={`acc-${p}`} className="pl-11" value={value?.[p] ?? ""} maxLength={300} autoCapitalize="none" autoCorrect="off" spellCheck={false}
+              onChange={(e) => onChange({ ...value, [p]: e.target.value })} placeholder={ACCOUNT_FIELDS[p].placeholder} />
+          </div>
+        </Field>
+      ))}
+      <p className="text-[13px] text-muted">Nous lançons votre publicité sur {platforms.length > 1 ? "ces comptes" : "ce compte"}.</p>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+import { accountsOf, missingAccountMessage, missingAccounts } from "@/lib/catalog/accounts";
 import { DomainError } from "@/lib/errors";
 import "server-only";
 import { db } from "@/lib/db";
@@ -56,6 +57,10 @@ export async function upsertCampaignOrder(userId: string, campaignId: string, pr
   if (campaign.status !== "DRAFT" && campaign.status !== "PENDING_PAYMENT") return { ok: false, error: "Cette campagne a déjà été commandée." };
   const missing = campaignMissing(campaign);
   if (missing.length) return { ok: false, error: missing[0]! };
+  // L'équipe lance la publicité sur les comptes du client : il en faut un par réseau choisi.
+  const business = campaign.businessId ? await db.business.findUnique({ where: { id: campaign.businessId }, select: { facebookUrl: true, instagramUrl: true, tiktokUrl: true } }) : null;
+  const noAccount = missingAccounts(campaign.platforms as PlatformCode[], accountsOf(business));
+  if (noAccount.length) return { ok: false, error: missingAccountMessage(noAccount[0]!) };
 
   let promo: PromoInput | null = null;
   if (promoCode?.trim()) {

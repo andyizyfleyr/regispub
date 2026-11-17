@@ -1,5 +1,6 @@
 "use server";
 
+import { ACCOUNT_FIELDS, normalizeAccount } from "@/lib/catalog/accounts";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { policyWarnings, strategySchema, type BusinessContext, type Strategy, type TargetingAdvice } from "@/lib/ai/schemas";
@@ -10,7 +11,7 @@ import { assertUser } from "@/lib/auth/session";
 import { campaignMissing, quoteCampaign, upsertCampaignOrder } from "@/lib/campaigns/service";
 import { clientCanCancel, clientCanEdit, type CampaignStatusName } from "@/lib/campaigns/status";
 import { getObjective, unsupportedPlatforms } from "@/lib/catalog/objectives";
-import { normalizeSplit, PLATFORM_CODES, platformLabel, type PlatformCode } from "@/lib/catalog/platforms";
+import { normalizeSplit, PLATFORM_CODES, platformLabel, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import { CITIES_BY_COUNTRY, MAX_AGE, MIN_AGE, SECTORS, TARGET_COUNTRIES } from "@/lib/catalog/targeting";
 import { db } from "@/lib/db";
 import { notify, notifyStaff } from "@/lib/notifications/service";
@@ -68,7 +69,8 @@ const patchSchema = z.object({
   name: text(80).min(2, "Donnez un nom à votre campagne."),
   platforms: z.array(platformEnum).min(1, "Choisissez au moins une plateforme.").max(3),
   objective: z.string().max(40),
-  business: z.object({ id: z.string().nullable(), name: text(80).min(2, "Indiquez le nom de votre entreprise."), sector: z.string().refine((s) => SECTORS.includes(s), "Choisissez un secteur."), city: text(60) }),
+  business: z.object({ id: z.string().nullable(), name: text(80).min(2, "Indiquez le nom de votre entreprise."), sector: z.string().refine((s) => SECTORS.includes(s), "Choisissez un secteur."), city: text(60),
+    accounts: z.object({ FACEBOOK: text(300).optional(), INSTAGRAM: text(300).optional(), TIKTOK: text(300).optional() }).optional() }),
   productName: text(120),
   productDescription: text(1500).min(20, "Décrivez votre produit ou service en quelques phrases (20 caractères minimum)."),
   productPrice: z.number().int().min(0).max(1_000_000_000).nullable(),
@@ -116,13 +118,22 @@ export async function saveCampaignAction(campaignId: string, input: CampaignPatc
     }
     if (p.business) {
       const b = p.business;
+      // Comptes du client sur les réseaux : un champ absent garde sa valeur enregistrée.
+      const accounts: Partial<Record<"facebookUrl" | "instagramUrl" | "tiktokUrl", string | null>> = {};
+      for (const code of PLATFORM_CODES) {
+        const raw = b.accounts?.[code];
+        if (raw === undefined) continue;
+        const url = normalizeAccount(code, raw);
+        if (url === null) throw new UserError(`Compte ${PLATFORMS[code].label} : collez le lien ou le @nom de votre compte.`);
+        accounts[ACCOUNT_FIELDS[code].column] = url || null;
+      }
       if (b.id) {
-        const updated = await db.business.updateMany({ where: { id: b.id, ownerId: user.id }, data: { name: b.name, sector: b.sector, city: b.city || null } });
+        const updated = await db.business.updateMany({ where: { id: b.id, ownerId: user.id }, data: { name: b.name, sector: b.sector, city: b.city || null, ...accounts } });
         if (!updated.count) throw new UserError("Entreprise introuvable.");
         data.businessId = b.id;
       } else {
         if ((await db.business.count({ where: { ownerId: user.id } })) >= 20) throw new UserError("Nombre maximal d'entreprises atteint.");
-        data.businessId = (await db.business.create({ data: { ownerId: user.id, name: b.name, sector: b.sector, city: b.city || null } })).id;
+        data.businessId = (await db.business.create({ data: { ownerId: user.id, name: b.name, sector: b.sector, city: b.city || null, ...accounts } })).id;
       }
     }
     if (p.name !== undefined) data.name = p.name;
