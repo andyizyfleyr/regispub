@@ -5,6 +5,7 @@ import { Check, ChevronDown, Lightbulb, LoaderCircle, Megaphone, ShoppingBag, Ti
 import { ObjectiveIcon, OperatorChip, PlatformBadge } from "@/components/icons";
 import { QuoteLines } from "@/components/app/quote-box";
 import { Button } from "@/components/ui/button";
+import { DatePicker, Slider } from "@/components/ui/controls";
 import { Field, Input } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import type { EditorData } from "@/lib/campaigns/editor-data";
@@ -207,6 +208,7 @@ export function BudgetFields({ data, value, onChange, recommended }: {
   }, [value.startDate, value.durationDays]);
   const today = new Date().toISOString().slice(0, 10);
   const presets = [5_000, 10_000, 20_000, 30_000, 50_000, 100_000].filter((v) => v >= limits.minAdBudget);
+  const sliderMax = Math.max(300_000, limits.minAdBudget * 10);
   const [first, ...rest] = value.platforms;
   const advised = recommended ? Math.max(limits.minAdBudget, recommended.daily * recommended.days) : null;
 
@@ -231,7 +233,8 @@ export function BudgetFields({ data, value, onChange, recommended }: {
             onChange={(e) => onChange({ adBudget: Math.min(999_999_999, Number(e.target.value.replace(/\D/g, "")) || 0) })} />
           <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-muted">FCFA</span>
         </div>
-        <p className="tnum mt-1.5 text-[13px] text-muted">Minimum {formatFcfa(limits.minAdBudget)}.</p>
+        <Slider className="mt-3" label="Budget publicitaire" value={value.adBudget} min={limits.minAdBudget} max={sliderMax} step={5000} onChange={(v) => onChange({ adBudget: v })} />
+        <p className="tnum flex justify-between text-[12px] text-muted"><span>{formatFcfa(limits.minAdBudget)}</span><span>{formatFcfa(sliderMax)}</span></p>
       </div>
 
       <div>
@@ -249,7 +252,7 @@ export function BudgetFields({ data, value, onChange, recommended }: {
       </div>
 
       <Field label="Début" htmlFor="startDate" hint={end ? `Fin le ${end}` : undefined} className="max-w-xs">
-        <Input id="startDate" type="date" min={today} value={value.startDate} onChange={(e) => onChange({ startDate: e.target.value })} />
+        <DatePicker id="startDate" min={today} value={value.startDate} onChange={(e) => onChange({ startDate: e.target.value })} />
       </Field>
 
       {value.platforms.length > 1 && (
@@ -265,7 +268,7 @@ export function BudgetFields({ data, value, onChange, recommended }: {
                 <div key={p} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:gap-3">
                   <span className="flex w-24 items-center gap-2 text-[13px] text-ink sm:w-28"><PlatformBadge platform={p} size="sm" />{PLATFORMS[p].label}</span>
                   {i === 0 ? <span className="h-1.5 rounded-full bg-line"><span className="block h-full rounded-full bg-green" style={{ width: `${pct}%` }} /></span>
-                    : <input type="range" min={5} max={90} step={5} value={pct} onChange={(e) => setSplit(p, Number(e.target.value))} aria-label={`Part de ${PLATFORMS[p].label}`} className="w-full min-w-0" />}
+                    : <Slider min={5} max={90} step={5} value={pct} onChange={(v) => setSplit(p, v)} label={`Part de ${PLATFORMS[p].label}`} className="min-w-0" />}
                   <span className="tnum w-[6.5rem] text-right text-[13px] text-ink-soft sm:w-28">{pct} % · {formatFcfa(Math.round((value.adBudget * pct) / 100))}</span>
                 </div>
               );

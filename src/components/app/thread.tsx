@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Lock, MessagesSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/controls";
 import { Textarea } from "@/components/ui/form";
 import { cn, formatDateTime } from "@/lib/utils";
 import { markCampaignReadAction, postMessageAction } from "@/server/actions/campaigns";
@@ -65,7 +66,7 @@ export function Thread({ campaignId, messages, canPost, allowInternal, disabledR
             onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) void send(e); }} className={internal ? "border-marigold bg-marigold-soft" : ""} />
           <div className="mt-2 flex items-center justify-between gap-3">
             {allowInternal ? (
-              <label className="flex cursor-pointer items-center gap-2 text-[13px] text-ink-soft"><input type="checkbox" className="size-4 accent-forest" checked={internal} onChange={(e) => setInternal(e.target.checked)} />Note interne (équipe uniquement)</label>
+              <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink-soft"><Switch checked={internal} onCheckedChange={setInternal} aria-label="Note interne" />Note interne</label>
             ) : <span className="text-xs text-muted">Réponse sous 24 h ouvrées.</span>}
             <Button type="submit" size="sm" disabled={busy || !body.trim()}><Send />{busy ? "Envoi…" : "Envoyer"}</Button>
           </div>

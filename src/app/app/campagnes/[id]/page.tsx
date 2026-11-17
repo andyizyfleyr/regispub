@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, ArrowRight, BarChart3, ChevronDown, FileText, Images, Info, MessageSquareText } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, ChevronDown, CircleCheck, CircleDot, CircleX, Eye, FileText, Flag, Images, Info, MessageSquareText, Megaphone, Paintbrush, Pause, PencilLine, Rocket, Wallet } from "lucide-react";
 import { AdPreview } from "@/components/app/ad-preview";
 import { CampaignActions, CreativeReview } from "@/components/app/campaign-client-parts";
 import { CampaignSummary } from "@/components/app/campaign-summary";
@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { List, ListRow, SectionTitle } from "@/components/ui/list";
 import { DefinitionList, EmptyState, Notice, TabsNav } from "@/components/ui/misc";
+import type { TileTone } from "@/components/ui/tile";
+import { Timeline } from "@/components/ui/timeline";
 import { loadCampaignReport } from "@/lib/ads/report";
 import { ROLE_LABELS, type RoleName } from "@/lib/auth/permissions";
 import { requireUser } from "@/lib/auth/session";
@@ -21,6 +23,12 @@ import { getObjective } from "@/lib/catalog/objectives";
 import type { PlatformCode } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
 import { cn, formatDateTime, formatFcfa } from "@/lib/utils";
+
+const STATUS_ICONS: Partial<Record<CampaignStatusName, typeof Wallet>> = {
+  DRAFT: PencilLine, PENDING_PAYMENT: Wallet, PAID: CircleCheck, AWAITING_INFO: MessageSquareText, IN_PREPARATION: Paintbrush, CLIENT_REVIEW: Eye,
+  READY_TO_LAUNCH: Rocket, RUNNING: Megaphone, PAUSED: Pause, COMPLETED: Flag, CANCELLED: CircleX,
+};
+const STATUS_TONES: Record<string, TileTone> = { neutral: "sky", info: "sky", ok: "green", warn: "marigold", danger: "rose", accent: "violet" };
 
 export const metadata: Metadata = { title: "Campagne" };
 
@@ -174,17 +182,15 @@ export default async function CampaignPage({ params, searchParams }: { params: P
             </section>
           )}
 
-          <details className="group rounded-lg border border-line bg-surface">
+          <details open className="group rounded-lg border border-line bg-surface">
             <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">Historique<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
-            <ol className="divide-y divide-line border-t border-line">
-              {c.statusEvents.map((e) => (
-                <li key={e.id} className="px-4 py-3 text-sm sm:px-5">
-                  <p className="font-medium text-ink">{STATUS_META[e.toStatus as CampaignStatusName].label}</p>
-                  {e.note && <p className="text-[13px] text-ink-soft">{e.note}</p>}
-                  <p className="text-xs text-muted">{formatDateTime(e.createdAt)}</p>
-                </li>
-              ))}
-            </ol>
+            <div className="border-t border-line px-4 py-5 sm:px-5">
+              <Timeline items={c.statusEvents.map((e, i) => {
+                const meta = STATUS_META[e.toStatus as CampaignStatusName];
+                const Icon = STATUS_ICONS[e.toStatus as CampaignStatusName] ?? CircleDot;
+                return { id: e.id, icon: <Icon />, tone: STATUS_TONES[meta.tone] ?? "green", title: meta.label, text: e.note ?? undefined, time: formatDateTime(e.createdAt), current: i === 0 };
+              })} />
+            </div>
           </details>
         </div>
       )}

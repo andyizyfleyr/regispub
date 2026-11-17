@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Headset, ImageIcon, Megaphone, MessageSquareText, Plus, Wallet } from "lucide-react";
 import { CampaignRow } from "@/components/app/campaign-row";
+import { Onboarding } from "@/components/app/onboarding";
 import { Button } from "@/components/ui/button";
 import { List, ListRow, SectionTitle } from "@/components/ui/list";
 import { Banner, Tile } from "@/components/ui/tile";
@@ -18,8 +19,8 @@ const TODO_META: Partial<Record<CampaignStatusName, { cta: string; icon: typeof 
 };
 
 /** Accueil : ce qu'il y a à faire, puis les campagnes. Rien d'autre. */
-export default async function DashboardPage() {
-  const user = await requireUser();
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ guide?: string }> }) {
+  const [user, { guide }] = await Promise.all([requireUser(), searchParams]);
   const [active, campaigns, todo] = await Promise.all([
     db.campaign.count({ where: { userId: user.id, status: { in: ACTIVE_STATUSES } } }),
     db.campaign.findMany({ where: { userId: user.id, status: { not: "CANCELLED" } }, orderBy: { updatedAt: "desc" }, take: 5 }),
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="animate-rise space-y-8">
+      <Onboarding userId={user.id} auto={!hasCampaigns} force={guide === "1"} />
       <Banner decoration={<Megaphone />}>
         <h1 className="max-w-md text-[26px] font-semibold leading-tight text-white sm:text-[32px]">Bonjour {firstName}</h1>
         <p className="mt-1.5 text-[15px] text-white/75">{lead}</p>

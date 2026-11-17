@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
+import { Checkbox } from "@/components/ui/controls";
 import { Field, Input, Select } from "@/components/ui/form";
 import { registerAction } from "@/server/actions/auth";
 
@@ -24,9 +25,9 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
           </Field>
           <Field label="Code parrain" htmlFor="referral" optional><Input id="referral" name="referral" defaultValue={sp.parrain ?? ""} className="uppercase" /></Field>
         </div>
-        <label className="flex items-start gap-2.5 text-[13px] text-ink-soft">
-          <input type="checkbox" name="terms" required className="mt-0.5 size-4" />
-          <span>J&apos;accepte les <Link href="/conditions" className="underline" target="_blank">conditions</Link>. Les résultats ne sont pas garantis.</span>
+        <label className="flex items-start gap-3 text-[13px] text-ink-soft">
+          <Checkbox name="terms" required aria-label="Accepter les conditions" />
+          <span className="pt-0.5">J&apos;accepte les <Link href="/conditions" className="underline" target="_blank">conditions</Link>. Les résultats ne sont pas garantis.</span>
         </label>
         <SubmitButton size="lg" className="w-full" pendingLabel="Création…">Créer mon compte</SubmitButton>
       </ActionForm>

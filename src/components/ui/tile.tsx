@@ -1,6 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { InfoTip } from "@/components/ui/controls";
 import { cn } from "@/lib/utils";
 
 /**
@@ -58,11 +59,11 @@ export function StepTile({ n, icon, title, tone = "green" }: { n: number; icon: 
 }
 
 /** Chiffre clé : libellé, grande valeur, précision. */
-export function StatTile({ label, value, hint, icon, tone = "green", className }: { label: React.ReactNode; value: React.ReactNode; hint?: React.ReactNode; icon?: React.ReactNode; tone?: TileTone; className?: string }) {
+export function StatTile({ label, value, hint, info, icon, tone = "green", className }: { label: React.ReactNode; value: React.ReactNode; hint?: React.ReactNode; info?: React.ReactNode; icon?: React.ReactNode; tone?: TileTone; className?: string }) {
   return (
     <div className={cn("rounded-xl border border-line bg-surface p-4 shadow-card", className)}>
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[13px] leading-snug text-muted">{label}</p>
+        <p className="text-[13px] leading-snug text-muted">{label}{info && <InfoTip label={info} className="ml-1" />}</p>
         {icon && <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg [&_svg]:size-4", TILE_TONES[tone])}>{icon}</span>}
       </div>
       <p className="tnum mt-2 font-display text-[24px] font-semibold leading-none text-ink sm:text-[26px]">{value}</p>

@@ -9,6 +9,7 @@ import { AssetThumb, Uploader } from "@/components/app/uploader";
 import { PlatformIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Switch, Tip, ToggleRow } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import type { AdCopy, EditorData, LinkedAsset, StrategyState } from "@/lib/campaigns/editor-data";
@@ -555,10 +556,9 @@ function AudienceStep({ s, set }: StepProps) {
             </div>
 
             <div className="border-t border-line pt-6">
-              <label className="flex items-start gap-3">
-                <input type="checkbox" className="mt-1 size-4" checked={t.customAudience.requested} onChange={(e) => setT({ customAudience: { ...t.customAudience, requested: e.target.checked } })} />
-                <span><span className="block text-sm font-medium text-ink">Recibler mes clients existants</span><span className="block text-[13px] text-muted">Faisabilité vérifiée avec vous.</span></span>
-              </label>
+              <ToggleRow icon={<Users />} label="Recibler mes clients" htmlFor="custom-aud">
+                <Switch id="custom-aud" checked={t.customAudience.requested} onCheckedChange={(v) => setT({ customAudience: { ...t.customAudience, requested: v } })} />
+              </ToggleRow>
               {t.customAudience.requested && <Textarea className="mt-3" rows={2} maxLength={500} value={t.customAudience.note} onChange={(e) => setT({ customAudience: { ...t.customAudience, note: e.target.value } })} placeholder="Ex. : personnes ayant déjà écrit à ma page ces 90 derniers jours" aria-label="Précision sur l'audience personnalisée" />}
             </div>
           </div>
@@ -602,7 +602,7 @@ function BudgetStep({ s, set, data, links, promo, setPromo, onTotal, onEdit }: S
               <li key={r.label} className="flex items-center gap-3 px-4 py-3">
                 <span title={r.label} className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sand text-ink-soft [&_svg]:size-4">{r.icon}<span className="sr-only">{r.label}</span></span>
                 <span className="min-w-0 flex-1 truncate text-sm text-ink">{r.value}</span>
-                <button type="button" onClick={() => onEdit(r.step)} aria-label={`Modifier : ${r.label}`} title="Modifier" className="flex size-8 shrink-0 items-center justify-center rounded-full text-green hover:bg-green-soft"><Pencil className="size-4" /></button>
+                <Tip label="Modifier"><button type="button" onClick={() => onEdit(r.step)} aria-label={`Modifier : ${r.label}`} className="flex size-9 shrink-0 items-center justify-center rounded-full text-green hover:bg-green-soft"><Pencil className="size-4" /></button></Tip>
               </li>
             ))}
           </ul>

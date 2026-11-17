@@ -3,6 +3,7 @@ import { NotificationList } from "@/components/app/notification-list";
 import { ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
 import { StateBadge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Switch, ToggleRow } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { EmptyState, Notice, PageHeader, Table, TabsNav } from "@/components/ui/misc";
 import { can } from "@/lib/auth/permissions";
@@ -43,8 +44,8 @@ export default async function StaffNotifications({ searchParams }: { searchParam
                 <Field label="Lien dans l'espace client" htmlFor="nt-link" optional hint="Exemple : /app/creer"><Input id="nt-link" name="link" maxLength={200} placeholder="/app/…" /><FieldError name="link" /></Field>
                 <fieldset className="space-y-2">
                   <legend className="mb-1 text-[13px] font-medium text-ink-soft">Canaux supplémentaires</legend>
-                  <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" name="viaEmail" disabled={!channels.email} className="size-4 accent-forest" />E-mail{!channels.email && <span className="text-xs text-muted">— non configuré</span>}</label>
-                  <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" name="viaWhatsapp" disabled={!channels.whatsapp} className="size-4 accent-forest" />WhatsApp{!channels.whatsapp && <span className="text-xs text-muted">— non configuré</span>}</label>
+                  <ToggleRow label="E-mail" hint={!channels.email ? "Non configuré" : undefined} htmlFor="n-mail"><Switch id="n-mail" name="viaEmail" disabled={!channels.email} /></ToggleRow>
+                  <ToggleRow label="WhatsApp" hint={!channels.whatsapp ? "Non configuré" : undefined} htmlFor="n-wa"><Switch id="n-wa" name="viaWhatsapp" disabled={!channels.whatsapp} /></ToggleRow>
                 </fieldset>
                 <SubmitButton pendingLabel="Envoi…">Envoyer</SubmitButton>
               </ActionForm>

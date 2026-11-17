@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AssetThumb, Uploader } from "@/components/app/uploader";
 import { StateBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DatePicker, Switch } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import { STATUS_META, type CampaignStatusName } from "@/lib/campaigns/status";
@@ -97,7 +98,7 @@ export function CreativesPanel({ campaignId, items, canManage }: { campaignId: s
       {canManage && (
         <div className="space-y-2">
           <Uploader compact label="Ajouter une création" hint="Image ou vidéo aux dimensions de la plateforme" onUploaded={async (asset) => { await run(() => staffAttachCreativeAction(campaignId, asset.id, submit), submit ? "Création soumise au client." : "Création ajoutée."); }} />
-          <label className="flex items-center gap-2 text-[13px] text-ink-soft"><input type="checkbox" className="size-4 accent-forest" checked={submit} onChange={(e) => setSubmit(e.target.checked)} />Soumettre à la validation du client dès l&apos;ajout</label>
+          <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink-soft"><Switch checked={submit} onCheckedChange={setSubmit} aria-label="Soumettre au client" />Soumettre au client dès l&apos;ajout</label>
         </div>
       )}
       {items.length === 0 ? <p className="py-6 text-center text-sm text-muted">Aucun fichier pour cette campagne.</p> : (
@@ -208,7 +209,7 @@ export function MetricsPanel({ campaignId, platforms, pending, canImport, canVal
           <div className="space-y-3 rounded-lg border border-line p-4">
             <h3 className="text-sm font-semibold">Saisir une journée</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Date" htmlFor="row-date"><Input id="row-date" type="date" max={today} value={row.date ?? ""} onChange={(e) => setRow((s) => ({ ...s, date: e.target.value }))} /></Field>
+              <Field label="Date" htmlFor="row-date"><DatePicker id="row-date" max={today} value={row.date ?? ""} onChange={(e) => setRow((s) => ({ ...s, date: e.target.value }))} /></Field>
               <Field label="Plateforme" htmlFor="row-pf"><Select id="row-pf" value={row.platform} onChange={(e) => setRow((s) => ({ ...s, platform: e.target.value }))}>{platforms.map((p) => <option key={p} value={p}>{PLATFORMS[p].label}</option>)}</Select></Field>
               {ROW_FIELDS.map((f) => (
                 <Field key={f.key} label={f.label} htmlFor={`row-${f.key}`} optional={f.key === "revenue"}>

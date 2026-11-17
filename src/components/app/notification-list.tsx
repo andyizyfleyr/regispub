@@ -35,7 +35,7 @@ export async function NotificationList({ userId, fallbackHref, embedded }: { use
             ))}
           </ul>
         </Card>
-      ) : <EmptyState icon={<Bell />} title="Aucune notification" />}
+      ) : <EmptyState art="box" title="Aucune notification" />}
     </>
   );
 }

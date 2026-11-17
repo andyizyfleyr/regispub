@@ -3,6 +3,7 @@ import { FilterChips } from "@/components/staff/common";
 import { ActionButton, ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/controls";
 import { Field, Input, Select } from "@/components/ui/form";
 import { EmptyState, PageHeader, Table } from "@/components/ui/misc";
 import { requirePermission } from "@/lib/auth/session";
@@ -54,8 +55,8 @@ export default async function PromosPage({ searchParams }: { searchParams: Promi
                   <Field label="Valeur" htmlFor="pr-value"><Input id="pr-value" name="value" type="number" inputMode="numeric" min={1} required className="tnum" /><FieldError name="value" /></Field>
                   <Field label="Utilisations max." htmlFor="pr-max" optional><Input id="pr-max" name="maxUses" type="number" min={1} className="tnum" /></Field>
                   <Field label="Par client" htmlFor="pr-per"><Input id="pr-per" name="perUserLimit" type="number" min={1} defaultValue={1} className="tnum" /></Field>
-                  <Field label="Début" htmlFor="pr-start" optional><Input id="pr-start" name="startsAt" type="date" /></Field>
-                  <Field label="Fin" htmlFor="pr-end" optional><Input id="pr-end" name="endsAt" type="date" /><FieldError name="endsAt" /></Field>
+                  <Field label="Début" htmlFor="pr-start" optional><DatePicker id="pr-start" name="startsAt" /></Field>
+                  <Field label="Fin" htmlFor="pr-end" optional><DatePicker id="pr-end" name="endsAt" /><FieldError name="endsAt" /></Field>
                 </div>
                 <Field label="Frais de prestation minimum (F)" htmlFor="pr-min" optional><Input id="pr-min" name="minServiceFee" type="number" min={0} step={500} className="tnum" /></Field>
                 <p className="text-xs text-muted">Après remise, les frais de prestation ne descendent jamais sous le plancher de la plateforme.</p>

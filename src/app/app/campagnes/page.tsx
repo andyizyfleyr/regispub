@@ -38,7 +38,7 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Pr
       {campaigns.length ? (
         <List>{campaigns.map((c) => <li key={c.id}><CampaignRow c={c} /></li>)}</List>
       ) : (
-        <EmptyState icon={<Megaphone />} title={current === "toutes" ? "Aucune campagne" : "Rien ici"} action={<Button asChild><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer</Link></Button>} />
+        <EmptyState art="megaphone" title={current === "toutes" ? "Aucune campagne" : "Rien ici"} action={<Button asChild><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer</Link></Button>} />
       )}
     </>
   );

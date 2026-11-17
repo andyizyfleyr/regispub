@@ -9,6 +9,7 @@ import { PlatformBadge } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Checkbox, DatePicker } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import { TILE_TONES, toneAt } from "@/components/ui/tile";
@@ -182,7 +183,7 @@ function ResultView({ result, onSave, startDate, setStartDate, today }: { result
           ))}
         </ul>
         <div className="flex flex-wrap items-end gap-3">
-          <Field label="Date de début" htmlFor="cal-start" className="w-44"><Input id="cal-start" type="date" min={today} value={startDate} onChange={(e) => setStartDate(e.target.value)} /></Field>
+          <Field label="Date de début" htmlFor="cal-start" className="w-44"><DatePicker id="cal-start" min={today} value={startDate} onChange={(e) => setStartDate(e.target.value)} /></Field>
           <Button disabled={saving || !d.entries.length} onClick={async () => { setSaving(true); await onSave(); setSaving(false); }}><CalendarPlus />{saving ? "Enregistrement…" : "Ajouter à mon calendrier"}</Button>
         </div>
       </>
@@ -209,8 +210,8 @@ function CalendarList({ entries }: { entries: Entry[] }) {
       <ul className="divide-y divide-line">
         {entries.map((e) => (
           <li key={e.id} className="flex items-start gap-3 px-4 py-3 sm:px-5">
-            <input type="checkbox" className="mt-1 size-4 shrink-0 accent-forest" checked={e.done} aria-label={`Marquer « ${e.title} » comme publiée`}
-              onChange={async (ev) => { await toggleCalendarEntryAction(e.id, ev.target.checked); router.refresh(); }} />
+            <Checkbox className="mt-0.5" checked={e.done} aria-label={`Marquer « ${e.title} » comme publiée`}
+              onCheckedChange={async (v) => { await toggleCalendarEntryAction(e.id, v === true); router.refresh(); }} />
             <div className={cn("min-w-0 flex-1 text-sm", e.done && "opacity-55")}>
               <p className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className="text-xs font-medium capitalize text-muted">{formatDay(e.date)}</span><PlatformBadge platform={e.platform as PlatformCode} size="sm" /><span className={cn("font-medium text-ink", e.done && "line-through")}>{e.title}</span></p>
               {e.caption && <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-[13px] text-ink-soft">{e.caption}</p>}

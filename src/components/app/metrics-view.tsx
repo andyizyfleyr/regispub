@@ -11,7 +11,7 @@ import { formatFcfa, formatNumber, formatPercent, formatPureDate } from "@/lib/u
 import { MetricsChart, type ChartSeries } from "./metrics-chart";
 
 const HINTS: Partial<Record<MetricKey, string>> = {
-  impressions: "Nombre de fois où la publicité a été montrée", ctr: "Part des affichages suivis d'un clic", conversions: "Selon l'objectif de la campagne",
+  impressions: "Nombre de fois où la publicité a été montrée", ctr: "Part des affichages suivis d'un clic", conversions: "Selon l'objectif de la campagne", clicks: "Nombre de clics sur la publicité", cpc: "Dépenses ÷ clics",
   roi: "(Revenus − dépenses) ÷ dépenses",
 };
 
@@ -41,7 +41,7 @@ export function MetricsView({ report, kpis, adBudget, staff }: { report: Campaig
   if (!report.totals.days) {
     return (
       <Card>
-        <EmptyState icon={<BarChart3 />} title="Pas encore de résultats" description={staff
+        <EmptyState art="chart" title="Pas encore de résultats" description={staff
           ? "Importez un export CSV du gestionnaire de publicités ou synchronisez la campagne. Les chiffres ne sont visibles du client qu'après validation."
           : "Ils s'affichent dès les premiers chiffres validés."} />
       </Card>
@@ -59,7 +59,7 @@ export function MetricsView({ report, kpis, adBudget, staff }: { report: Campaig
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {primary.map((k, i) => { const Icon = METRIC_ICONS[k]; return <StatTile key={k} label={METRIC_LABELS[k]} value={metricValue(k, report)} hint={staff ? HINTS[k] : undefined} icon={<Icon />} tone={toneAt(i)} />; })}
+        {primary.map((k, i) => { const Icon = METRIC_ICONS[k]; return <StatTile key={k} label={METRIC_LABELS[k]} value={metricValue(k, report)} info={HINTS[k]} icon={<Icon />} tone={toneAt(i)} />; })}
       </div>
       <div className="rounded-xl border border-line bg-surface p-4 shadow-card sm:p-5">
         <div className="flex items-baseline justify-between gap-3">

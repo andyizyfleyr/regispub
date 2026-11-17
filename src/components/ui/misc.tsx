@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,10 +22,11 @@ export function PageHeader({ title, description, actions, eyebrow, back }: { tit
   );
 }
 
-export function EmptyState({ icon, title, description, action, className }: { icon?: React.ReactNode; title: string; description?: React.ReactNode; action?: React.ReactNode; className?: string }) {
+export function EmptyState({ icon, art, title, description, action, className }: { icon?: React.ReactNode; art?: "megaphone" | "phone" | "chart" | "box"; title: string; description?: React.ReactNode; action?: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex flex-col items-center rounded-lg border border-dashed border-line-strong bg-paper/60 px-6 py-12 text-center", className)}>
-      {icon && (
+    <div className={cn("flex flex-col items-center rounded-2xl border border-dashed border-line-strong bg-surface px-6 text-center", art ? "py-9" : "py-12", className)}>
+      {art && <Image src={`/img/3d/${art}.webp`} alt="" width={280} height={280} unoptimized className="mb-2 size-36 mix-blend-multiply" />}
+      {icon && !art && (
         <div className="relative mb-4 flex size-14 items-center justify-center">
           <span aria-hidden className="absolute inset-0 rounded-full bg-green-soft" />
           <span aria-hidden className="absolute -inset-2 rounded-full border border-green/15" />

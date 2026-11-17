@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Switch, ToggleRow } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { formatFcfa } from "@/lib/utils";
 import { changeRoleAction, requestRefundAction, resolveRefundAction, saveServiceAction, updateTicketAction } from "@/server/actions/staff-admin";
@@ -115,7 +116,7 @@ export function ServiceDialog({ service, minFee }: { service?: ServiceData; minF
             <Field label="Ordre" htmlFor="sv-order"><Input id="sv-order" name="sortOrder" type="number" min={0} max={999} className="tnum" defaultValue={s?.sortOrder ?? 50} /></Field>
           </div>
           <Field label="Inclus dans la prestation" htmlFor="sv-feat" hint="Une ligne par élément." optional><Textarea id="sv-feat" name="features" rows={4} defaultValue={s?.features.join("\n")} /></Field>
-          <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" name="active" defaultChecked={s?.active ?? true} className="size-4 accent-forest" />Proposée aux clients</label>
+          <ToggleRow label="Proposée aux clients" htmlFor="sv-active"><Switch id="sv-active" name="active" defaultChecked={s?.active ?? true} /></ToggleRow>
           <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={() => setOpen(false)}>Fermer</Button><SubmitButton pendingLabel="Enregistrement…">Enregistrer</SubmitButton></div>
         </ActionForm>
       </DialogContent>

@@ -4,11 +4,12 @@ import { WhatsappIcon } from "@/components/icons";
 import { CampaignRow } from "@/components/app/campaign-row";
 import { Button } from "@/components/ui/button";
 import { List, SectionTitle } from "@/components/ui/list";
-import { Banner, StepTile, toneAt } from "@/components/ui/tile";
+import { Carousel } from "@/components/ui/carousel";
+import { Banner, StepTile, TILE_TONES, toneAt } from "@/components/ui/tile";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
-import { formatFcfa } from "@/lib/utils";
+import { cn, formatFcfa } from "@/lib/utils";
 import { createCampaignAction } from "@/server/actions/campaigns";
 
 export const metadata: Metadata = { title: "Confier ma publicité à un expert" };
@@ -52,14 +53,15 @@ export default async function ExpertPage() {
       {services.length > 0 && (
         <section aria-labelledby="formules">
           <SectionTitle id="formules">Formules</SectionTitle>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {services.map((s) => (
-              <div key={s.id} className="rounded-xl border border-line bg-surface p-5 shadow-card">
-                <p className="text-[15px] font-semibold text-ink">{s.name}</p>
-                <p className="mt-2"><span className="tnum font-display text-[26px] font-semibold leading-none">{formatFcfa(s.fee)}</span><span className="ml-1.5 text-[13px] text-muted">/ campagne</span></p>
+          <Carousel label="Formules" itemClassName="basis-[78%] sm:basis-[47%]">
+            {services.map((s, i) => (
+              <div key={s.id} className="flex w-full flex-col rounded-2xl border border-line bg-surface p-5 shadow-card">
+                <span aria-hidden className={cn("flex size-11 items-center justify-center rounded-xl [&_svg]:size-5", TILE_TONES[toneAt(i)])}>{s.kind === "PACK" ? <Palette /> : <Headset />}</span>
+                <p className="mt-4 text-[15px] font-semibold leading-snug text-ink">{s.name}</p>
+                <p className="mt-auto pt-3"><span className="tnum font-display text-[26px] font-semibold leading-none">{formatFcfa(s.fee)}</span><span className="ml-1.5 text-[13px] text-muted">/ campagne</span></p>
               </div>
             ))}
-          </div>
+          </Carousel>
           <p className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[13px] text-muted">Hors budget publicitaire.{wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-medium text-green hover:underline"><WhatsappIcon className="size-4" />Une question ?</a>}</p>
         </section>
       )}

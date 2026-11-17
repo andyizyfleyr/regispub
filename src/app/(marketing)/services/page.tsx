@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarClock, Check, Headset, Megaphone, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Carousel } from "@/components/ui/carousel";
 import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import { TILE_TONES } from "@/components/ui/tile";
@@ -16,6 +17,13 @@ const KIND_INFO = {
   SUBSCRIPTION: { title: "Suivi mensuel", icon: <CalendarClock />, tone: "violet" },
 } as const;
 
+/** Au-delà de trois offres : carrousel. Sinon, simple grille. */
+function Group({ many, children }: { many: boolean; children: React.ReactNode }) {
+  return many
+    ? <Carousel label="Offres" className="mt-5" itemClassName="basis-[78%] sm:basis-[44%] lg:basis-[31.5%]">{children}</Carousel>
+    : <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>;
+}
+
 export default async function ServicesPage() {
   const [services, settings] = await Promise.all([db.service.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }), getSettings()]);
   return (
@@ -29,9 +37,9 @@ export default async function ServicesPage() {
         return (
           <section key={kind} className="mt-12">
             <h2 className="flex items-center gap-3 text-2xl font-semibold"><span aria-hidden className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5", TILE_TONES[KIND_INFO[kind].tone])}>{KIND_INFO[kind].icon}</span>{KIND_INFO[kind].title}</h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Group many={list.length > 3}>
               {list.map((s, i) => (
-                <article key={s.id} className="flex flex-col rounded-2xl border border-line bg-surface p-6 shadow-card">
+                <article key={s.id} className="flex w-full flex-col rounded-2xl border border-line bg-surface p-6 shadow-card">
                   <span aria-hidden className={cn("h-1.5 w-10 rounded-full", ["bg-green", "bg-marigold", "bg-sky", "bg-violet", "bg-rose"][i % 5])} />
                   <h3 className="mt-4 text-[17px] font-semibold tracking-normal [font-family:var(--font-sans)]">{s.name}</h3>
                   <p className="mt-2">
@@ -43,7 +51,7 @@ export default async function ServicesPage() {
                   </ul>
                 </article>
               ))}
-            </div>
+            </Group>
           </section>
         );
       })}

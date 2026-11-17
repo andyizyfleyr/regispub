@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { Megaphone, ReceiptText, Wallet } from "lucide-react";
+import Link from "next/link";
+import { Megaphone, Plus, ReceiptText, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { StateBadge } from "@/components/ui/badge";
 import { List, ListRow } from "@/components/ui/list";
 import { StatTile } from "@/components/ui/tile";
@@ -35,7 +37,7 @@ export default async function PaymentsPage() {
               trailing={<span className="tnum font-semibold text-ink">{formatFcfa(o.total)}</span>} />
           ))}
         </List>
-      ) : <EmptyState icon={<ReceiptText />} title="Aucune commande" />}
+      ) : <EmptyState art="phone" title="Aucune commande" action={<Button asChild><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer</Link></Button>} />}
     </>
   );
 }

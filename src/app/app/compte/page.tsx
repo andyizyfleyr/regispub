@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Bell, Building2, CalendarClock, Check, Gift, LifeBuoy, Star, Ticket, UserRound, Users } from "lucide-react";
+import Link from "next/link";
+import { Bell, BookOpen, Building2, CalendarClock, Check, Gift, LifeBuoy, Mail, Star, Ticket, UserRound, Users } from "lucide-react";
 import { BusinessDialog, CopyField, RedeemPoints } from "@/components/app/account-parts";
 import { WhatsappIcon } from "@/components/icons";
 import { ActionButton, ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { StatTile, Tile, toneAt } from "@/components/ui/tile";
+import { Switch, ToggleRow } from "@/components/ui/controls";
 import { EmptyState, Notice, PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -63,9 +65,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 <Field label="Téléphone" htmlFor="p-phone"><Input id="p-phone" name="phone" type="tel" inputMode="tel" required defaultValue={user.phone ? formatPhone(user.phone) : ""} autoComplete="tel" /><FieldError name="phone" /></Field>
                 <Field label="Type de compte" htmlFor="p-type"><Select id="p-type" name="accountType" defaultValue={user.accountType}><option value="INDIVIDUAL">Particulier</option><option value="PROFESSIONAL">Professionnel</option></Select></Field>
                 <fieldset className="space-y-2">
-                  <legend className="mb-1 text-[13px] font-medium text-ink-soft">Notifications</legend>
-                  <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" name="notifyEmail" defaultChecked={user.notifyEmail} className="size-4 accent-forest" />Par e-mail</label>
-                  <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" name="notifyWhatsapp" defaultChecked={user.notifyWhatsapp} className="size-4 accent-forest" />Par WhatsApp</label>
+                  <legend className="mb-1.5 text-[13px] font-medium text-ink">Notifications</legend>
+                  <ToggleRow icon={<Mail />} label="E-mail" htmlFor="p-nmail"><Switch id="p-nmail" name="notifyEmail" defaultChecked={user.notifyEmail} /></ToggleRow>
+                  <ToggleRow icon={<WhatsappIcon />} label="WhatsApp" htmlFor="p-nwa"><Switch id="p-nwa" name="notifyWhatsapp" defaultChecked={user.notifyWhatsapp} /></ToggleRow>
                 </fieldset>
                 <SubmitButton pendingLabel="Enregistrement…">Enregistrer</SubmitButton>
               </ActionForm>
@@ -266,7 +268,8 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
         {(wa || email) && (
           <Card>
             <CardBody className="space-y-2 text-sm">
-              <p className="font-medium text-ink">Contact</p>
+              <Link href="/app?guide=1" className="flex items-center gap-2 font-medium text-green hover:underline"><BookOpen className="size-4" />Revoir le guide</Link>
+              <p className="pt-2 font-medium text-ink">Contact</p>
               {wa && <a href={wa} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-green hover:underline"><WhatsappIcon className="size-4" />WhatsApp {formatPhone(whatsapp)}</a>}
               {email && <a href={`mailto:${email}`} className="block text-green hover:underline">{email}</a>}
             </CardBody>

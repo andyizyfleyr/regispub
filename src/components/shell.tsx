@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/icons";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { cn, initials } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
 
@@ -193,6 +194,8 @@ export function AppShell({ area, user, unread, allowed, children }: {
         </header>
 
         <main className={cn("mx-auto w-full flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-9", client ? "max-w-4xl" : "max-w-6xl", client && !immersive && "pb-28 lg:pb-9")}>{children}</main>
+
+        {client && !immersive && <PullToRefresh />}
 
         {client && !immersive && (
           <nav className="no-print safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 items-end border-t border-line bg-surface/90 px-1 pt-1.5 backdrop-blur-md lg:hidden" aria-label="Navigation principale">
