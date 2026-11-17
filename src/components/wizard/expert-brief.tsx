@@ -51,11 +51,10 @@ export function ExpertBrief({ data }: { data: EditorData }) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="space-y-6">
+    <div className="mx-auto max-w-2xl space-y-7">
         <Section icon={<ClipboardList />} title="Votre besoin" description="Dites-nous ce que vous voulez obtenir, avec vos mots.">
           <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             <Field label="Plateformes" htmlFor="eb-platforms">
               <Select id="eb-platforms" value={choice} onChange={(e) => { const p = PLATFORM_CHOICES.find((x) => x.id === e.target.value)!.platforms; const o = getObjective(s.objective); set({ platforms: p, objective: o && o.platforms.some((x) => p.includes(x)) ? s.objective : null, budgetSplit: Object.fromEntries(p.map((x, i) => [x, Math.floor(100 / p.length) + (i === 0 ? 100 - Math.floor(100 / p.length) * p.length : 0)])) }); }}>
                 {PLATFORM_CHOICES.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
@@ -74,7 +73,7 @@ export function ExpertBrief({ data }: { data: EditorData }) {
           <Field label="Décrivez votre besoin" htmlFor="eb-brief" hint={`${s.brief.trim().length} / 3 000 — votre activité, ce que vous voulez promouvoir, votre clientèle, vos contraintes.`}>
             <Textarea id="eb-brief" rows={7} maxLength={3000} value={s.brief} onChange={(e) => set({ brief: e.target.value })} placeholder="Je vends des perruques naturelles à Cotonou. Je veux recevoir plus de commandes sur WhatsApp pour la collection de fin d'année. Mes clientes ont entre 20 et 40 ans…" />
           </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             <Field label="Produit ou service concerné" htmlFor="eb-product" optional><Input id="eb-product" maxLength={120} value={s.productName} onChange={(e) => set({ productName: e.target.value })} /></Field>
             <Field label="Nom de la campagne" htmlFor="eb-name"><Input id="eb-name" maxLength={80} value={s.name} onChange={(e) => set({ name: e.target.value })} /></Field>
           </div>
@@ -90,12 +89,12 @@ export function ExpertBrief({ data }: { data: EditorData }) {
               </Select>
             </Field>
           )}
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-4">
             <Field label="Nom" htmlFor="eb-bname"><Input id="eb-bname" maxLength={80} value={s.business.name} onChange={(e) => set({ business: { ...s.business, name: e.target.value } })} /></Field>
             <Field label="Secteur" htmlFor="eb-sector"><Select id="eb-sector" value={s.business.sector} onChange={(e) => set({ business: { ...s.business, sector: e.target.value } })}><option value="" disabled>Choisir…</option>{SECTORS.map((x) => <option key={x}>{x}</option>)}</Select></Field>
             <Field label="Ville" htmlFor="eb-city"><Input id="eb-city" maxLength={60} value={s.business.city} onChange={(e) => set({ business: { ...s.business, city: e.target.value } })} /></Field>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             <Field label="WhatsApp" htmlFor="eb-wa" optional><Input id="eb-wa" inputMode="tel" maxLength={40} value={s.destinationWhatsapp} onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" /></Field>
             <Field label="Lien de votre page" htmlFor="eb-url" optional><Input id="eb-url" type="url" maxLength={300} value={s.destinationUrl} onChange={(e) => set({ destinationUrl: e.target.value })} placeholder="https://facebook.com/votrepage" /></Field>
           </div>
@@ -114,15 +113,14 @@ export function ExpertBrief({ data }: { data: EditorData }) {
         <Section icon={<Sparkles />} title="Formule" description="Ce que notre équipe prend en charge.">
           <LevelPicker expert levels={data.levels} value={s.serviceCode} onChange={(serviceCode) => set({ serviceCode })} baseLabel="" baseFee={objective ? data.baseFees[objective.serviceCode] ?? data.limits.minServiceFee : data.limits.minServiceFee} />
         </Section>
-      </div>
 
-      <aside className="space-y-3 lg:sticky lg:top-24 lg:self-start">
+      <section className="space-y-3 border-t border-line pt-7">
         <QuotePanel state={quote} promo={promo} onPromo={setPromo} />
         {error && <Notice tone="danger">{error}</Notice>}
         <Button type="button" size="lg" variant="accent" className="w-full" disabled={busy !== null} onClick={() => save(true)}>{busy === "order" && <LoaderCircle className="animate-spin" />}Passer au paiement<ArrowRight /></Button>
         <Button type="button" variant="ghost" className="w-full" disabled={busy !== null} onClick={() => save(false)}>{busy === "save" && <LoaderCircle className="animate-spin" />}Enregistrer le brouillon</Button>
         <p className="text-xs leading-relaxed text-muted">Après paiement, un gestionnaire vous contacte par la messagerie de la campagne. Les créations vous sont soumises avant toute diffusion. <Link href="/conditions" className="underline">Conditions</Link></p>
-      </aside>
+      </section>
     </div>
   );
 }

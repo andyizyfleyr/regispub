@@ -94,16 +94,11 @@ export function Assistant({ businesses, hasModel, entries, today }: { businesses
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
+    <div className="space-y-6">
       <div className="min-w-0 space-y-4">
-        <div className="scrollbar-none -mx-4 flex gap-1.5 overflow-x-auto px-4 lg:mx-0 lg:flex-wrap lg:px-0" role="tablist" aria-label="Outils de l'assistant">
-          {TOOLS.map((t) => (
-            <button key={t.kind} type="button" role="tab" aria-selected={kind === t.kind} onClick={() => setKind(t.kind)}
-              className={cn("shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors", kind === t.kind ? "border-forest bg-forest text-white" : "border-line bg-surface text-ink-soft hover:border-line-strong")}>
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <Field label="Que voulez-vous faire ?" htmlFor="as-tool">
+          <Select id="as-tool" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>{TOOLS.map((t) => <option key={t.kind} value={t.kind}>{t.label}</option>)}</Select>
+        </Field>
         <Card>
           <CardBody>
             <p className="mb-4 text-sm text-muted">{tool.description}</p>
@@ -145,11 +140,7 @@ export function Assistant({ businesses, hasModel, entries, today }: { businesses
               <p className="border-t border-line pt-3 text-xs text-muted">Propositions à relire et à adapter : elles reposent uniquement sur les informations que vous avez fournies et ne garantissent aucun résultat.</p>
             </CardBody>
           </Card>
-        ) : (
-          <div className="rounded-lg border border-dashed border-line-strong px-6 py-10 text-center text-sm text-muted">
-            <Sparkles className="mx-auto mb-2 size-6 text-line-strong" />Choisissez un outil, complétez les champs puis lancez la génération. Le résultat s&apos;affiche ici.
-          </div>
-        )}
+        ) : null}
         <CalendarList entries={entries} />
       </div>
     </div>
@@ -162,7 +153,7 @@ function ResultView({ result, onSave, startDate, setStartDate, today }: { result
     case "diagnostic": { const d = result.data as Diagnostic; return (
       <>
         <p className="text-sm text-ink-soft">{d.summary}</p>
-        <div className="grid gap-5 sm:grid-cols-2"><Bullets title="Points forts" items={d.strengths} /><Bullets title="Points à améliorer" items={d.weaknesses} /></div>
+        <div className="space-y-5"><Bullets title="Points forts" items={d.strengths} /><Bullets title="Points à améliorer" items={d.weaknesses} /></div>
         {d.priorities.length > 0 && <div><h4 className="text-[13px] font-semibold">Priorités</h4><ol className="mt-2 space-y-2">{d.priorities.map((p, i) => <li key={i} className="flex gap-3 rounded-md bg-paper px-3 py-2.5 text-sm"><span className="tnum font-semibold text-green">{i + 1}</span><span><span className="font-medium text-ink">{p.title}</span><span className="block text-ink-soft">{p.action}</span></span></li>)}</ol></div>}
         {d.campaignSuggestions.length > 0 && <div><h4 className="text-[13px] font-semibold">Campagnes conseillées</h4><ul className="mt-2 space-y-2 text-sm">{d.campaignSuggestions.map((s, i) => <li key={i}><span className="font-medium">{s.objective}</span> — <span className="text-ink-soft">{s.why}</span></li>)}</ul><Button asChild size="sm" className="mt-3"><Link href="/app/creer">Créer une publicité</Link></Button></div>}
       </>
@@ -184,7 +175,7 @@ function ResultView({ result, onSave, startDate, setStartDate, today }: { result
         </div>
       </>
     ); }
-    case "ideas": { const d = result.data as Ideas; return <ul className="grid gap-3 sm:grid-cols-2">{d.ideas.map((x, i) => <li key={i} className="rounded-md border border-line p-3.5 text-sm"><p className="font-medium text-ink">{x.title}</p><p className="text-xs text-green">{x.format}</p><p className="mt-1.5 text-ink-soft">{x.description}</p></li>)}</ul>; }
+    case "ideas": { const d = result.data as Ideas; return <ul className="divide-y divide-line rounded-md border border-line">{d.ideas.map((x, i) => <li key={i} className="px-3.5 py-3 text-sm"><p className="font-medium text-ink">{x.title}</p><p className="text-xs text-green">{x.format}</p><p className="mt-1.5 text-ink-soft">{x.description}</p></li>)}</ul>; }
     case "captions": { const d = result.data as Captions; return <ul className="space-y-3">{d.captions.map((c, i) => <li key={i} className="flex items-start gap-3 rounded-md border border-line p-3.5 text-sm"><p className="min-w-0 flex-1 whitespace-pre-wrap text-ink-soft">{c}</p><CopyButton text={c} /></li>)}</ul>; }
     case "hashtags": { const d = result.data as Hashtags; return (
       <>

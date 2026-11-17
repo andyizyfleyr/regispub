@@ -65,12 +65,13 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
 
       <fieldset>
         <legend className="mb-2 text-[13px] font-medium text-ink-soft">1. Votre opérateur Mobile Money</legend>
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
           {operators.map((o) => (
             <button key={o.code} type="button" aria-pressed={operator === o.code} onClick={() => { setOperator(o.code); setTouched(true); }}
-              className={cn("flex items-center gap-3 rounded-lg border bg-surface p-3 text-left transition-colors", operator === o.code ? "border-forest ring-1 ring-forest" : "border-line hover:border-line-strong")}>
+              className={cn("flex w-full items-center gap-3 px-4 py-3 text-left transition-colors", operator === o.code ? "bg-green-soft/50" : "hover:bg-paper")}>
               <OperatorChip operator={o.code} />
-              <span className="text-sm font-medium text-ink">{o.label}</span>
+              <span className="flex-1 text-sm font-medium text-ink">{o.label}</span>
+              <span aria-hidden className={cn("flex size-5 items-center justify-center rounded-full border", operator === o.code ? "border-green bg-green" : "border-line-strong")}>{operator === o.code && <span className="size-2 rounded-full bg-white" />}</span>
             </button>
           ))}
         </div>

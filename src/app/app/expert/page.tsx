@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { ArrowRight, ClipboardList, MessagesSquare, ShieldCheck, Smartphone } from "lucide-react";
-import { CampaignCard } from "@/components/app/campaign-card";
+import { ArrowRight } from "lucide-react";
+import { CampaignRow } from "@/components/app/campaign-row";
 import { Button } from "@/components/ui/button";
+import { Figures, List, SectionTitle } from "@/components/ui/list";
 import { PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -12,10 +13,10 @@ import { createCampaignAction } from "@/server/actions/campaigns";
 export const metadata: Metadata = { title: "Confier ma publicité à un expert" };
 
 const STEPS = [
-  { icon: ClipboardList, title: "Vous remplissez le brief", text: "Votre activité, votre objectif, votre budget et vos fichiers. Cinq minutes suffisent." },
-  { icon: Smartphone, title: "Vous payez par Mobile Money", text: "Budget publicitaire et frais de prestation sont affichés séparément avant validation." },
-  { icon: MessagesSquare, title: "Un gestionnaire prépare tout", text: "Textes, visuels, ciblage. Vous échangez avec lui par messagerie et suivez l'avancement." },
-  { icon: ShieldCheck, title: "Vous validez, nous lançons", text: "Rien n'est diffusé sans votre accord. Vous pouvez demander des modifications." },
+  { title: "Vous remplissez le brief", text: "Votre activité, votre objectif, votre budget. Cinq minutes suffisent." },
+  { title: "Vous payez par Mobile Money", text: "Budget publicitaire et prestation sont affichés séparément." },
+  { title: "Un gestionnaire prépare tout", text: "Textes, visuels, ciblage. Vous échangez avec lui par messagerie." },
+  { title: "Vous validez, nous lançons", text: "Rien n'est diffusé sans votre accord." },
 ];
 
 export default async function ExpertPage() {
@@ -27,34 +28,38 @@ export default async function ExpertPage() {
   ]);
   const wa = settings.supportWhatsapp.replace(/\D/g, "");
   return (
-    <>
-      <PageHeader title="Confier ma publicité à un expert" description="Vous décrivez votre besoin, notre équipe s'occupe du reste : stratégie, créations, lancement et suivi." />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <ol className="stagger grid gap-3 sm:grid-cols-2">
-          {STEPS.map((s, i) => (
-            <li key={s.title} className="rounded-lg border border-line bg-surface p-5 shadow-card">
-              <div className="flex items-center justify-between"><span className="flex size-11 items-center justify-center rounded-md bg-green-soft text-green"><s.icon className="size-5" /></span><span className="tnum font-display text-2xl font-semibold leading-none text-line-strong">{i + 1}</span></div>
-              <p className="mt-4 font-medium text-ink">{s.title}</p>
-              <p className="mt-1 text-sm text-muted">{s.text}</p>
-            </li>
-          ))}
-        </ol>
-        <aside className="bg-brand relative flex flex-col overflow-hidden rounded-lg p-6 text-white">
-          <p className="eyebrow !text-white/60">Formules</p>
-          <ul className="mt-3 space-y-3">
-            {services.map((s) => <li key={s.id} className="flex items-baseline justify-between gap-3 text-sm"><span className="text-white/85">{s.name}</span><span className="tnum shrink-0 font-semibold">{formatFcfa(s.fee)}</span></li>)}
-          </ul>
-          <p className="mt-3 text-xs text-white/60">Hors budget publicitaire, que vous fixez librement.</p>
-          <form action={createCampaignAction.bind(null, "EXPERT", undefined)} className="mt-6"><Button type="submit" variant="accent" size="lg" className="w-full">Remplir mon brief <ArrowRight /></Button></form>
-          {wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer" className="mt-3 text-center text-[13px] text-white/75 underline-offset-4 hover:underline">Une question ? Écrivez-nous sur WhatsApp</a>}
-        </aside>
+    <div className="space-y-8">
+      <div>
+        <PageHeader title="Confier ma publicité à un expert" description="Vous décrivez votre besoin, notre équipe s'occupe du reste." />
+        <form action={createCampaignAction.bind(null, "EXPERT", undefined)}><Button type="submit" variant="accent" size="lg">Remplir mon brief<ArrowRight /></Button></form>
       </div>
+
       {drafts.length > 0 && (
-        <section className="mt-8" aria-labelledby="briefs">
-          <h2 id="briefs" className="mb-3 text-lg font-semibold">Briefs en cours</h2>
-          <div className="stagger grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{drafts.map((c) => <CampaignCard key={c.id} c={c} />)}</div>
+        <section aria-labelledby="briefs">
+          <SectionTitle id="briefs">Reprendre un brief</SectionTitle>
+          <List>{drafts.map((c) => <li key={c.id}><CampaignRow c={c} /></li>)}</List>
         </section>
       )}
-    </>
+
+      <section aria-labelledby="etapes">
+        <SectionTitle id="etapes">Comment ça se passe</SectionTitle>
+        <List>
+          {STEPS.map((s, i) => (
+            <li key={s.title} className="flex items-start gap-3.5 px-4 py-3.5 sm:px-5">
+              <span className="tnum flex size-7 shrink-0 items-center justify-center rounded-full bg-green-soft text-[13px] font-semibold text-green">{i + 1}</span>
+              <span><span className="block font-medium leading-snug text-ink">{s.title}</span><span className="mt-0.5 block text-[13.5px] leading-snug text-muted">{s.text}</span></span>
+            </li>
+          ))}
+        </List>
+      </section>
+
+      {services.length > 0 && (
+        <section aria-labelledby="formules">
+          <SectionTitle id="formules">Formules</SectionTitle>
+          <Figures items={services.map((s) => ({ label: s.name, value: formatFcfa(s.fee) }))} />
+          <p className="mt-2 text-[13px] text-muted">Hors budget publicitaire, que vous fixez librement.{wa && <> Une question ? <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer" className="font-medium text-green hover:underline">Écrivez-nous sur WhatsApp</a>.</>}</p>
+        </section>
+      )}
+    </div>
   );
 }

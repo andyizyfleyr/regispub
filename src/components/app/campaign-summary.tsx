@@ -14,7 +14,7 @@ type SummaryCampaign = {
 };
 
 /** Récapitulatif de la configuration d'une campagne (lecture seule). */
-export function CampaignSummary({ c }: { c: SummaryCampaign }) {
+export function CampaignSummary({ c, compact }: { c: SummaryCampaign; compact?: boolean }) {
   const platforms = c.platforms as PlatformCode[];
   const objective = getObjective(c.objective);
   const t = readTargeting(c.targeting);
@@ -23,7 +23,7 @@ export function CampaignSummary({ c }: { c: SummaryCampaign }) {
   const gender = GENDERS.find((g) => g.id === t.gender)?.label ?? "Tous";
   const languages = t.languages.map((l) => LANGUAGES.find((x) => x.id === l)?.label ?? l).join(", ");
   return (
-    <DefinitionList items={[
+    <DefinitionList items={([
       { label: "Plateformes", value: <span className="flex flex-wrap items-center gap-x-3 gap-y-1">{platforms.map((p) => <span key={p} className="flex items-center gap-1.5"><PlatformBadge platform={p} size="sm" />{PLATFORMS[p].label}{platforms.length > 1 && c.adBudget > 0 ? <span className="tnum text-muted">{split[p] ?? 0} %</span> : null}</span>)}</span> },
       { label: "Objectif", value: objective?.label },
       { label: "Entreprise", value: c.business ? `${c.business.name} · ${c.business.sector}` : null },
@@ -38,6 +38,6 @@ export function CampaignSummary({ c }: { c: SummaryCampaign }) {
       ...(t.customAudience.requested ? [{ label: "Audience personnalisée", value: t.customAudience.note || "Demandée" }] : []),
       ...(c.productDescription ? [{ label: "Description", value: <span className="whitespace-pre-wrap">{c.productDescription}</span> }] : []),
       ...(c.brief ? [{ label: "Brief", value: <span className="whitespace-pre-wrap">{c.brief}</span> }] : []),
-    ]} />
+    ] as { label: string; value: React.ReactNode }[]).filter((it) => !compact || Boolean(it.value))} />
   );
 }

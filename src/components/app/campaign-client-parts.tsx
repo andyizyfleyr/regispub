@@ -69,14 +69,14 @@ export function CreativeReview({ items }: { items: ReviewItem[] }) {
   }
 
   return (
-    <ul className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+    <ul className="divide-y divide-line">
       {items.map((it) => (
-        <li key={it.linkId} className="overflow-hidden rounded-lg border border-line bg-surface">
-          <a href={`/api/files/${it.assetId}`} target="_blank" rel="noreferrer" className="block bg-sand"><AssetThumb id={it.assetId} kind={it.kind} name={it.name} className="aspect-square w-full" /></a>
-          <div className="space-y-3 p-3.5">
-            <div className="flex items-start justify-between gap-2">
-              <p className="min-w-0 truncate text-sm font-medium" title={it.name}>{it.name}</p>
-              {it.approval !== "NOT_REQUIRED" ? <StateBadge kind="approval" value={it.approval} /> : <span className="shrink-0 text-xs text-muted">{it.byTeam ? "Équipe" : "Fourni par vous"}</span>}
+        <li key={it.linkId} className="flex items-start gap-4 px-4 py-4 sm:px-5">
+          <a href={`/api/files/${it.assetId}`} target="_blank" rel="noreferrer" title="Ouvrir en grand" className="block size-24 shrink-0 overflow-hidden rounded-md bg-sand sm:size-28"><AssetThumb id={it.assetId} kind={it.kind} name={it.name} className="size-full" /></a>
+          <div className="min-w-0 flex-1 space-y-2.5">
+            <div>
+              <p className="truncate text-sm font-medium" title={it.name}>{it.name}</p>
+              <div className="mt-1">{it.approval !== "NOT_REQUIRED" ? <StateBadge kind="approval" value={it.approval} /> : <span className="text-[13px] text-muted">{it.byTeam ? "Préparé par notre équipe" : "Fourni par vous"}</span>}</div>
             </div>
             {it.feedback && <p className="rounded-md bg-sand px-3 py-2 text-[13px] text-ink-soft"><MessageSquareWarning className="mr-1.5 inline size-3.5" />{it.feedback}</p>}
             {it.approval === "PENDING" && (editing === it.linkId ? (

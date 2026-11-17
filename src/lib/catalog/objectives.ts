@@ -170,6 +170,6 @@ export function unsupportedPlatforms(objective: Objective, platforms: PlatformCo
 }
 
 export const METRIC_LABELS: Record<MetricKey, string> = {
-  impressions: "Impressions", reach: "Portée", clicks: "Clics", ctr: "CTR", cpc: "CPC", cpm: "CPM",
-  engagements: "Engagement", videoViews: "Vues vidéo", conversions: "Conversions", leads: "Prospects", spend: "Dépenses", roi: "Retour sur investissement",
+  impressions: "Affichages", reach: "Personnes touchées", clicks: "Clics", ctr: "Taux de clic", cpc: "Coût par clic", cpm: "Coût pour 1 000 affichages",
+  engagements: "Réactions et commentaires", videoViews: "Vues vidéo", conversions: "Résultats obtenus", leads: "Prospects", spend: "Dépenses", roi: "Retour sur investissement",
 };

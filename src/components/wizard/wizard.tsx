@@ -2,10 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft, ArrowRight, Check, ChevronDown, CircleCheck, ImagePlus, Lightbulb, LoaderCircle, MapPin, PenLine, ShoppingBag, SlidersHorizontal, Sparkles, Store, Target,
-  Trash2, Type, Users, Wallet, WandSparkles, X,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleCheck, ImagePlus, LoaderCircle, Trash2, WandSparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdPreview } from "@/components/app/ad-preview";
 import { AssetThumb, Uploader } from "@/components/app/uploader";
@@ -13,6 +10,7 @@ import { PlatformIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
+import { Figures } from "@/components/ui/list";
 import { Notice } from "@/components/ui/misc";
 import type { AdCopy, EditorData, LinkedAsset, StrategyState } from "@/lib/campaigns/editor-data";
 import { getObjective } from "@/lib/catalog/objectives";
@@ -25,10 +23,10 @@ import {
 import { BudgetFields, Chip, LevelPicker, ObjectivePicker, PlatformPicker, QuotePanel, Section, Stepper, useQuote } from "./parts";
 
 export const WIZARD_STEPS = [
-  { title: "Objectif", heading: "Que voulez-vous obtenir ?", lead: "Choisissez où diffuser et le résultat attendu. Nous réglons le reste en conséquence." },
-  { title: "Votre annonce", heading: "Présentez ce que vous proposez", lead: "Quelques informations et une photo suffisent. L'aperçu se met à jour pendant que vous écrivez." },
+  { title: "Objectif", heading: "Que voulez-vous obtenir ?", lead: "Choisissez où diffuser et le résultat attendu." },
+  { title: "Votre annonce", heading: "Présentez ce que vous proposez", lead: "Quelques informations et une photo suffisent." },
   { title: "Audience", heading: "À qui montrer votre publicité ?", lead: "Nous proposons une audience adaptée à votre activité. Vous pouvez l'ajuster." },
-  { title: "Budget", heading: "Fixez votre budget", lead: "Vous voyez le total avant de payer. Le budget publicitaire et notre prestation sont toujours séparés." },
+  { title: "Budget", heading: "Fixez votre budget", lead: "Vous voyez le total avant de payer." },
 ];
 const LAST = WIZARD_STEPS.length;
 const DEFAULT_NAMES = ["Nouvelle campagne", "Campagne confiée à un expert"];
@@ -142,7 +140,7 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
   const meta = WIZARD_STEPS[step - 1]!;
 
   return (
-    <div ref={top} className="mx-auto max-w-5xl scroll-mt-24">
+    <div ref={top} className="mx-auto max-w-2xl scroll-mt-24">
       <div className="mb-6 flex items-center justify-between gap-3">
         <button type="button" onClick={quit} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2.5 pr-3.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60">
           <X className="size-3.5" />Enregistrer et quitter
@@ -150,23 +148,20 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
         <span className={cn("flex items-center gap-1.5 text-[13px] text-green transition-opacity duration-300", saved ? "opacity-100" : "opacity-0")} aria-live="polite"><CircleCheck className="size-4" />Brouillon enregistré</span>
       </div>
 
-      <div className="mb-8 rounded-lg border border-line bg-surface px-4 py-3.5 shadow-card sm:px-6">
-        <Stepper steps={WIZARD_STEPS.map((x) => x.title)} current={step} reached={reached} onSelect={go} disabled={busy} />
-        <p className="mt-3 text-[13px] text-muted md:hidden">Étape {step} sur {LAST} · <span className="font-medium text-ink">{meta.title}</span></p>
-      </div>
+      <div className="mb-7"><Stepper steps={WIZARD_STEPS.map((x) => x.title)} current={step} reached={reached} onSelect={go} disabled={busy} /></div>
 
       <header key={step} className="mb-6 animate-rise">
-        <h1 className="text-[26px] font-semibold leading-tight sm:text-[32px]">{meta.heading}</h1>
-        <p className="mt-1.5 max-w-2xl text-muted">{meta.lead}</p>
+        <h1 className="text-[24px] font-semibold leading-tight sm:text-[28px]">{meta.heading}</h1>
+        <p className="mt-1.5 text-muted">{meta.lead}</p>
       </header>
 
       <div key={`step-${step}`} className="animate-rise">
         {step === 1 && (
-          <div className="space-y-6">
-            <Section icon={<Store />} title="Où diffuser votre publicité ?" description="Une ou plusieurs plateformes.">
+          <div className="space-y-7">
+            <Section title="Où diffuser votre publicité ?" description="Une ou plusieurs plateformes.">
               <PlatformPicker value={s.platforms} onChange={setPlatforms} extraFee={data.limits.extraPlatformFee} />
             </Section>
-            <Section icon={<Target />} title="Votre objectif" description="Le résultat que vous attendez de cette campagne.">
+            <Section title="Votre objectif">
               <ObjectivePicker value={s.objective} platforms={s.platforms} baseFees={data.baseFees} onChange={setObjective} />
             </Section>
           </div>
@@ -179,7 +174,7 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
       {warnings.length > 0 && <Notice tone="warn" className="mt-6" title="À vérifier avant le lancement">{warnings.map((w) => <p key={w}>{w}</p>)}</Notice>}
       {error && <Notice tone="danger" className="mt-6">{error}</Notice>}
 
-      <div className="safe-bottom sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-line bg-surface/90 px-4 pt-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-t-lg lg:border lg:border-b-0 lg:px-5 lg:shadow-lift">
+      <div className="safe-bottom sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-line bg-surface/95 px-4 pt-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
         <Button type="button" variant="ghost" disabled={step === 1 || busy} onClick={() => go(step - 1)}><ArrowLeft />Retour</Button>
         {step < LAST ? (
           <Button type="button" size="lg" disabled={busy} onClick={() => go(step + 1)}>{busy && <LoaderCircle className="animate-spin" />}Continuer<ArrowRight /></Button>
@@ -285,6 +280,9 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
   const st = s.strategy;
   const [writing, setWriting] = React.useState(false);
   const [notice, setNotice] = React.useState<string | null>(null);
+  // Une activité déjà connue est résumée sur une ligne : inutile de reposer les mêmes questions.
+  const [editBusiness, setEditBusiness] = React.useState(!(s.business.id && s.business.name && s.business.sector && s.business.city));
+  const [showLink, setShowLink] = React.useState(Boolean(s.destinationUrl) || needs.includes("page"));
   const pack = data.levels.find((l) => l.kind === "PACK");
   const ctas = Array.from(new Set([...(objective?.config.ctas ?? []), ...(st?.ctas ?? []), "En savoir plus", ...(copy.cta ? [copy.cta] : [])]));
   const alternatives = st ? [...st.texts, ...st.variants].filter((t) => !(t.headline === copy.headline && t.body === copy.body)).slice(0, 4) : [];
@@ -302,123 +300,123 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
     toast.success("Texte proposé. Modifiez-le librement.");
   }
 
+  const summary = "flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3.5 text-sm font-medium text-ink sm:px-5";
+
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
-      <div className="space-y-6">
-        <Section icon={<Store />} title="Votre activité" description="Le nom affiché sur l'annonce et l'endroit où vos clients vous contactent.">
-          <div className="space-y-4">
-            {data.businesses.length > 1 && (
-              <Field label="Entreprise" htmlFor="businessId">
-                <Select id="businessId" value={s.business.id ?? ""} onChange={(e) => { const b = data.businesses.find((x) => x.id === e.target.value); set({ business: b ? { ...b } : { id: null, name: "", sector: "", city: "" } }); }}>
-                  {data.businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                  <option value="">+ Nouvelle entreprise</option>
-                </Select>
-              </Field>
-            )}
-            <Field label="Nom de l'entreprise ou de la marque" htmlFor="bname"><Input id="bname" value={s.business.name} maxLength={80} onChange={(e) => setB({ name: e.target.value })} placeholder="Boutique Afi" /></Field>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div className="space-y-7">
+      <Section title="Votre activité" description="Le nom affiché sur l'annonce et l'endroit où vos clients vous contactent.">
+        <div className="space-y-4">
+          {!editBusiness ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3.5 sm:px-5">
+              <span className="min-w-0">
+                <span className="block truncate font-medium text-ink">{s.business.name}</span>
+                <span className="block truncate text-[13.5px] text-muted">{[s.business.sector, s.business.city].filter(Boolean).join(" · ")}</span>
+              </span>
+              <button type="button" onClick={() => setEditBusiness(true)} className="shrink-0 rounded-full px-2.5 py-1 text-[13.5px] font-medium text-green hover:bg-green-soft">Modifier</button>
+            </div>
+          ) : (
+            <>
+              {data.businesses.length > 1 && (
+                <Field label="Entreprise" htmlFor="businessId">
+                  <Select id="businessId" value={s.business.id ?? ""} onChange={(e) => { const b = data.businesses.find((x) => x.id === e.target.value); set({ business: b ? { ...b } : { id: null, name: "", sector: "", city: "" } }); }}>
+                    {data.businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    <option value="">+ Nouvelle entreprise</option>
+                  </Select>
+                </Field>
+              )}
+              <Field label="Nom de l'entreprise ou de la marque" htmlFor="bname"><Input id="bname" value={s.business.name} maxLength={80} onChange={(e) => setB({ name: e.target.value })} placeholder="Boutique Afi" /></Field>
               <Field label="Secteur" htmlFor="sector">
                 <Select id="sector" value={s.business.sector} onChange={(e) => setB({ sector: e.target.value })}><option value="" disabled>Choisir…</option>{SECTORS.map((x) => <option key={x}>{x}</option>)}</Select>
               </Field>
               <Field label="Ville" htmlFor="city"><Input id="city" value={s.business.city} maxLength={60} onChange={(e) => setB({ city: e.target.value })} placeholder="Cotonou" /></Field>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Numéro WhatsApp" htmlFor="wa" optional={!needs.includes("whatsapp")} hint="Les clients intéressés vous écrivent ici.">
-                <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />
-              </Field>
-              <Field label="Lien de votre page" htmlFor="url" optional={!needs.includes("page")} hint="Page Facebook, compte Instagram ou TikTok.">
-                <Input id="url" type="url" value={s.destinationUrl} maxLength={300} onChange={(e) => set({ destinationUrl: e.target.value })} placeholder="https://facebook.com/votrepage" />
-              </Field>
-            </div>
-          </div>
-        </Section>
-
-        <Section icon={<ShoppingBag />} title="Ce que vous proposez" description="Décrivez-le comme vous le diriez à un client.">
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_11rem]">
-              <Field label="Produit ou service" htmlFor="pname" optional><Input id="pname" value={s.productName} maxLength={120} onChange={(e) => set({ productName: e.target.value })} placeholder="Robes en pagne sur mesure" /></Field>
-              <Field label="Prix" htmlFor="price" optional>
-                <div className="relative">
-                  <Input id="price" inputMode="numeric" className="tnum pr-14" value={s.productPrice ? String(s.productPrice) : ""} onChange={(e) => { const n = Number(e.target.value.replace(/\D/g, "")); set({ productPrice: n ? Math.min(n, 1_000_000_000) : null }); }} placeholder="15000" />
-                  <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[13px] text-muted">FCFA</span>
-                </div>
-              </Field>
-            </div>
-            <Field label="Description" htmlFor="pdesc" hint={<span className="flex justify-between gap-3"><span>Ce qui le rend intéressant, pour qui, comment commander.</span><span className="tnum shrink-0">{s.productDescription.trim().length} / 1 500</span></span>}>
-              <Textarea id="pdesc" rows={4} value={s.productDescription} maxLength={1500} onChange={(e) => set({ productDescription: e.target.value })} placeholder="Robes cousues main en wax, tailles 36 à 52, livraison à Cotonou et Calavi en 48 h…" />
+            </>
+          )}
+          <Field label="Numéro WhatsApp" htmlFor="wa" optional={!needs.includes("whatsapp")} hint="Les clients intéressés vous écrivent ici.">
+            <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />
+          </Field>
+          {showLink ? (
+            <Field label="Lien de votre page" htmlFor="url" optional={!needs.includes("page")} hint="Page Facebook, compte Instagram ou TikTok.">
+              <Input id="url" type="url" value={s.destinationUrl} maxLength={300} onChange={(e) => set({ destinationUrl: e.target.value })} placeholder="https://facebook.com/votrepage" />
             </Field>
-          </div>
-        </Section>
+          ) : (
+            <button type="button" onClick={() => setShowLink(true)} className="text-[13.5px] font-medium text-green hover:underline">+ Ajouter le lien de ma page</button>
+          )}
+        </div>
+      </Section>
 
-        <Section icon={<ImagePlus />} title="Photo ou vidéo" description={needs.includes("video") ? "Une vidéo est recommandée pour cet objectif." : "Une belle photo de votre produit fait la moitié du travail."}>
-          <MediaGrid campaignId={s.id} role="CREATIVE" items={media} setLinks={setLinks} library={data.library} />
-          <p className="mt-3 text-[13px] text-muted">
-            {media.length === 0 && pack
-              ? <>Pas de visuel ? À la dernière étape, choisissez « {pack.name} » : notre équipe les réalise et vous les soumet.</>
-              : "Images JPG, PNG ou WebP, vidéos MP4 ou MOV. Chaque visuel est vérifié par notre équipe avant diffusion."}
-          </p>
-        </Section>
-
-        <Section
-          icon={<Type />} title="Texte de l'annonce" description="Écrivez-le vous-même, ou laissez-nous vous proposer un texte."
-          action={<Button type="button" variant="soft" size="sm" disabled={writing} onClick={write}>{writing ? <LoaderCircle className="animate-spin" /> : <WandSparkles />}{writing ? "Rédaction…" : st ? "Autre proposition" : "Rédiger pour moi"}</Button>}
-        >
-          <div className="space-y-4">
-            {notice && <Notice tone="info">{notice}</Notice>}
-            <Field label="Texte principal" htmlFor="copy-b" hint={<span className="flex justify-between gap-3"><span>Laissez vide si vous préférez que notre équipe le rédige.</span><span className="tnum shrink-0">{copy.body.length} / 900</span></span>}>
-              <Textarea id="copy-b" rows={4} value={copy.body} maxLength={900} onChange={(e) => setCopy({ body: e.target.value })} placeholder="Offrez-vous une robe unique, cousue à vos mesures…" />
-            </Field>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_13rem]">
-              <Field label="Titre" htmlFor="copy-h"><Input id="copy-h" value={copy.headline} maxLength={90} onChange={(e) => setCopy({ headline: e.target.value })} placeholder="Votre robe sur mesure en 48 h" /></Field>
-              <Field label="Bouton" htmlFor="copy-c">
-                <Select id="copy-c" value={copy.cta} onChange={(e) => setCopy({ cta: e.target.value })}><option value="">Choisi par notre équipe</option>{ctas.map((c) => <option key={c} value={c}>{c}</option>)}</Select>
-              </Field>
+      <Section title="Ce que vous proposez" description="Décrivez-le comme vous le diriez à un client.">
+        <div className="space-y-4">
+          <Field label="Produit ou service" htmlFor="pname" optional><Input id="pname" value={s.productName} maxLength={120} onChange={(e) => set({ productName: e.target.value })} placeholder="Robes en pagne sur mesure" /></Field>
+          <Field label="Description" htmlFor="pdesc" hint={<span className="flex justify-between gap-3"><span>Ce qui le rend intéressant, pour qui, comment commander.</span><span className="tnum shrink-0">{s.productDescription.trim().length} / 1 500</span></span>}>
+            <Textarea id="pdesc" rows={4} value={s.productDescription} maxLength={1500} onChange={(e) => set({ productDescription: e.target.value })} placeholder="Robes cousues main en wax, tailles 36 à 52, livraison à Cotonou et Calavi en 48 h…" />
+          </Field>
+          <Field label="Prix" htmlFor="price" optional className="max-w-[14rem]">
+            <div className="relative">
+              <Input id="price" inputMode="numeric" className="tnum pr-14" value={s.productPrice ? String(s.productPrice) : ""} onChange={(e) => { const n = Number(e.target.value.replace(/\D/g, "")); set({ productPrice: n ? Math.min(n, 1_000_000_000) : null }); }} placeholder="15000" />
+              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[13px] text-muted">FCFA</span>
             </div>
+          </Field>
+        </div>
+      </Section>
 
-            {alternatives.length > 0 && (
-              <div>
-                <p className="mb-2 flex items-center gap-2 text-[13px] font-medium text-ink"><Sparkles className="size-4 text-green" />Autres propositions <span className="font-normal text-muted">— {st?.engine === "ai" ? "générées par IA" : "modèles de notre équipe"}</span></p>
-                <div className="stagger grid gap-2 sm:grid-cols-2">
-                  {alternatives.map((t, i) => (
-                    <button key={i} type="button" onClick={() => set({ adCopy: { headline: t.headline, body: t.body, cta: t.cta } })} className="group rounded-md border border-line bg-surface p-3.5 text-left transition-colors hover:border-green hover:bg-green-soft/30">
-                      <span className="block text-[13.5px] font-medium leading-snug text-ink">{t.headline}</span>
-                      <span className="mt-1 line-clamp-2 block text-[13px] leading-snug text-muted">{t.body}</span>
-                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-green opacity-80 group-hover:opacity-100"><PenLine className="size-3" />Utiliser ce texte</span>
-                    </button>
-                  ))}
-                </div>
+      <Section title="Photo ou vidéo" description={needs.includes("video") ? "Une vidéo est recommandée pour cet objectif." : "Une belle photo de votre produit fait la moitié du travail."}>
+        <MediaGrid campaignId={s.id} role="CREATIVE" items={media} setLinks={setLinks} library={data.library} />
+        {media.length === 0 && pack && <p className="mt-3 text-[13.5px] text-muted">Pas de visuel ? À la dernière étape, choisissez « {pack.name} » : notre équipe les réalise.</p>}
+      </Section>
+
+      <Section title="Texte de l'annonce" description="Écrivez-le vous-même, ou laissez-nous vous proposer un texte."
+        action={<Button type="button" variant="soft" size="sm" disabled={writing} onClick={write}>{writing ? <LoaderCircle className="animate-spin" /> : <WandSparkles />}{writing ? "Rédaction…" : st ? "Autre proposition" : "Rédiger pour moi"}</Button>}>
+        <div className="space-y-4">
+          {notice && <Notice tone="info">{notice}</Notice>}
+          <Field label="Texte principal" htmlFor="copy-b" hint={<span className="flex justify-between gap-3"><span>Laissez vide si vous préférez que notre équipe le rédige.</span><span className="tnum shrink-0">{copy.body.length} / 900</span></span>}>
+            <Textarea id="copy-b" rows={4} value={copy.body} maxLength={900} onChange={(e) => setCopy({ body: e.target.value })} placeholder="Offrez-vous une robe unique, cousue à vos mesures…" />
+          </Field>
+          <Field label="Titre" htmlFor="copy-h"><Input id="copy-h" value={copy.headline} maxLength={90} onChange={(e) => setCopy({ headline: e.target.value })} placeholder="Votre robe sur mesure en 48 h" /></Field>
+          <Field label="Bouton" htmlFor="copy-c">
+            <Select id="copy-c" value={copy.cta} onChange={(e) => setCopy({ cta: e.target.value })}><option value="">Choisi par notre équipe</option>{ctas.map((c) => <option key={c} value={c}>{c}</option>)}</Select>
+          </Field>
+
+          {alternatives.length > 0 && (
+            <details className="group">
+              <summary className={summary}>Voir {alternatives.length} autre{alternatives.length > 1 ? "s" : ""} proposition{alternatives.length > 1 ? "s" : ""}<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+              <div className="mt-2 divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+                {alternatives.map((t, i) => (
+                  <button key={i} type="button" onClick={() => set({ adCopy: { headline: t.headline, body: t.body, cta: t.cta } })} className="block w-full px-4 py-3.5 text-left transition-colors hover:bg-paper sm:px-5">
+                    <span className="block text-sm font-medium leading-snug text-ink">{t.headline}</span>
+                    <span className="mt-0.5 line-clamp-2 block text-[13.5px] leading-snug text-muted">{t.body}</span>
+                    <span className="mt-1.5 block text-[13px] font-medium text-green">Utiliser ce texte</span>
+                  </button>
+                ))}
               </div>
-            )}
+            </details>
+          )}
 
-            {st && (st.hooks.length > 0 || st.visualConcepts.length > 0) && (
-              <details className="group rounded-md bg-paper">
-                <summary className="flex items-center justify-between gap-3 px-4 py-3 text-[13.5px] font-medium text-ink">
-                  <span className="flex items-center gap-2"><Lightbulb className="size-4 text-marigold-600" />Idées pour votre publicité</span>
-                  <ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="grid gap-5 px-4 pb-4 text-[13.5px] sm:grid-cols-2">
+          {st && (st.hooks.length > 0 || st.visualConcepts.length > 0) && (
+            <details className="group">
+              <summary className={summary}>Idées pour votre publicité<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+              <div className="mt-2 space-y-4 rounded-lg border border-line bg-surface px-4 py-4 text-[13.5px] sm:px-5">
+                {st.hooks.length > 0 && (
                   <div>
-                    <p className="eyebrow mb-2">Accroches</p>
-                    <ul className="space-y-1.5 text-ink-soft">{st.hooks.slice(0, 5).map((h, i) => <li key={i} className="flex gap-2"><Check className="mt-0.5 size-3.5 shrink-0 text-green" />{h}</li>)}</ul>
+                    <p className="mb-1.5 font-medium text-ink">Accroches</p>
+                    <ul className="space-y-1 text-ink-soft">{st.hooks.slice(0, 4).map((h, i) => <li key={i} className="flex gap-2"><Check className="mt-0.5 size-3.5 shrink-0 text-green" />{h}</li>)}</ul>
                   </div>
+                )}
+                {st.visualConcepts.length > 0 && (
                   <div>
-                    <p className="eyebrow mb-2">Idées de visuels</p>
-                    <ul className="space-y-2 text-ink-soft">{st.visualConcepts.slice(0, 3).map((v, i) => <li key={i}><span className="font-medium text-ink">{v.title}</span><span className="block text-[13px] text-muted">{v.description}</span></li>)}</ul>
+                    <p className="mb-1.5 font-medium text-ink">Idées de visuels</p>
+                    <ul className="space-y-1.5 text-ink-soft">{st.visualConcepts.slice(0, 3).map((v, i) => <li key={i}><span className="text-ink">{v.title}</span><span className="block text-[13px] text-muted">{v.description}</span></li>)}</ul>
                   </div>
-                  {st.videoIdeas.length > 0 && (
-                    <div className="sm:col-span-2">
-                      <p className="eyebrow mb-2">Idées de vidéos</p>
-                      <ul className="grid gap-3 text-ink-soft sm:grid-cols-2">{st.videoIdeas.slice(0, 2).map((v, i) => <li key={i}><span className="font-medium text-ink">{v.title}</span><span className="line-clamp-4 block whitespace-pre-line text-[13px] text-muted">{v.script}</span></li>)}</ul>
-                    </div>
-                  )}
-                </div>
-              </details>
-            )}
-          </div>
-        </Section>
-      </div>
+                )}
+              </div>
+            </details>
+          )}
 
-      <aside className="lg:sticky lg:top-24 lg:self-start"><PhonePreview s={s} links={links} /></aside>
+          <details className="group">
+            <summary className={summary}>Voir l&apos;aperçu de l&apos;annonce<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+            <div className="mt-3"><PhonePreview s={s} links={links} /></div>
+          </details>
+        </div>
+      </Section>
     </div>
   );
 }
@@ -469,45 +467,32 @@ function AudienceStep({ s, set }: StepProps) {
 
   return (
     <div className="space-y-6">
-      <section className="bg-brand relative overflow-hidden rounded-lg p-5 text-white sm:p-6">
-        <span aria-hidden className="bg-grid absolute inset-0" />
-        <div className="relative">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-md bg-white/10 text-marigold"><Users className="size-5" /></span>
-              <div>
-                <p className="text-[17px] font-semibold leading-snug [font-family:var(--font-display)]">Audience proposée</p>
-                <p className="text-[13px] text-white/65">{loading ? "Analyse de votre activité…" : rationale ? (rationale.engine === "ai" ? "Proposée par IA à partir de votre activité" : "Proposée à partir de votre activité") : "D'après vos réglages actuels"}</p>
-              </div>
-            </div>
-            <Button type="button" size="sm" variant="outline" disabled={loading} onClick={() => suggest()} className="border-white/20 bg-white/5 text-white hover:border-white/40 hover:bg-white/10">
-              {loading ? <LoaderCircle className="animate-spin" /> : <WandSparkles />}Proposer à nouveau
-            </Button>
-          </div>
-          <dl className={cn("mt-5 grid gap-3 transition-opacity sm:grid-cols-3", loading && "opacity-50")}>
-            <div className="rounded-md bg-white/[0.08] p-3.5"><dt className="flex items-center gap-1.5 text-xs text-white/60"><MapPin className="size-3.5" />Zone</dt><dd className="mt-1 text-[15px] font-medium">{zone || "À définir"}</dd></div>
-            <div className="rounded-md bg-white/[0.08] p-3.5"><dt className="flex items-center gap-1.5 text-xs text-white/60"><Users className="size-3.5" />Profil</dt><dd className="mt-1 text-[15px] font-medium">{gender}, {t.ageMin}–{t.ageMax >= 65 ? "65+" : t.ageMax} ans</dd></div>
-            <div className="rounded-md bg-white/[0.08] p-3.5"><dt className="flex items-center gap-1.5 text-xs text-white/60"><Target className="size-3.5" />Centres d&apos;intérêt</dt><dd className="mt-1 text-[15px] font-medium">{interests.length ? `${interests.length} sélectionné${interests.length > 1 ? "s" : ""}` : "Audience large"}</dd></div>
-          </dl>
-          {interests.length > 0 && <p className="mt-3 line-clamp-2 text-[13px] text-white/70">{interests.slice(0, 8).join(" · ")}{interests.length > 8 ? " …" : ""}</p>}
-          {rationale && <p className="mt-3 text-[13px] leading-relaxed text-white/75">{rationale.text}</p>}
+      <section aria-labelledby="audience">
+        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+          <h2 id="audience" className="text-[15px] font-semibold tracking-normal [font-family:var(--font-sans)]">{loading ? "Analyse de votre activité…" : "Audience proposée"}</h2>
+          <button type="button" disabled={loading} onClick={() => suggest()} className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-green hover:underline disabled:opacity-60">
+            {loading ? <LoaderCircle className="size-4 animate-spin" /> : <WandSparkles className="size-4" />}Proposer à nouveau
+          </button>
         </div>
+        <Figures className={cn("transition-opacity", loading && "opacity-50")} items={[
+          { label: "Zone", value: zone || "À définir" },
+          { label: "Profil", value: `${gender}, ${t.ageMin}–${t.ageMax >= 65 ? "65+" : t.ageMax} ans` },
+          { label: "Centres d'intérêt", value: interests.length ? `${interests.length} sélectionné${interests.length > 1 ? "s" : ""}` : "Audience large" },
+        ]} />
+        {rationale && <p className="mt-2.5 text-[13.5px] leading-relaxed text-muted">{rationale.text}</p>}
       </section>
 
       <Field label="Décrivez vos clients avec vos mots" htmlFor="aud" optional hint="Cette note aide votre gestionnaire à affiner le ciblage.">
         <Textarea id="aud" rows={2} value={s.audienceNote} maxLength={600} onChange={(e) => set({ audienceNote: e.target.value })} placeholder="Femmes actives de Cotonou qui aiment les tenues en pagne, mariées ou fiancées…" />
       </Field>
 
-      <div className="rounded-lg border border-line bg-surface shadow-card">
-        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left">
-          <span className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-md bg-sand text-ink-soft"><SlidersHorizontal className="size-5" /></span>
-            <span><span className="block text-[15px] font-semibold text-ink">Personnaliser l&apos;audience</span><span className="block text-[13px] text-muted">Zone, âge, genre et centres d&apos;intérêt. Facultatif.</span></span>
-          </span>
+      <div className="rounded-lg border border-line bg-surface">
+        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left sm:px-5">
+          <span><span className="block font-medium text-ink">Personnaliser l&apos;audience</span><span className="block text-[13.5px] text-muted">Zone, âge, genre et centres d&apos;intérêt. Facultatif.</span></span>
           <ChevronDown className={cn("size-5 shrink-0 text-muted transition-transform", open && "rotate-180")} />
         </button>
         {open && (
-          <div className="animate-rise space-y-7 border-t border-line p-5 sm:p-6">
+          <div className="animate-rise space-y-7 border-t border-line px-4 py-5 sm:px-5">
             <div className="space-y-4">
               <h3 className="text-[15px] font-semibold [font-family:var(--font-sans)]">Zone géographique</h3>
               <div>
@@ -591,35 +576,33 @@ function BudgetStep({ s, set, data, links, promo, setPromo, onTotal, onEdit }: S
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="space-y-6">
-        <Section icon={<Wallet />} title="Budget et durée" description="Ce montant est dépensé sur Facebook, Instagram ou TikTok pour montrer votre publicité.">
+    <div className="space-y-7">
+        <Section title="Budget et durée" description="Ce montant est dépensé sur les plateformes pour montrer votre publicité.">
           <BudgetFields data={data} value={{ adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "", budgetSplit: s.budgetSplit, platforms: s.platforms }} onChange={set}
             recommended={objective ? { daily: objective.config.recommendedDailyBudget, days: objective.config.recommendedDays } : null} />
         </Section>
 
-        <Section icon={<Sparkles />} title="Notre accompagnement" description="Choisissez ce que notre équipe fait pour vous.">
+        <Section title="Notre accompagnement" description="Choisissez ce que notre équipe fait pour vous.">
           <LevelPicker levels={data.levels} value={s.serviceCode} onChange={(serviceCode) => set({ serviceCode })} baseLabel={objective?.label ?? "Campagne"} baseFee={baseFee} />
         </Section>
 
-        <Section icon={<CircleCheck />} title="Récapitulatif" description="Vérifiez avant de payer. Vous pouvez encore tout modifier.">
-          <ul className="divide-y divide-line rounded-md border border-line">
+        <Section title="Récapitulatif">
+          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
             {rows.map((r) => (
               <li key={r.label} className="flex items-center gap-3 px-4 py-3">
-                <span className="w-20 shrink-0 text-[13px] text-muted">{r.label}</span>
+                <span className="w-[4.5rem] shrink-0 text-[13px] text-muted">{r.label}</span>
                 <span className="min-w-0 flex-1 truncate text-sm text-ink">{r.value}</span>
                 <button type="button" onClick={() => onEdit(r.step)} className="shrink-0 rounded-full px-2.5 py-1 text-[13px] font-medium text-green hover:bg-green-soft">Modifier</button>
               </li>
             ))}
           </ul>
-          <Field label="Nom de la campagne" htmlFor="cname" hint="Pour la retrouver dans votre espace." className="mt-4 max-w-md"><Input id="cname" value={s.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} /></Field>
+          <Field label="Nom de la campagne" htmlFor="cname" hint="Pour la retrouver dans votre espace." className="mt-4"><Input id="cname" value={s.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} /></Field>
         </Section>
-      </div>
 
-      <aside className="space-y-3 lg:sticky lg:top-24 lg:self-start">
-        <QuotePanel state={quote} promo={promo} onPromo={setPromo} />
-        <p className="px-1 text-xs leading-relaxed text-muted">Le paiement se fait à l&apos;écran suivant. Les résultats d&apos;une campagne dépendent de nombreux facteurs et ne peuvent pas être garantis.</p>
-      </aside>
+        <section data-quote className="space-y-2.5">
+          <QuotePanel state={quote} promo={promo} onPromo={setPromo} />
+          <p className="text-[13px] leading-relaxed text-muted">Le paiement se fait à l&apos;écran suivant. Les résultats d&apos;une campagne ne peuvent pas être garantis.</p>
+        </section>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Building2, Gift, LifeBuoy } from "lucide-react";
+import { Building2, CalendarClock, Gift, LifeBuoy, UserRound } from "lucide-react";
 import { BusinessDialog, CopyField, RedeemPoints } from "@/components/app/account-parts";
 import { WhatsappIcon } from "@/components/icons";
 import { ActionButton, ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
@@ -7,7 +7,8 @@ import { StateBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
-import { EmptyState, Notice, PageHeader, Stat, TabsNav } from "@/components/ui/misc";
+import { Figures, List, ListRow } from "@/components/ui/list";
+import { EmptyState, Notice, PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
@@ -20,27 +21,39 @@ import { subscribeAction } from "@/server/actions/payments";
 export const metadata: Metadata = { title: "Mon compte" };
 
 const TABS = ["profil", "entreprises", "fidelite", "abonnement", "support"] as const;
+const MENU: Record<(typeof TABS)[number], { label: string; hint: string; icon: typeof Gift }> = {
+  profil: { label: "Profil et mot de passe", hint: "Nom, téléphone, notifications", icon: UserRound },
+  entreprises: { label: "Mes entreprises", hint: "Les activités pour lesquelles vous faites de la publicité", icon: Building2 },
+  fidelite: { label: "Fidélité et parrainage", hint: "Points, bons d'achat, lien de parrainage", icon: Gift },
+  abonnement: { label: "Accompagnement mensuel", hint: "Formules et abonnements en cours", icon: CalendarClock },
+  support: { label: "Aide et réclamations", hint: "Poser une question, suivre une demande", icon: LifeBuoy },
+};
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ onglet?: string; erreur?: string }> }) {
   const session = await requireUser();
   const { onglet, erreur } = await searchParams;
-  const tab = (TABS as readonly string[]).includes(onglet ?? "") ? (onglet as (typeof TABS)[number]) : "profil";
+  const asked = onglet === "aide" ? "support" : onglet;
+  const tab = (TABS as readonly string[]).includes(asked ?? "") ? (asked as (typeof TABS)[number]) : null;
   const [user, settings] = await Promise.all([db.user.findUniqueOrThrow({ where: { id: session.id } }), getSettings()]);
   const base = "/app/compte";
 
+  if (!tab) {
+    return (
+      <>
+        <PageHeader title="Mon compte" description={user.email} />
+        <List>
+          {TABS.map((id) => { const m = MENU[id]; return <ListRow key={id} href={`${base}?onglet=${id}`} icon={<m.icon />} title={m.label} subtitle={m.hint} />; })}
+        </List>
+      </>
+    );
+  }
+
   return (
     <>
-      <PageHeader title="Mon compte" description={user.email} />
-      <TabsNav current={tab} className="mb-6" tabs={[
-        { id: "profil", label: "Profil", href: base },
-        { id: "entreprises", label: "Entreprises", href: `${base}?onglet=entreprises` },
-        { id: "fidelite", label: "Fidélité et parrainage", href: `${base}?onglet=fidelite` },
-        { id: "abonnement", label: "Abonnement", href: `${base}?onglet=abonnement` },
-        { id: "support", label: "Aide", href: `${base}?onglet=support` },
-      ]} />
+      <PageHeader title={MENU[tab].label} back={{ href: base, label: "Mon compte" }} />
 
       {tab === "profil" && (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
           <Card>
             <CardHeader title="Informations personnelles" />
             <CardBody>
@@ -58,7 +71,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               </ActionForm>
             </CardBody>
           </Card>
-          <Card className="self-start">
+          <Card>
             <CardHeader title="Mot de passe" />
             <CardBody>
               <ActionForm action={changePasswordAction} resetOnSuccess className="space-y-4">
@@ -115,12 +128,12 @@ async function Loyalty({ userId, points, referralCode, settings }: { userId: str
   const now = new Date();
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <Stat label="Points de fidélité" value={formatNumber(points)} hint={`Valeur : ${formatFcfa(points * settings.loyaltyPointValue)}`} />
-        <Stat label="Filleuls inscrits" value={formatNumber(referrals)} />
-        <Stat label="Bons disponibles" value={formatNumber(vouchers.filter((v) => v.usedCount < (v.maxUses ?? Infinity) && (!v.endsAt || v.endsAt > now)).length)} className="col-span-2 lg:col-span-1" />
-      </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <Figures items={[
+        { label: "Points de fidélité", hint: `Valeur : ${formatFcfa(points * settings.loyaltyPointValue)}`, value: formatNumber(points), strong: true },
+        { label: "Filleuls inscrits", value: formatNumber(referrals) },
+        { label: "Bons disponibles", value: formatNumber(vouchers.filter((v) => v.usedCount < (v.maxUses ?? Infinity) && (!v.endsAt || v.endsAt > now)).length) },
+      ]} />
+      <div className="space-y-6">
         <Card>
           <CardHeader title="Programme de fidélité" description={`${settings.loyaltyPointsPer1000} point par tranche de 1 000 F de frais de prestation payés. 1 point = ${formatFcfa(settings.loyaltyPointValue)}.`} />
           <CardBody><RedeemPoints balance={points} min={settings.loyaltyMinRedeem} pointValue={settings.loyaltyPointValue} /></CardBody>
@@ -157,7 +170,7 @@ async function Loyalty({ userId, points, referralCode, settings }: { userId: str
                   );
                 })}
               </ul>
-            ) : <EmptyState icon={<Gift />} title="Aucun bon" description="Convertissez vos points ou parrainez un proche pour en obtenir." />}
+            ) : <p className="px-5 py-4 text-sm text-muted">Aucun bon pour l&apos;instant. Convertissez vos points ou parrainez un proche pour en obtenir.</p>}
           </Card>
         </div>
       </div>
@@ -175,7 +188,7 @@ async function SubscriptionTab({ userId, error }: { userId: string; error?: stri
   return (
     <div className="space-y-6">
       {error && <Notice tone="danger" title="Souscription impossible">{error}</Notice>}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="space-y-4">
         {plans.map((p) => (
           <Card key={p.id}>
             <CardBody>
@@ -220,8 +233,8 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
   ]);
   const wa = whatsapp ? toWhatsappLink(whatsapp) : null;
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-      <Card>
+    <div className="flex flex-col gap-6">
+      <Card className="order-2">
         <CardHeader title="Mes demandes" description="Réclamations, questions de paiement et demandes de remboursement." />
         {tickets.length ? (
           <ul className="divide-y divide-line">

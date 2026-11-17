@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PrintButton } from "@/components/app/campaign-client-parts";
+import { Figures } from "@/components/ui/list";
 import { CampaignSummary } from "@/components/app/campaign-summary";
 import { metricValue } from "@/components/app/metrics-view";
 import { Logo } from "@/components/icons";
@@ -45,17 +46,10 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <h2 className="mt-8 text-base font-semibold">Résultats</h2>
         {report.totals.days ? (
           <>
-            <dl className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line sm:grid-cols-4">
-              {KEYS.map((k) => (
-                <div key={k} className="bg-surface px-4 py-3">
-                  <dt className="text-xs text-muted">{METRIC_LABELS[k]}</dt>
-                  <dd className="tnum mt-0.5 text-base font-medium">{metricValue(k, report)}</dd>
-                </div>
-              ))}
-            </dl>
+            <Figures className="mt-3" items={KEYS.map((k) => ({ label: METRIC_LABELS[k], value: metricValue(k, report) }))} />
             <h2 className="mt-8 text-base font-semibold">Détail quotidien</h2>
             <div className="mt-3 overflow-hidden rounded-md border border-line">
-              <Table head={["Date", "Impressions", "Portée", "Clics", "CTR", "Dépenses"]}>
+              <Table head={["Date", "Affichages", "Personnes touchées", "Clics", "Taux de clic", "Dépenses"]}>
                 {report.daily.map((d) => (
                   <tr key={d.date} className="border-b border-line last:border-0">
                     <td className="px-4 py-2">{formatPureDate(d.date)}</td>
@@ -72,7 +66,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         ) : <p className="mt-3 text-sm text-muted">Aucune statistique validée n&apos;est encore disponible pour cette campagne.</p>}
 
         <h2 className="mt-8 text-base font-semibold">Configuration</h2>
-        <div className="mt-3"><CampaignSummary c={c} /></div>
+        <div className="mt-3"><CampaignSummary c={c} compact /></div>
         <p className="mt-8 border-t border-line pt-4 text-xs text-muted">Chiffres issus des plateformes publicitaires (Meta, TikTok), validés par un gestionnaire. Les indicateurs non mesurés sont indiqués par « — » : aucune valeur n&apos;est estimée.</p>
       </article>
     </div>

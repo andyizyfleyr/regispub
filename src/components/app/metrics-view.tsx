@@ -1,7 +1,8 @@
-import { BarChart3 } from "lucide-react";
+import { BarChart3, ChevronDown } from "lucide-react";
 import { PlatformBadge } from "@/components/icons";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { EmptyState, Stat, Table } from "@/components/ui/misc";
+import { Figures } from "@/components/ui/list";
+import { EmptyState, Table } from "@/components/ui/misc";
 import type { CampaignReport } from "@/lib/ads/report";
 import { METRIC_LABELS, type MetricKey } from "@/lib/catalog/objectives";
 import { PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
@@ -9,7 +10,7 @@ import { formatFcfa, formatNumber, formatPercent, formatPureDate } from "@/lib/u
 import { MetricsChart, type ChartSeries } from "./metrics-chart";
 
 const HINTS: Partial<Record<MetricKey, string>> = {
-  impressions: "Nombre d'affichages", reach: "Personnes touchées", ctr: "Clics ÷ impressions", cpc: "Dépenses ÷ clics", cpm: "Coût pour 1 000 affichages",
+  impressions: "Nombre de fois où la publicité a été montrée", ctr: "Part des affichages suivis d'un clic", conversions: "Selon l'objectif de la campagne",
   roi: "(Revenus − dépenses) ÷ dépenses",
 };
 
@@ -47,48 +48,52 @@ export function MetricsView({ report, kpis, adBudget, staff }: { report: Campaig
   const series: ChartSeries[] = [...kpis.filter((k) => CHARTABLE.includes(k)), ...CHARTABLE.filter((k) => !kpis.includes(k))].filter((k) => report.daily.some((d) => Number(d[k as keyof typeof d]) > 0)).map((k) => ({ key: k, label: METRIC_LABELS[k], money: k === "spend" }));
   const spentShare = adBudget > 0 ? Math.min(1, report.totals.spend / adBudget) : null;
 
+  const perPlatform = report.platforms.length > 0;
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {primary.map((k) => <Stat key={k} label={METRIC_LABELS[k]} value={metricValue(k, report)} hint={HINTS[k]} />)}
-      </div>
+      <Figures items={[
+        ...primary.map((k) => ({ label: METRIC_LABELS[k], hint: HINTS[k], value: metricValue(k, report), strong: true })),
+        { label: "Budget dépensé", hint: <>sur <span className="tnum">{formatFcfa(adBudget)}</span>, hors frais de prestation</>, value: formatFcfa(report.totals.spend), strong: true },
+      ]} />
+      {spentShare !== null && (
+        <div className="-mt-3 h-1.5 overflow-hidden rounded-full bg-sand" role="progressbar" aria-valuenow={Math.round(spentShare * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Part du budget dépensée">
+          <div className="h-full rounded-full bg-green" style={{ width: `${spentShare * 100}%` }} />
+        </div>
+      )}
 
       {series.length > 0 && report.daily.length > 1 && (
         <Card>
-          <CardHeader title="Évolution quotidienne" description={`Du ${formatPureDate(report.firstDate!)} au ${formatPureDate(report.lastDate!)} · ${report.totals.days} jour${report.totals.days > 1 ? "s" : ""} de données`} />
+          <CardHeader title="Évolution quotidienne" description={`Du ${formatPureDate(report.firstDate!)} au ${formatPureDate(report.lastDate!)}`} />
           <CardBody><MetricsChart data={report.daily.map((d) => ({ ...d }))} series={series} /></CardBody>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <Card>
-          <CardHeader title="Tous les indicateurs" />
-          <dl className="grid grid-cols-2 gap-px bg-line sm:grid-cols-4">
-            {secondary.map((k) => (
-              <div key={k} className="bg-surface px-5 py-4">
-                <dt className="text-[12.5px] text-muted">{METRIC_LABELS[k]}</dt>
-                <dd className="tnum mt-1 text-lg font-medium">{metricValue(k, report)}</dd>
-              </div>
-            ))}
-          </dl>
-          {report.derived.roi === null && <p className="border-t border-line px-5 py-3 text-xs text-muted">Le retour sur investissement n&apos;est calculé que si le chiffre d&apos;affaires généré a été communiqué à votre gestionnaire.</p>}
-        </Card>
-        <Card>
-          <CardHeader title="Budget publicitaire" />
-          <CardBody>
-            <p className="tnum font-display text-2xl font-semibold">{formatFcfa(report.totals.spend)}</p>
-            <p className="text-[13px] text-muted">dépensés sur <span className="tnum">{formatFcfa(adBudget)}</span></p>
-            {spentShare !== null && (
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-sand" role="progressbar" aria-valuenow={Math.round(spentShare * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Part du budget dépensée">
-                <div className="h-full rounded-full bg-green" style={{ width: `${spentShare * 100}%` }} />
-              </div>
-            )}
-            <p className="mt-3 text-xs text-muted">Dépenses constatées sur les plateformes, hors frais de prestation.</p>
-          </CardBody>
-        </Card>
-      </div>
+      <details className="group rounded-lg border border-line bg-surface" open={staff || undefined}>
+        <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">Tous les indicateurs<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+        <Figures bare className="border-t border-line" items={secondary.filter((k) => k !== "spend").map((k) => ({ label: METRIC_LABELS[k], hint: HINTS[k], value: metricValue(k, report) }))} />
+        {report.derived.roi === null && <p className="border-t border-line px-4 py-3 text-xs text-muted sm:px-5">Le retour sur investissement n&apos;est calculé que si le chiffre d&apos;affaires généré a été communiqué à votre gestionnaire.</p>}
+      </details>
 
-      {report.platforms.length > 0 && (
+      {perPlatform && !staff && (
+        <details className="group rounded-lg border border-line bg-surface">
+          <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">Par plateforme<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+          <ul className="divide-y divide-line border-t border-line">
+            {report.platforms.map((p) => (
+              <li key={p.platform} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+                <PlatformBadge platform={p.platform as PlatformCode} size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-ink">{PLATFORMS[p.platform as PlatformCode]?.label ?? p.platform}</span>
+                  <span className="tnum block text-[13px] text-muted">{formatNumber(p.impressions)} affichages · {formatNumber(p.clicks)} clics</span>
+                </span>
+                <span className="tnum shrink-0 text-sm font-medium">{formatFcfa(p.spend)}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {perPlatform && staff && (
         <Card>
           <CardHeader title="Par plateforme" />
           <Table head={["Plateforme", "Impressions", "Portée", "Clics", "CTR", "CPC", "Dépenses"]}>

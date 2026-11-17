@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export function PageHeader({ title, description, actions, eyebrow, back }: { title: React.ReactNode; description?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode; back?: { href: string; label: string } }) {
   return (
-    <header className="mb-7 flex animate-rise flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-6 flex animate-rise flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {back && (
           <Link href={back.href} className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pl-2 pr-3 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
@@ -13,7 +13,7 @@ export function PageHeader({ title, description, actions, eyebrow, back }: { tit
           </Link>
         )}
         {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
-        <h1 className="text-[26px] font-semibold leading-tight sm:text-[30px]">{title}</h1>
+        <h1 className="text-[24px] font-semibold leading-tight sm:text-[28px]">{title}</h1>
         {description && <p className="mt-1.5 max-w-2xl text-muted">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
@@ -109,13 +109,14 @@ export function Table({ head, children, className }: { head: React.ReactNode[]; 
   );
 }
 
+/** Fiche d'informations : une ligne par information, le libellé à gauche, la valeur à droite. */
 export function DefinitionList({ items, className }: { items: { label: string; value: React.ReactNode }[]; className?: string }) {
   return (
-    <dl className={cn("grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2", className)}>
+    <dl className={cn("divide-y divide-line", className)}>
       {items.map((it) => (
-        <div key={it.label} className="min-w-0">
-          <dt className="text-[12.5px] text-muted">{it.label}</dt>
-          <dd className="mt-0.5 break-words text-sm text-ink">{it.value || "—"}</dd>
+        <div key={it.label} className="flex flex-col gap-0.5 py-2.5 first:pt-0 last:pb-0 sm:flex-row sm:gap-6">
+          <dt className="shrink-0 text-[13px] text-muted sm:w-44 sm:pt-px">{it.label}</dt>
+          <dd className="min-w-0 flex-1 break-words text-sm text-ink">{it.value || "—"}</dd>
         </div>
       ))}
     </dl>

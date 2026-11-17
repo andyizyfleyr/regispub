@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, FileText, Images } from "lucide-react";
+import { ArrowLeft, ChevronDown, FileText, Images } from "lucide-react";
 import { AdPreview } from "@/components/app/ad-preview";
 import { CampaignActions, CreativeReview } from "@/components/app/campaign-client-parts";
 import { CampaignSummary } from "@/components/app/campaign-summary";
 import { MetricsView } from "@/components/app/metrics-view";
 import { Thread } from "@/components/app/thread";
-import { PlatformStack } from "@/components/icons";
 import { CampaignStatusBadge, StateBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { EmptyState, Notice, TabsNav } from "@/components/ui/misc";
+import { List, ListRow, SectionTitle } from "@/components/ui/list";
+import { DefinitionList, EmptyState, Notice, TabsNav } from "@/components/ui/misc";
 import { loadCampaignReport } from "@/lib/ads/report";
 import { ROLE_LABELS, type RoleName } from "@/lib/auth/permissions";
 import { requireUser } from "@/lib/auth/session";
@@ -20,7 +20,7 @@ import { clientCanCancel, STATUS_META, type CampaignStatusName } from "@/lib/cam
 import { getObjective } from "@/lib/catalog/objectives";
 import type { PlatformCode } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
-import { cn, formatDateTime, formatFcfa, formatPureDate } from "@/lib/utils";
+import { cn, formatDateTime, formatFcfa } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Campagne" };
 
@@ -67,31 +67,21 @@ export default async function CampaignPage({ params, searchParams }: { params: P
         <ArrowLeft className="size-3.5" />Mes campagnes
       </Link>
 
-      <header className="mb-5 animate-rise rounded-lg border border-line bg-surface p-5 shadow-card sm:p-6">
+      <header className="mb-6 animate-rise">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <PlatformStack platforms={c.platforms as PlatformCode[]} size="md" />
+          <h1 className="text-[24px] font-semibold leading-tight sm:text-[28px]">{c.name}</h1>
           <CampaignStatusBadge status={status} />
-          <span className="ml-auto font-mono text-xs text-muted">{c.reference}</span>
         </div>
-        <h1 className="mt-4 text-[24px] font-semibold leading-tight sm:text-[30px]">{c.name}</h1>
-        <p className="mt-1.5 max-w-2xl text-muted">{STATUS_META[status].clientHint}</p>
-
-        <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-line pt-5 text-sm lg:grid-cols-4">
-          <div><dt className="text-[13px] text-muted">Objectif</dt><dd className="mt-0.5 font-medium text-ink">{objective?.label ?? "—"}</dd></div>
-          <div><dt className="text-[13px] text-muted">Budget publicitaire</dt><dd className="tnum mt-0.5 font-medium text-ink">{formatFcfa(c.adBudget)}</dd></div>
-          <div><dt className="text-[13px] text-muted">Période</dt><dd className="mt-0.5 font-medium text-ink">{c.startDate ? `${formatPureDate(c.startDate)}${c.endDate ? ` → ${formatPureDate(c.endDate)}` : ""}` : "À définir"}</dd></div>
-          <div><dt className="text-[13px] text-muted">Votre gestionnaire</dt><dd className="mt-0.5 font-medium text-ink">{c.manager?.name ?? "En cours d'attribution"}</dd></div>
-        </dl>
-
+        <p className="mt-1.5 text-muted">{STATUS_META[status].clientHint}</p>
         {status !== "CANCELLED" && (
-          <ol className="mt-5 grid grid-cols-4 gap-2" aria-label="Avancement de la campagne">
+          <ol className="mt-5 flex gap-1.5" aria-label="Avancement de la campagne">
             {PHASES.map((label, i) => {
               const done = i < phase || status === "COMPLETED";
               const current = i === phase && status !== "COMPLETED";
               return (
-                <li key={label} aria-current={current ? "step" : undefined}>
+                <li key={label} className="min-w-0 flex-1" aria-current={current ? "step" : undefined}>
                   <div className={cn("h-1.5 rounded-full", done ? "bg-green" : current ? "bg-marigold" : "bg-sand")} />
-                  <p className={cn("mt-2 flex items-center gap-1 text-xs sm:text-[13px]", done || current ? "font-medium text-ink" : "text-muted")}>{done && <Check className="size-3.5 shrink-0 text-green" />}{label}</p>
+                  <p className={cn("mt-1.5 truncate text-xs", current ? "font-semibold text-ink" : done ? "text-ink-soft" : "text-muted")}>{label}</p>
                 </li>
               );
             })}
@@ -108,7 +98,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
       {status === "AWAITING_INFO" && <Notice tone="warn" title="Nous avons besoin d'informations" className="mb-5">Votre gestionnaire attend un complément pour avancer. <Link href={`${base}?onglet=messages`} className="font-medium underline">Voir les messages</Link></Notice>}
       {pendingReview > 0 && tab !== "creations" && <Notice tone="info" title={`${pendingReview} création${pendingReview > 1 ? "s" : ""} à valider`} className="mb-5">Votre validation est nécessaire avant le lancement. <Link href={`${base}?onglet=creations`} className="font-medium underline">Voir les créations</Link></Notice>}
 
-      <TabsNav current={tab} className="mb-6" tabs={[
+      <TabsNav current={tab} className="mb-5" tabs={[
         { id: "suivi", label: "Résultats", href: base },
         { id: "creations", label: "Créations", href: `${base}?onglet=creations`, count: pendingReview || undefined },
         { id: "messages", label: "Messages", href: `${base}?onglet=messages`, count: unread || undefined },
@@ -144,50 +134,59 @@ export default async function CampaignPage({ params, searchParams }: { params: P
       )}
 
       {tab === "details" && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader title="Configuration" action={<CampaignActions id={c.id} canCancel={clientCanCancel(status)} canRevise={!["PENDING_PAYMENT", "COMPLETED", "CANCELLED"].includes(status)} />} />
-              <CardBody><CampaignSummary c={c} /></CardBody>
-            </Card>
-            {c.revisions.length > 0 && (
-              <Card>
-                <CardHeader title="Demandes de modification" />
-                <ul className="divide-y divide-line">
-                  {c.revisions.map((r) => (
-                    <li key={r.id} className="px-5 py-3.5 text-sm">
-                      <div className="flex items-start justify-between gap-3"><p className="whitespace-pre-wrap text-ink">{r.description}</p><StateBadge kind="revision" value={r.status} /></div>
-                      {r.response && <p className="mt-2 rounded-md bg-sand px-3 py-2 text-[13px] text-ink-soft">Réponse : {r.response}</p>}
-                      <p className="mt-1.5 text-xs text-muted">{formatDateTime(r.createdAt)}</p>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            )}
-            <Card>
-              <CardHeader title="Historique" />
-              <ol className="space-y-4 px-5 py-4">
-                {c.statusEvents.map((e) => (
-                  <li key={e.id} className="relative pl-5 text-sm before:absolute before:left-0 before:top-1.5 before:size-2 before:rounded-full before:bg-line-strong">
-                    <p className="font-medium text-ink">{STATUS_META[e.toStatus as CampaignStatusName].label}</p>
-                    {e.note && <p className="text-[13px] text-ink-soft">{e.note}</p>}
-                    <p className="text-xs text-muted">{formatDateTime(e.createdAt)}</p>
+        <div className="space-y-6">
+          <section aria-labelledby="config">
+            <SectionTitle id="config">Votre campagne</SectionTitle>
+            <div className="rounded-lg border border-line bg-surface px-4 py-4 sm:px-5">
+              <CampaignSummary c={c} compact />
+              <DefinitionList className="mt-2.5 border-t border-line pt-2.5" items={[
+                { label: "Votre gestionnaire", value: c.manager?.name ?? "En cours d'attribution" },
+                { label: "Référence", value: <span className="font-mono text-[13px]">{c.reference}</span> },
+              ]} />
+            </div>
+            <div className="mt-3"><CampaignActions id={c.id} canCancel={clientCanCancel(status)} canRevise={!["PENDING_PAYMENT", "COMPLETED", "CANCELLED"].includes(status)} /></div>
+          </section>
+
+          {order && (
+            <List>
+              <ListRow href={`/app/paiements/${order.id}`} title="Commande et reçu" subtitle={<span className="font-mono text-[12.5px]">{order.reference}</span>} trailing={<span className="tnum font-semibold text-ink">{formatFcfa(order.total)}</span>} />
+            </List>
+          )}
+
+          {copy && (
+            <details className="group rounded-lg border border-line bg-surface">
+              <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">Aperçu de l&apos;annonce<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+              <div className="border-t border-line p-4"><div className="mx-auto max-w-sm"><AdPreview platform={(c.platforms[0] ?? "FACEBOOK") as PlatformCode} pageName={c.business?.name ?? user.name} copy={copy} imageId={firstImage?.asset.id ?? null} /></div></div>
+            </details>
+          )}
+
+          {c.revisions.length > 0 && (
+            <section aria-labelledby="demandes">
+              <SectionTitle id="demandes">Demandes de modification</SectionTitle>
+              <List>
+                {c.revisions.map((r) => (
+                  <li key={r.id} className="px-4 py-3.5 text-sm sm:px-5">
+                    <div className="flex items-start justify-between gap-3"><p className="whitespace-pre-wrap text-ink">{r.description}</p><StateBadge kind="revision" value={r.status} /></div>
+                    {r.response && <p className="mt-2 rounded-md bg-sand px-3 py-2 text-[13px] text-ink-soft">Réponse : {r.response}</p>}
+                    <p className="mt-1.5 text-xs text-muted">{formatDateTime(r.createdAt)}</p>
                   </li>
                 ))}
-              </ol>
-            </Card>
-          </div>
-          <aside className="space-y-4">
-            {copy && <AdPreview platform={(c.platforms[0] ?? "FACEBOOK") as PlatformCode} pageName={c.business?.name ?? user.name} copy={copy} imageId={firstImage?.asset.id ?? null} />}
-            {order && (
-              <Card>
-                <CardBody className="flex items-center justify-between gap-3 text-sm">
-                  <span><span className="block text-muted">Commande <span className="font-mono text-xs">{order.reference}</span></span><span className="tnum font-medium">{formatFcfa(order.total)}</span></span>
-                  <Button asChild variant="ghost" size="sm"><Link href={`/app/paiements/${order.id}`}>Voir <ArrowRight /></Link></Button>
-                </CardBody>
-              </Card>
-            )}
-          </aside>
+              </List>
+            </section>
+          )}
+
+          <details className="group rounded-lg border border-line bg-surface">
+            <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">Historique<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+            <ol className="divide-y divide-line border-t border-line">
+              {c.statusEvents.map((e) => (
+                <li key={e.id} className="px-4 py-3 text-sm sm:px-5">
+                  <p className="font-medium text-ink">{STATUS_META[e.toStatus as CampaignStatusName].label}</p>
+                  {e.note && <p className="text-[13px] text-ink-soft">{e.note}</p>}
+                  <p className="text-xs text-muted">{formatDateTime(e.createdAt)}</p>
+                </li>
+              ))}
+            </ol>
+          </details>
         </div>
       )}
     </>

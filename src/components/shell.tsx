@@ -21,6 +21,7 @@ const CLIENT_NAV: NavItem[] = [
   { id: "payments", href: "/app/paiements", label: "Paiements", icon: Wallet },
   { id: "assistant", href: "/app/assistant", label: "Assistant marketing", short: "Assistant", icon: Sparkles },
   { id: "account", href: "/app/compte", label: "Mon compte", short: "Compte", icon: UserRound },
+  { id: "expert", href: "/app/expert", label: "Confier à un expert", icon: Headset },
 ];
 
 const STAFF_NAV: NavItem[] = [
@@ -42,8 +43,7 @@ const STAFF_NAV: NavItem[] = [
 
 const EXTRA_TITLES: [RegExp, string][] = [
   [/^\/app\/creer/, "Créer une publicité"],
-  [/^\/app\/expert/, "Confier à un expert"],
-  [/^\/app\/notifications/, "Notifications"],
+    [/^\/app\/notifications/, "Notifications"],
 ];
 
 function isActive(pathname: string, item: NavItem) {
@@ -166,15 +166,7 @@ export function AppShell({ area, user, unread, allowed, children }: {
         </div>
         {client && <div className="mb-5">{createButton()}</div>}
         <div className="scrollbar-none -mx-1 flex-1 overflow-y-auto px-1"><NavLinks items={all} pathname={pathname} /></div>
-        {client && (
-          <Link href="/app/expert" className="bg-brand group relative mb-4 mt-4 overflow-hidden rounded-lg p-4 text-white">
-            <span aria-hidden className="bg-grid absolute inset-0 opacity-60" />
-            <span className="relative flex size-9 items-center justify-center rounded-md bg-white/10 text-marigold"><Headset className="size-[18px]" /></span>
-            <span className="relative mt-3 block text-[14px] font-semibold leading-snug">Pas le temps ?</span>
-            <span className="relative mt-0.5 block text-[13px] leading-snug text-white/70">Un expert prépare et lance votre publicité.</span>
-            <span className="relative mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-marigold">Confier ma publicité<span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span></span>
-          </Link>
-        )}
+        <div className="mt-4" />
         <UserMenu user={user} area={area} />
       </aside>
 
@@ -195,17 +187,12 @@ export function AppShell({ area, user, unread, allowed, children }: {
             </p>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            {client && (
-              <Link href="/app/expert" className="mr-1 hidden h-9 items-center gap-2 rounded-full border border-line px-3.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink md:flex">
-                <Headset className="size-4 text-green" />Parler à un expert
-              </Link>
-            )}
             {bell}
             <span className="lg:hidden"><UserMenu user={user} area={area} compact /></span>
           </div>
         </header>
 
-        <main className={cn("mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-9", client && !immersive && "pb-28 lg:pb-9")}>{children}</main>
+        <main className={cn("mx-auto w-full flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-9", client ? "max-w-3xl" : "max-w-6xl", client && !immersive && "pb-28 lg:pb-9")}>{children}</main>
 
         {client && !immersive && (
           <nav className="no-print safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 items-end border-t border-line bg-surface/90 px-1 pt-1.5 backdrop-blur-md lg:hidden" aria-label="Navigation principale">
@@ -222,9 +209,6 @@ export function AppShell({ area, user, unread, allowed, children }: {
               <DialogContent title="Menu" side="bottom">
                 <div className="mb-3">{createButton(() => setOpen(false))}</div>
                 <NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} />
-                <Link href="/app/expert" onClick={() => setOpen(false)} className="mt-3 flex items-center gap-3 rounded-md bg-paper px-3 py-3 text-[14px] font-medium text-ink">
-                  <Headset className="size-[18px] text-green" />Confier ma publicité à un expert
-                </Link>
               </DialogContent>
             </Dialog>
           </nav>

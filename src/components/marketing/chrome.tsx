@@ -34,29 +34,15 @@ export async function MarketingHeader() {
 export function MarketingFooter({ supportWhatsapp, supportEmail }: { supportWhatsapp?: string; supportEmail?: string }) {
   return (
     <footer className="border-t border-line bg-surface">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="sm:col-span-2">
-          <Logo />
-          <p className="mt-4 max-w-sm text-sm text-muted">La publicité digitale accessible à tous les entrepreneurs d&apos;Afrique de l&apos;Ouest : création, paiement Mobile Money, gestion et suivi au même endroit.</p>
-        </div>
-        <div className="text-sm">
-          <p className="eyebrow mb-3">Plateforme</p>
-          <ul className="space-y-2 text-ink-soft">
-            <li><Link href="/services" className="hover:text-ink">Services et tarifs</Link></li>
-            <li><Link href="/app/creer" className="hover:text-ink">Créer une publicité</Link></li>
-            <li><Link href="/app/expert" className="hover:text-ink">Confier à un expert</Link></li>
-            <li><Link href="/conditions" className="hover:text-ink">Conditions d&apos;utilisation</Link></li>
-          </ul>
-        </div>
-        <div className="text-sm">
-          <p className="eyebrow mb-3">Contact</p>
-          <ul className="space-y-2 text-ink-soft">
-            <li>Cotonou, Bénin</li>
-            {supportEmail && <li><a href={`mailto:${supportEmail}`} className="hover:text-ink">{supportEmail}</a></li>}
-            {supportWhatsapp && <li><a href={`https://wa.me/${supportWhatsapp.replace(/\D/g, "")}`} className="hover:text-ink">WhatsApp : {supportWhatsapp}</a></li>}
-            <li><Link href="/connexion" className="hover:text-ink">Espace client</Link></li>
-          </ul>
-        </div>
+      <div className="mx-auto max-w-6xl px-5 py-8">
+        <Logo />
+        <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft">
+          <li><Link href="/services" className="hover:text-ink">Services et tarifs</Link></li>
+          <li><Link href="/conditions" className="hover:text-ink">Conditions d&apos;utilisation</Link></li>
+          <li><Link href="/connexion" className="hover:text-ink">Espace client</Link></li>
+          {supportWhatsapp && <li><a href={`https://wa.me/${supportWhatsapp.replace(/\D/g, "")}`} className="hover:text-ink">WhatsApp : {supportWhatsapp}</a></li>}
+          {supportEmail && <li><a href={`mailto:${supportEmail}`} className="hover:text-ink">{supportEmail}</a></li>}
+        </ul>
       </div>
       <div className="border-t border-line">
         <p className="mx-auto max-w-6xl px-5 py-5 text-xs text-muted">
