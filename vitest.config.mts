@@ -10,7 +10,7 @@ export default defineConfig({
       APP_SECRET: "secret-de-test-0123456789abcdef0123456789abcdef",
       APP_URL: "http://localhost:3000",
       PAYMENT_PROVIDER: "sandbox",
-      STORAGE_DRIVER: "local",
+      STORAGE_DRIVER: process.env.STORAGE_DRIVER ?? "local",
       LOG_LEVEL: "error",
     },
     include: ["tests/**/*.test.ts"],

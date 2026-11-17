@@ -28,7 +28,7 @@ Tant que les API publicitaires ne sont pas autorisées, les campagnes sont **lan
 
 ## Démarrage
 
-Prérequis : Node.js 20.9 ou plus récent. Aucune installation de PostgreSQL ni de Docker n'est nécessaire en local.
+Prérequis : Node.js 22 ou plus récent. Aucune installation de PostgreSQL ni de Docker n'est nécessaire en local.
 
 ```bash
 npm install
@@ -69,12 +69,14 @@ Simulateur de paiement : un numéro se terminant par `00` est refusé, par `99` 
 
 ## Mise en production (Vercel)
 
-1. Créer une base PostgreSQL (Neon, Supabase…) et renseigner `DATABASE_URL` (URL « pooled ») et `DIRECT_URL`.
-2. Définir au minimum `APP_URL`, `APP_SECRET`, `CRON_SECRET`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`.
-3. Appliquer les migrations puis les données initiales : `npm run db:migrate && npm run db:seed`.
-4. Configurer un stockage S3 : le disque d'un hébergement serverless n'est pas persistant.
-5. Configurer FedaPay et déclarer le webhook `https://votre-domaine/api/webhooks/payments/fedapay`. Sans prestataire, les clients ne peuvent pas payer : le simulateur est refusé en production.
-6. `vercel.json` planifie `/api/cron/quotidien` (vérification des paiements en attente, synchronisation des statistiques, entretien).
+Le guide pas à pas (Neon, Vercel, Cloudflare R2, FedaPay) est dans [`docs/07-deploiement.md`](docs/07-deploiement.md). En résumé :
+
+1. **Base de données** : une base PostgreSQL (Neon, Supabase…). `DATABASE_URL` = URL « pooled », `DIRECT_URL` = URL directe (migrations).
+2. **Variables minimales** : `DATABASE_URL`, `APP_SECRET`, `CRON_SECRET`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`. `APP_URL` est facultatif sur Vercel (le domaine de production est utilisé par défaut) ; renseignez-le dès que vous branchez votre propre domaine.
+3. **Migrations et données initiales** : rien à lancer à la main. La commande de build (`npm run vercel-build`, déclarée dans `vercel.json`) applique les migrations puis crée les prestations, les modèles et le compte super administrateur à chaque déploiement de production. Les déploiements de prévisualisation ne touchent jamais à la base.
+4. **Stockage** : un bucket compatible S3 (Cloudflare R2 recommandé) et les variables `STORAGE_DRIVER=s3`, `S3_*`. Sans stockage, le site fonctionne mais l'envoi de fichiers est désactivé. Les fichiers de plus de 4 Mo partent directement du navigateur vers le bucket (URL signée) : le bucket doit donc porter une règle CORS pour le domaine du site.
+5. **Paiements** : configurer FedaPay et déclarer le webhook `https://votre-domaine/api/webhooks/payments/fedapay`. Sans prestataire, les clients ne peuvent pas payer. `ALLOW_SANDBOX_PAYMENTS=true` autorise le simulateur en production pour une phase de recette : à retirer avant d'ouvrir le site au public, car une commande « payée » au simulateur n'a rien encaissé.
+6. **Tâche planifiée** : `vercel.json` planifie `/api/cron/quotidien` (vérification des paiements en attente, synchronisation des statistiques, entretien).
 
 ## Organisation du code
 
@@ -98,3 +100,4 @@ docs/                 analyse, architecture, modèle de données, contraintes AP
 4. [Contraintes d'accès aux API](docs/04-contraintes-api.md)
 5. [Parcours client](docs/05-parcours-client.md)
 6. [Plan par phases](docs/06-plan-par-phases.md)
+- [`docs/07-deploiement.md`](docs/07-deploiement.md) : mise en ligne pas à pas (Neon, Vercel, Cloudflare R2, FedaPay).

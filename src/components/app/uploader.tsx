@@ -8,15 +8,75 @@ import { cn } from "@/lib/utils";
 export type UploadedAsset = { id: string; name: string; kind: string; mime: string; width: number | null; height: number | null; format: string | null };
 
 const ACCEPT = { media: "image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm", image: "image/jpeg,image/png,image/webp", any: "image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,application/pdf", csv: "text/csv,.csv" };
-const MAX = { image: 8, video: 60, other: 10 };
+// Les photos sont réduites avant l'envoi : on accepte donc des originaux plus lourds que la limite du serveur (8 Mo).
+const MAX = { image: 25, video: 60, other: 10 };
 
-export async function uploadFile(file: File | Blob, extra: Record<string, string> = {}): Promise<UploadedAsset> {
-  const body = new FormData();
-  body.set("file", file, extra.name ?? (file instanceof File ? file.name : "fichier"));
-  for (const [k, v] of Object.entries(extra)) body.set(k, v);
+/** Au-delà de cette taille, le fichier part directement vers le stockage (les fonctions serverless refusent les corps de plus de 4,5 Mo). */
+const DIRECT_THRESHOLD = 4 * 1024 * 1024;
+const SHRINK_ABOVE = 1.5 * 1024 * 1024;
+const MAX_SIDE = 2560;
+
+/**
+ * Réduit une photo lourde avant l'envoi (2 560 px au plus, JPEG) : l'envoi est plus rapide sur une connexion mobile
+ * et les plateformes publicitaires n'exploitent pas une définition supérieure. Les PNG légers gardent leur transparence.
+ */
+async function shrinkImage(file: File | Blob, name: string): Promise<{ file: File | Blob; name: string }> {
+  const keep = { file, name };
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size <= SHRINK_ABOVE || typeof createImageBitmap !== "function") return keep;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return keep;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.86));
+    if (!blob || blob.size >= file.size) return keep;
+    return { file: blob, name: name.replace(/\.(png|webp|jpe?g)$/i, "") + ".jpg" };
+  } catch { return keep; }
+}
+
+type UploadResponse = { asset?: UploadedAsset; error?: string } | null;
+const NETWORK_ERROR = "Connexion interrompue pendant l'envoi. Vérifiez votre réseau et réessayez.";
+
+async function postJson(body: unknown) {
   let res: Response;
-  try { res = await fetch("/api/files", { method: "POST", body }); } catch { throw new Error("Connexion interrompue pendant l'envoi. Vérifiez votre réseau et réessayez."); }
-  const json = (await res.json().catch(() => null)) as { asset?: UploadedAsset; error?: string } | null;
+  try { res = await fetch("/api/files/direct", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); } catch { throw new Error(NETWORK_ERROR); }
+  return { res, json: (await res.json().catch(() => null)) as (UploadResponse & { url?: string; ticket?: string }) };
+}
+
+/** Envoi direct au stockage. Renvoie null si le serveur ne le propose pas (stockage local en développement). */
+async function uploadDirect(file: File | Blob, name: string, extra: Record<string, string>): Promise<UploadedAsset | null> {
+  const begin = await postJson({ step: "begin", name, mime: file.type, size: file.size, source: extra.source, format: extra.format ?? null });
+  if (begin.res.status === 409) return null;
+  if (!begin.res.ok || !begin.json?.url || !begin.json.ticket) throw new Error(begin.json?.error ?? "L'envoi a échoué. Réessayez.");
+  let put: Response;
+  try { put = await fetch(begin.json.url, { method: "PUT", body: file, headers: { "Content-Type": file.type } }); } catch { throw new Error(NETWORK_ERROR); }
+  if (!put.ok) throw new Error("Le stockage a refusé le fichier. Réessayez dans un instant.");
+  const done = await postJson({ step: "complete", ticket: begin.json.ticket, design: extra.design });
+  if (!done.res.ok || !done.json?.asset) throw new Error(done.json?.error ?? "L'envoi a échoué. Réessayez.");
+  return done.json.asset;
+}
+
+export async function uploadFile(input: File | Blob, extra: Record<string, string> = {}): Promise<UploadedAsset> {
+  const { file, name } = await shrinkImage(input, extra.name ?? (input instanceof File ? input.name : "fichier"));
+  if (file.size > DIRECT_THRESHOLD) {
+    const asset = await uploadDirect(file, name, extra);
+    if (asset) return asset;
+  }
+  const body = new FormData();
+  body.set("file", file, name);
+  for (const [k, v] of Object.entries(extra)) body.set(k, v);
+  body.set("name", name);
+  let res: Response;
+  try { res = await fetch("/api/files", { method: "POST", body }); } catch { throw new Error(NETWORK_ERROR); }
+  if (res.status === 413) throw new Error("Fichier trop volumineux pour être envoyé pour le moment.");
+  const json = (await res.json().catch(() => null)) as UploadResponse;
   if (!res.ok || !json?.asset) throw new Error(json?.error ?? "L'envoi a échoué. Réessayez.");
   return json.asset;
 }
@@ -49,7 +109,7 @@ export function Uploader({ accept = "media", multiple = true, onUploaded, label,
       <input ref={input} type="file" className="sr-only" accept={ACCEPT[accept]} multiple={multiple} onChange={(e) => void handle(e.target.files)} disabled={busy > 0} />
       {busy > 0 ? <LoaderCircle className="size-5 animate-spin text-green" /> : <Upload className="size-5 text-muted" />}
       <span className="text-sm font-medium text-ink">{busy > 0 ? "Envoi en cours…" : label ?? "Importer des fichiers"}</span>
-      <span className="text-xs text-muted">{hint ?? "Images JPG, PNG ou WebP (8 Mo) · Vidéos MP4 ou MOV (60 Mo)"}</span>
+      <span className="text-xs text-muted">{hint ?? "Images JPG, PNG ou WebP · Vidéos MP4 ou MOV (60 Mo)"}</span>
     </label>
   );
 }

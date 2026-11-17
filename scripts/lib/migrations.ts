@@ -23,6 +23,10 @@ export async function applyMigrations(connectionString: string, log: (msg: strin
       const id = randomUUID();
       await client.query("BEGIN");
       try {
+        // Deux déploiements simultanés ne doivent pas appliquer la même migration : verrou tenu jusqu'à la fin de la transaction.
+        await client.query("SELECT pg_advisory_xact_lock(727073692)");
+        const done = await client.query(`SELECT 1 FROM "_prisma_migrations" WHERE "migration_name" = $1 AND "finished_at" IS NOT NULL AND "rolled_back_at" IS NULL`, [name]);
+        if (done.rowCount) { await client.query("ROLLBACK"); continue; }
         await client.query(sql);
         await client.query(`INSERT INTO "_prisma_migrations" ("id", "checksum", "migration_name", "finished_at", "applied_steps_count") VALUES ($1, $2, $3, now(), 1)`, [id, createHash("sha256").update(sql).digest("hex"), name]);
         await client.query("COMMIT");

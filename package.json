@@ -4,11 +4,12 @@
   "private": true,
   "description": "RegisPub — plateforme de publicité digitale tout-en-un avec paiement Mobile Money",
   "engines": {
-    "node": ">=20.9"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "vercel-build": "prisma generate && tsx scripts/deploy-db.ts && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

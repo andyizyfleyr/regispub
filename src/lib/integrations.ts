@@ -57,6 +57,6 @@ export function integrationsStatus(): Integration[] {
     { area: "Notifications", name: "Notifications dans l'application", state: "operational", detail: "Toujours actives." },
     env.storageDriver === "s3" && s3Configured()
       ? { area: "Stockage", name: "Stockage compatible S3", state: "operational", detail: `Bucket ${env.s3.bucket}.` }
-      : { area: "Stockage", name: "Stockage compatible S3", state: "needs_config", detail: "Stockage sur disque local : adapté au développement, pas à un hébergement serverless (fichiers non persistants).", action: "Définir STORAGE_DRIVER=s3 et les variables S3_* (S3, Cloudflare R2, MinIO…)." },
+      : { area: "Stockage", name: "Stockage compatible S3", state: "needs_config", detail: env.readOnlyFs ? "Aucun stockage configuré : l'envoi de fichiers (photos, vidéos, créations) est désactivé sur ce site." : "Stockage sur disque local : adapté au développement, pas à un hébergement serverless (fichiers non persistants).", action: "Définir STORAGE_DRIVER=s3 et les variables S3_* (S3, Cloudflare R2, MinIO…)." },
   ];
 }

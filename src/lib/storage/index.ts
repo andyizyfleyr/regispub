@@ -3,6 +3,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { AwsClient } from "aws4fetch";
 import { env } from "@/lib/env";
+import { DomainError } from "@/lib/errors";
 
 /** Stockage d'objets. Les fichiers ne sont jamais publics : ils sont servis par /api/files après contrôle d'accès. */
 export interface StorageDriver {
@@ -10,7 +11,21 @@ export interface StorageDriver {
   put(key: string, data: Uint8Array, contentType: string): Promise<void>;
   get(key: string): Promise<Uint8Array | null>;
   delete(key: string): Promise<void>;
+  /** Envoi direct depuis le navigateur (fichiers volumineux). Absent si le pilote ne le permet pas. */
+  readonly direct?: DirectAccess;
 }
+
+export interface DirectAccess {
+  /** URL signée, valable `expires` secondes, acceptant un PUT du fichier. */
+  presignPut(key: string, expires: number): Promise<string>;
+  /** URL signée de lecture, avec le type et le nom de fichier imposés par le serveur. */
+  presignGet(key: string, expires: number, opts: { contentType: string; disposition: string }): Promise<string>;
+  /** Premiers octets de l'objet et sa taille totale, ou null s'il n'existe pas. */
+  head(key: string, bytes: number): Promise<{ head: Uint8Array; size: number } | null>;
+}
+
+/** Fichiers au-delà de cette taille : envoi et lecture directs (les fonctions serverless plafonnent les corps à 4,5 Mo). */
+export const DIRECT_THRESHOLD_BYTES = 4 * 1024 * 1024;
 
 function assertSafeKey(key: string) {
   if (!/^[a-zA-Z0-9][a-zA-Z0-9/_.-]*$/.test(key) || key.includes("..")) throw new Error("Clé de stockage invalide");
@@ -53,6 +68,26 @@ class S3Driver implements StorageDriver {
     const res = await this.client.fetch(this.url(key), { method: "DELETE" });
     if (!res.ok && res.status !== 404) throw new Error(`Stockage S3 : suppression refusée (HTTP ${res.status})`);
   }
+
+  private async presign(method: "GET" | "PUT", key: string, expires: number, query: Record<string, string> = {}) {
+    const url = new URL(this.url(key));
+    url.searchParams.set("X-Amz-Expires", String(Math.min(Math.max(expires, 60), 3600)));
+    for (const [k, v] of Object.entries(query)) url.searchParams.set(k, v);
+    return (await this.client.sign(new Request(url, { method }), { aws: { signQuery: true } })).url;
+  }
+
+  readonly direct: DirectAccess = {
+    presignPut: (key, expires) => this.presign("PUT", key, expires),
+    presignGet: (key, expires, opts) => this.presign("GET", key, expires, { "response-content-type": opts.contentType, "response-content-disposition": opts.disposition }),
+    head: async (key, bytes) => {
+      const res = await this.client.fetch(this.url(key), { headers: { Range: `bytes=0-${bytes - 1}` } });
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`Stockage S3 : lecture refusée (HTTP ${res.status})`);
+      const head = new Uint8Array(await res.arrayBuffer());
+      const total = Number(res.headers.get("content-range")?.split("/")[1]);
+      return { head, size: Number.isFinite(total) && total > 0 ? total : head.byteLength };
+    },
+  };
 }
 
 export function s3Configured() {
@@ -68,6 +103,8 @@ export function getStorage(): StorageDriver {
     if (!s3Configured()) throw new Error("STORAGE_DRIVER=s3 mais la configuration S3 est incomplète");
     cached = new S3Driver(env.s3);
   } else {
+    // Sur un hébergement serverless le disque est en lecture seule : mieux vaut un message clair qu'une erreur système.
+    if (env.readOnlyFs) throw new DomainError("L'envoi de fichiers n'est pas encore activé sur ce site (stockage en cours de configuration).");
     cached = new LocalDriver(path.resolve(/* turbopackIgnore: true */ process.cwd(), env.storageLocalDir));
   }
   return cached;

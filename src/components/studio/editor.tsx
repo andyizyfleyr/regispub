@@ -25,6 +25,8 @@ function useImage(id: string | null) {
     if (!id) { setState({ el: null, failed: false }); return; }
     let cancelled = false;
     const img = new Image();
+    // Une image lourde est servie par redirection vers le stockage : sans ce mode, le canevas ne pourrait plus être exporté.
+    img.crossOrigin = "anonymous";
     img.onload = () => { if (!cancelled) setState({ el: img, failed: false }); };
     img.onerror = () => { if (!cancelled) setState({ el: null, failed: true }); };
     img.src = `/api/files/${id}`;
