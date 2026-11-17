@@ -102,5 +102,6 @@ Les fonctions Vercel refusent les requêtes de plus de 4,5 Mo. Le site s'y adapt
 ## 5. Vérifier après chaque mise en ligne
 
 - `https://votre-domaine/api/health` répond `{"status":"ok"}` ;
+- `https://votre-domaine/api/health?controle=<clé>` rejoue chaque étape d'un envoi de fichier depuis le serveur en service (écriture, relecture, adresse signée, fiche en base) et nomme celle qui échoue. La clé se calcule à partir de `APP_SECRET` : `node -e 'console.log(require("crypto").createHmac("sha256", process.env.APP_SECRET).update("health:storage").digest("hex").slice(0,24))'`. Le contrôle fait au moment de la construction ne suffit pas : il ne tourne pas dans le serveur Next.js ;
 - connexion avec le compte super administrateur ;
 - **Gestion → Intégrations** : chaque ligne reflète ce qui est réellement configuré.

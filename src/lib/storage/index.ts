@@ -55,7 +55,10 @@ class S3Driver implements StorageDriver {
   }
   private url(key: string) { assertSafeKey(key); return `${this.cfg.endpoint}/${this.cfg.bucket}/${key.split("/").map(encodeURIComponent).join("/")}`; }
   async put(key: string, data: Uint8Array, contentType: string) {
-    const res = await this.client.fetch(this.url(key), { method: "PUT", body: data as BodyInit, headers: { "Content-Type": contentType } });
+    // L'envoi passe par une adresse signée et un `fetch` direct avec le tableau d'octets : la taille est ainsi annoncée
+    // (Content-Length). Confié à `client.fetch`, le corps devient un flux dans Next.js et part sans longueur,
+    // ce que Cloudflare R2 refuse (HTTP 411).
+    const res = await fetch(await this.presign("PUT", key, 300), { method: "PUT", body: data as BodyInit, headers: { "Content-Type": contentType }, cache: "no-store" });
     if (!res.ok) throw new Error(`Stockage S3 : envoi refusé (HTTP ${res.status})`);
   }
   async get(key: string) {

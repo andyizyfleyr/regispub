@@ -57,7 +57,7 @@ Ajouter un agrégateur de paiement (KKiaPay, CinetPay…) revient à implémente
 
 ## Exploitation
 
-- `GET /api/health` : état de la base.
+- `GET /api/health` : état de la base ; avec `?controle=<clé>`, contrôle complet du stockage (voir `07-deploiement.md`).
 - `/api/cron/{paiements|statistiques|entretien|quotidien}` avec `Authorization: Bearer CRON_SECRET`.
 - Journaux JSON sur la sortie standard (`LOG_LEVEL`).
 - Migrations SQL versionnées dans `prisma/migrations`.
