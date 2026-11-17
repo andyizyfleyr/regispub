@@ -41,7 +41,10 @@ async function shrinkImage(file: File | Blob, name: string): Promise<{ file: Fil
   } catch { return keep; }
 }
 
-type UploadResponse = { asset?: UploadedAsset; error?: string } | null;
+type UploadResponse = { asset?: UploadedAsset; error?: string; code?: string } | null;
+/** Message d'échec : celui du serveur avec sa référence, sinon le code de réponse (page d'erreur de l'hébergeur, coupure…). */
+const failure = (res: Response, json: UploadResponse) =>
+  json?.error ? (json.code ? `${json.error} (réf. ${json.code})` : json.error) : `L'envoi a échoué (réponse ${res.status} du serveur). Réessayez.`;
 const NETWORK_ERROR = "Connexion interrompue pendant l'envoi. Vérifiez votre réseau et réessayez.";
 
 async function postJson(body: unknown) {
@@ -54,12 +57,12 @@ async function postJson(body: unknown) {
 async function uploadDirect(file: File | Blob, name: string, extra: Record<string, string>): Promise<UploadedAsset | null> {
   const begin = await postJson({ step: "begin", name, mime: file.type, size: file.size, source: extra.source, format: extra.format ?? null });
   if (begin.res.status === 409) return null;
-  if (!begin.res.ok || !begin.json?.url || !begin.json.ticket) throw new Error(begin.json?.error ?? "L'envoi a échoué. Réessayez.");
+  if (!begin.res.ok || !begin.json?.url || !begin.json.ticket) throw new Error(failure(begin.res, begin.json));
   let put: Response;
   try { put = await fetch(begin.json.url, { method: "PUT", body: file, headers: { "Content-Type": file.type } }); } catch { throw new Error(NETWORK_ERROR); }
-  if (!put.ok) throw new Error("Le stockage a refusé le fichier. Réessayez dans un instant.");
+  if (!put.ok) throw new Error(`Le stockage a refusé le fichier (réponse ${put.status}). Réessayez dans un instant.`);
   const done = await postJson({ step: "complete", ticket: begin.json.ticket, design: extra.design });
-  if (!done.res.ok || !done.json?.asset) throw new Error(done.json?.error ?? "L'envoi a échoué. Réessayez.");
+  if (!done.res.ok || !done.json?.asset) throw new Error(failure(done.res, done.json));
   return done.json.asset;
 }
 
@@ -77,7 +80,7 @@ export async function uploadFile(input: File | Blob, extra: Record<string, strin
   try { res = await fetch("/api/files", { method: "POST", body }); } catch { throw new Error(NETWORK_ERROR); }
   if (res.status === 413) throw new Error("Fichier trop volumineux pour être envoyé pour le moment.");
   const json = (await res.json().catch(() => null)) as UploadResponse;
-  if (!res.ok || !json?.asset) throw new Error(json?.error ?? "L'envoi a échoué. Réessayez.");
+  if (!res.ok || !json?.asset) throw new Error(failure(res, json));
   return json.asset;
 }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { storeAsset } from "@/lib/assets/service";
 import { getSessionUser } from "@/lib/auth/session";
-import { DomainError } from "@/lib/errors";
+import { DomainError, failureCode } from "@/lib/errors";
 import { createLogger } from "@/lib/logger";
 import { rateLimit } from "@/lib/rate-limit";
 import { isStaff } from "@/lib/auth/permissions";
@@ -29,6 +29,6 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof DomainError) return NextResponse.json({ error: error.message }, { status: 400 });
     log.error("envoi de fichier en échec", { error });
-    return NextResponse.json({ error: "L'envoi a échoué. Réessayez." }, { status: 500 });
+    return NextResponse.json({ error: "L'envoi a échoué. Réessayez.", code: failureCode(error) }, { status: 500 });
   }
 }
