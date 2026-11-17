@@ -82,7 +82,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
 
             {objective && (
               <Card>
-                <CardHeader title="Paramétrage publicitaire recommandé" description="À appliquer dans le gestionnaire de publicités lors de la création manuelle de la campagne." />
+                <CardHeader title="Paramétrage publicitaire recommandé" />
                 <CardBody>
                   <DefinitionList items={[
                     ...(platforms.some((p) => p !== "TIKTOK") ? [{ label: "Objectif Meta", value: objective.config.metaObjective ? <span className="font-mono text-[13px]">{objective.config.metaObjective}</span> : "Non adapté" }, { label: "Optimisation Meta", value: objective.config.metaOptimization ? <span className="font-mono text-[13px]">{objective.config.metaOptimization}</span> : null }] : []),
@@ -169,7 +169,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
 
       {tab === "creations" && (
         <Card>
-          <CardHeader title="Fichiers et créations" description="Les créations ajoutées par l'équipe sont soumises à la validation du client avant le lancement." />
+          <CardHeader title="Fichiers et créations" />
           <CreativesPanel campaignId={c.id} canManage={can(user.role, "campaign.manage_creatives") && !["COMPLETED", "CANCELLED"].includes(status)}
             items={c.assets.map((a) => ({ linkId: a.id, assetId: a.asset.id, name: a.asset.name, kind: a.asset.kind, approval: a.approval, feedback: a.feedback, byClient: a.addedById === c.userId, role: a.role }))} />
         </Card>
@@ -177,7 +177,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
 
       {tab === "messages" && (
         <Card>
-          <CardHeader title="Échanges" description="Les notes internes ne sont jamais visibles du client." />
+          <CardHeader title="Échanges" />
           <Thread campaignId={c.id} canPost={can(user.role, "campaign.message")} allowInternal disabledReason="Votre rôle ne permet pas d'écrire au client."
             messages={(await db.message.findMany({ where: { campaignId: c.id }, orderBy: { createdAt: "asc" }, take: 300, include: { sender: { select: { name: true, role: true } } } }))
               .map((m) => ({ id: m.id, body: m.body, internal: m.internal, createdAt: m.createdAt.toISOString(), mine: m.senderId === user.id, author: m.sender.name, role: ROLE_LABELS[m.sender.role as RoleName] }))} />
@@ -186,12 +186,12 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
 
       {tab === "modifications" && (
         <Card>
-          <CardHeader title="Demandes de modification" description="Un changement de budget se règle par un complément de commande ou un remboursement partiel." />
+          <CardHeader title="Demandes de modification" />
           {c.revisions.length ? (
             <ul className="divide-y divide-line">
               {c.revisions.map((r) => <RevisionItem key={r.id} id={r.id} description={r.description} status={r.status} response={r.response} requester={r.requester.name} createdAt={r.createdAt.toISOString()} canManage={can(user.role, "revision.manage")} />)}
             </ul>
-          ) : <EmptyState title="Aucune demande" description="Le client n'a demandé aucune modification." />}
+          ) : <EmptyState title="Aucune demande" />}
         </Card>
       )}
 
@@ -218,14 +218,14 @@ async function Stats({ campaignId, platforms, adBudget, kpis, launched, canImpor
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader title="Alimenter les statistiques" description="Import d'un export du gestionnaire de publicités, saisie manuelle ou synchronisation API. Rien n'est publié sans validation." />
+        <CardHeader title="Alimenter les statistiques" />
         <CardBody><MetricsPanel campaignId={campaignId} platforms={platforms} pending={report.pending} canImport={canImport} canValidate={canValidate} apiReady={apiReady} launched={launched} today={toIsoDate(todayUtc())} template={CSV_TEMPLATE} /></CardBody>
       </Card>
       {report.pending > 0 && report.totals.days > 0 && <Notice tone="info">L&apos;aperçu ci-dessous inclut les lignes en attente de validation. Le client ne voit que les lignes validées.</Notice>}
       <MetricsView report={report} kpis={kpis} adBudget={adBudget} staff />
       {rows.length > 0 && (
         <Card>
-          <CardHeader title="Lignes enregistrées" description="120 dernières lignes." />
+          <CardHeader title="Lignes enregistrées" />
           <Table head={["Date", "Plateforme", "Impressions", "Clics", "Dépenses", "Source", "État"]}>
             {rows.map((r) => (
               <tr key={r.id}>

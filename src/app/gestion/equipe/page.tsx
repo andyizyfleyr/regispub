@@ -19,7 +19,7 @@ export default async function TeamPage() {
   const roles = assignableRoles(actor.role).filter((r) => r !== "CLIENT");
   return (
     <>
-      <PageHeader title="Collaborateurs" description="Comptes internes, rôles et droits d'accès." />
+      <PageHeader title="Collaborateurs" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-6">
           <Card>
@@ -43,7 +43,7 @@ export default async function TeamPage() {
             </Table>
           </Card>
           <Card>
-            <CardHeader title="Droits par rôle" description="Appliqués côté serveur à chaque page et à chaque action." />
+            <CardHeader title="Droits par rôle" />
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] border-collapse text-left text-[13px]">
                 <thead><tr className="border-b border-line text-muted"><th className="px-5 py-2.5 font-medium">Permission</th>{STAFF_ROLES.map((r) => <th key={r} className="px-2 py-2.5 text-center font-medium">{ROLE_LABELS[r]}</th>)}</tr></thead>

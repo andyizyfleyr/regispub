@@ -32,7 +32,7 @@ export function TileBody({ icon, tone = "green", title, text, arrow, hideTextOnM
   return (
     <>
       <span className="flex items-start justify-between gap-2">
-        <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5", TILE_TONES[tone])}>{icon}</span>
+        <span className={cn("flex size-12 shrink-0 items-center justify-center rounded-2xl [&_svg]:size-6", TILE_TONES[tone])}>{icon}</span>
         {arrow === true ? <ArrowRight aria-hidden className="mt-1 size-4 shrink-0 text-line-strong transition-[transform,color] group-hover:translate-x-0.5 group-hover:text-green" /> : arrow || null}
       </span>
       <span className="mt-3.5 block text-[15px] font-semibold leading-snug text-ink">{title}</span>
@@ -44,6 +44,17 @@ export function TileBody({ icon, tone = "green", title, text, arrow, hideTextOnM
 /** Tuile-lien. */
 export function Tile({ href, className, arrow = true, ...body }: React.ComponentProps<typeof TileBody> & { href: string; className?: string }) {
   return <Link href={href} className={cn(tileClass, className)}><TileBody arrow={arrow} {...body} /></Link>;
+}
+
+/** Étape illustrée : un pictogramme, un numéro, deux ou trois mots. */
+export function StepTile({ n, icon, title, tone = "green" }: { n: number; icon: React.ReactNode; title: React.ReactNode; tone?: TileTone }) {
+  return (
+    <li className="relative flex flex-col items-center rounded-xl border border-line bg-surface px-3 py-5 text-center shadow-card">
+      <span aria-hidden className="tnum absolute left-3 top-3 flex size-6 items-center justify-center rounded-full bg-sand text-xs font-semibold text-ink-soft">{n}</span>
+      <span className={cn("flex size-14 items-center justify-center rounded-2xl [&_svg]:size-7", TILE_TONES[tone])}>{icon}</span>
+      <span className="mt-3 block text-[15px] font-semibold leading-snug text-ink">{title}</span>
+    </li>
+  );
 }
 
 /** Chiffre clé : libellé, grande valeur, précision. */

@@ -31,7 +31,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const base = "/gestion/commandes";
   return (
     <>
-      <PageHeader title="Commandes" description="Chaque commande distingue le budget publicitaire, reversé aux plateformes, des frais de prestation." />
+      <PageHeader title="Commandes" />
       <div className="mb-4 space-y-3">
         <SearchForm action={base} q={q} placeholder="Référence, reçu, client…" hidden={{ statut: status }} />
         <FilterChips current={status ?? "toutes"} items={[{ id: "toutes", label: "Toutes", href: hrefWith(base, params, { statut: undefined, page: undefined }) }, ...STATUSES.map(([id, label]) => ({ id, label, href: hrefWith(base, params, { statut: id, page: undefined }) }))]} />
@@ -59,7 +59,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
             </Table>
             <Pagination page={page} total={total} base={base} params={params} />
           </>
-        ) : <EmptyState icon={<ReceiptText />} title="Aucune commande" description="Aucune commande ne correspond à ces critères." />}
+        ) : <EmptyState icon={<ReceiptText />} title="Aucune commande" />}
       </Card>
     </>
   );

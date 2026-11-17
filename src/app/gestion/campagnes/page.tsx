@@ -46,7 +46,7 @@ export default async function StaffCampaigns({ searchParams }: { searchParams: P
 
   return (
     <>
-      <PageHeader title="Campagnes" description="Commandes des clients à préparer, lancer et suivre." />
+      <PageHeader title="Campagnes" />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <SearchForm action={base} q={q} placeholder="Nom, référence, client…" hidden={{ vue: params.vue, moi: params.moi }} />
         <FilterChips current={sp.moi === "1" ? "moi" : "tous"} items={[{ id: "tous", label: "Toutes les campagnes", href: hrefWith(base, params, { moi: undefined, page: undefined }) }, { id: "moi", label: "Les miennes", href: hrefWith(base, params, { moi: "1", page: undefined }) }]} />

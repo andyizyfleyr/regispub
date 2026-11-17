@@ -1,28 +1,31 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronDown, LoaderCircle, TicketPercent } from "lucide-react";
+import { Check, ChevronDown, Lightbulb, LoaderCircle, Megaphone, ShoppingBag, TicketPercent, Users } from "lucide-react";
 import { ObjectiveIcon, OperatorChip, PlatformBadge } from "@/components/icons";
 import { QuoteLines } from "@/components/app/quote-box";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import type { EditorData } from "@/lib/campaigns/editor-data";
-import { OBJECTIVE_CATEGORIES, OBJECTIVES, type Objective, type ObjectiveCategory } from "@/lib/catalog/objectives";
+import { OBJECTIVE_CATEGORIES, OBJECTIVES, objectiveShort, type Objective, type ObjectiveCategory } from "@/lib/catalog/objectives";
 import { platformFamilies, PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import type { Quote } from "@/lib/pricing/quote";
 import { cn, formatFcfa } from "@/lib/utils";
 import { TILE_TONES, toneAt } from "@/components/ui/tile";
 import { previewQuoteAction } from "@/server/actions/campaigns";
 
-/** Bloc de formulaire : un titre, une phrase d'aide, puis les champs. Les blocs sont séparés par un simple filet. */
-export function Section({ title, description, action, children, className }: { icon?: React.ReactNode; title: string; description?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
+/** Bloc de formulaire : un pictogramme, un titre court, puis les champs. Les blocs sont séparés par un simple filet. */
+export function Section({ icon, tone = "green", title, description, action, children, className }: { icon?: React.ReactNode; tone?: keyof typeof TILE_TONES; title: string; description?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
     <section className={cn("border-t border-line pt-7 first:border-0 first:pt-0", className)}>
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div className="min-w-0">
-          <h2 className="text-[17px] font-semibold leading-snug">{title}</h2>
-          {description && <p className="mt-0.5 text-[13.5px] text-muted">{description}</p>}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 items-center gap-3">
+          {icon && <span aria-hidden className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl [&_svg]:size-[18px]", TILE_TONES[tone])}>{icon}</span>}
+          <div className="min-w-0">
+            <h2 className="text-[17px] font-semibold leading-snug">{title}</h2>
+            {description && <p className="mt-0.5 text-[13.5px] text-muted">{description}</p>}
+          </div>
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
@@ -46,9 +49,9 @@ export function ChoiceList({ children, className, cols }: { children: React.Reac
   return <div className={cn("grid gap-2.5", cols === 2 && "sm:grid-cols-2", cols === 3 && "sm:grid-cols-3", className)}>{children}</div>;
 }
 
-export function ChoiceRow({ active, onClick, children, leading, multiple, disabled, className }: { active: boolean; onClick: () => void; children: React.ReactNode; leading?: React.ReactNode; multiple?: boolean; disabled?: boolean; className?: string }) {
+export function ChoiceRow({ active, onClick, children, leading, multiple, disabled, className, title }: { active: boolean; onClick: () => void; children: React.ReactNode; leading?: React.ReactNode; multiple?: boolean; disabled?: boolean; className?: string; title?: string }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} aria-pressed={active}
+    <button type="button" onClick={onClick} disabled={disabled} aria-pressed={active} title={title}
       className={cn("flex h-full w-full items-start gap-3.5 rounded-xl border bg-surface p-4 text-left transition-[border-color,box-shadow,background-color] disabled:cursor-not-allowed disabled:opacity-45",
         active ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card hover:border-line-strong hover:shadow-lift", className)}>
       {leading}
@@ -57,12 +60,6 @@ export function ChoiceRow({ active, onClick, children, leading, multiple, disabl
     </button>
   );
 }
-
-const PLATFORM_HINT: Record<PlatformCode, string> = {
-  FACEBOOK: "Le plus utilisé pour vendre près de chez vous",
-  INSTAGRAM: "Mode, beauté, restauration, produits visuels",
-  TIKTOK: "Vidéos courtes, public jeune",
-};
 
 /** Choix des plateformes : une ou plusieurs, en un geste. */
 export function PlatformPicker({ value, onChange, extraFee }: { value: PlatformCode[]; onChange: (p: PlatformCode[]) => void; extraFee?: number }) {
@@ -80,15 +77,16 @@ export function PlatformPicker({ value, onChange, extraFee }: { value: PlatformC
               <span aria-hidden className={cn("absolute right-2 top-2 flex size-5 items-center justify-center rounded-[6px] border transition-colors", active ? "border-green bg-green text-white" : "border-line-strong bg-surface text-transparent")}><Check className="size-3" strokeWidth={3} /></span>
               <PlatformBadge platform={p} size="lg" />
               <span className="mt-2.5 block text-[15px] font-semibold text-ink">{PLATFORMS[p].label}</span>
-              <span className="mt-0.5 hidden text-[12.5px] leading-snug text-muted sm:block">{PLATFORM_HINT[p]}</span>
             </button>
           );
         })}
       </div>
-      {families > 1 && extraFee ? <p className="tnum mt-3 text-[13px] text-muted">Facebook et Instagram comptent pour une seule plateforme. Avec TikTok en plus : {formatFcfa(extraFee)} de prestation supplémentaire.</p> : null}
+      {families > 1 && extraFee ? <p className="tnum mt-3 text-[13px] text-muted">Avec TikTok en plus : + {formatFcfa(extraFee)} de prestation.</p> : null}
     </div>
   );
 }
+
+const CATEGORY_ICONS: Record<ObjectiveCategory, typeof Users> = { community: Users, business: ShoppingBag, awareness: Megaphone };
 
 export function ObjectivePicker({ value, platforms, baseFees, onChange }: { value: string | null; platforms: PlatformCode[]; baseFees: Record<string, number>; onChange: (code: string) => void }) {
   const selected = OBJECTIVES.find((o) => o.code === value) ?? null;
@@ -100,8 +98,8 @@ export function ObjectivePicker({ value, platforms, baseFees, onChange }: { valu
         <div className="inline-flex gap-1 rounded-full bg-sand p-1" role="tablist">
           {(Object.keys(OBJECTIVE_CATEGORIES) as ObjectiveCategory[]).map((c) => (
             <button key={c} type="button" role="tab" aria-selected={category === c} onClick={() => setCategory(c)}
-              className={cn("whitespace-nowrap rounded-full px-4 py-2 text-[13.5px] font-medium transition-colors", category === c ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>
-              {OBJECTIVE_CATEGORIES[c].label}
+              className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[13.5px] font-medium transition-colors", category === c ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>
+              {React.createElement(CATEGORY_ICONS[c], { className: "size-4" })}{OBJECTIVE_CATEGORIES[c].label}
             </button>
           ))}
         </div>
@@ -110,20 +108,24 @@ export function ObjectivePicker({ value, platforms, baseFees, onChange }: { valu
         {OBJECTIVES.filter((o) => o.category === category).map((o, i) => {
           const ok = available(o);
           return (
-            <ChoiceRow key={o.code} active={value === o.code} onClick={() => onChange(o.code)} disabled={!ok}
+            <ChoiceRow key={o.code} active={value === o.code} onClick={() => onChange(o.code)} disabled={!ok} className="items-center" title={o.label}
               leading={<span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", TILE_TONES[toneAt(i)])}><ObjectiveIcon name={o.icon} className="size-[18px]" /></span>}>
-              <span className="block font-medium leading-snug text-ink">{o.label}</span>
-              <span className="mt-0.5 block text-[13.5px] leading-snug text-muted">
-                {ok ? o.description : <span className="text-clay">Indisponible sur {platforms.map((p) => PLATFORMS[p].label).join(" + ")}</span>}
-              </span>
+              <span className="block font-medium leading-snug text-ink">{objectiveShort(o)}</span>
+              {!ok && <span className="mt-0.5 block text-[13px] leading-snug text-clay">Indisponible sur {platforms.map((p) => PLATFORMS[p].label).join(" + ")}</span>}
             </ChoiceRow>
           );
         })}
       </ChoiceList>
       {selected && (
-        <p className="tnum mt-3 animate-rise rounded-xl bg-marigold-soft/60 px-4 py-3 text-[13.5px] leading-relaxed text-ink-soft">
-          <span className="font-semibold text-ink">Notre conseil : </span>{selected.recommendation} Prestation dès {formatFcfa(baseFees[selected.serviceCode] ?? 10_000)}.
-        </p>
+        <details className="group mt-3 animate-rise rounded-xl bg-marigold-soft/60 px-4 py-3 text-[13.5px] text-ink-soft">
+          <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-ink [&::-webkit-details-marker]:hidden">
+            <Lightbulb className="size-4 shrink-0 text-[#9a6400]" />
+            <span className="tnum flex-1">Prestation dès {formatFcfa(baseFees[selected.serviceCode] ?? 10_000)}</span>
+            <span className="text-[13px] font-normal text-ink-soft">Conseil</span>
+            <ChevronDown className="size-4 text-ink-soft transition-transform group-open:rotate-180" />
+          </summary>
+          <p className="mt-2 leading-relaxed">{selected.recommendation}</p>
+        </details>
       )}
     </div>
   );
@@ -153,7 +155,7 @@ export function QuotePanel({ state, promo, onPromo, children }: { state: ReturnT
   return (
     <div className="overflow-hidden rounded-lg border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
-        <p className="text-[15px] font-semibold">Ce que vous payez</p>
+        <p className="text-[15px] font-semibold">Total</p>
         {state.loading && <LoaderCircle className="size-4 animate-spin text-muted" aria-label="Calcul en cours" />}
       </div>
       <div className="p-5">
@@ -166,7 +168,7 @@ export function QuotePanel({ state, promo, onPromo, children }: { state: ReturnT
 
         <details className="group mt-4 border-t border-line pt-3" open={Boolean(promo) || undefined}>
           <summary className="flex items-center justify-between gap-2 text-[13px] font-medium text-green">
-            <span className="flex items-center gap-2"><TicketPercent className="size-4" />{applied ? `Code ${promo} appliqué` : "J'ai un code promo"}</span>
+            <span className="flex items-center gap-2"><TicketPercent className="size-4" />{applied ? `Code ${promo} appliqué` : "Code promo"}</span>
             <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
           </summary>
           <div className="mt-3">
@@ -181,7 +183,7 @@ export function QuotePanel({ state, promo, onPromo, children }: { state: ReturnT
         {children}
         <div className="mt-4 flex items-center gap-2 border-t border-line pt-4">
           <OperatorChip operator="MTN" /><OperatorChip operator="MOOV" /><OperatorChip operator="CELTIIS" />
-          <span className="ml-1 text-xs leading-snug text-muted">Paiement par Mobile Money</span>
+          <span className="ml-1 text-xs leading-snug text-muted">Mobile Money</span>
         </div>
       </div>
     </div>
@@ -229,7 +231,7 @@ export function BudgetFields({ data, value, onChange, recommended }: {
             onChange={(e) => onChange({ adBudget: Math.min(999_999_999, Number(e.target.value.replace(/\D/g, "")) || 0) })} />
           <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-muted">FCFA</span>
         </div>
-        <p className="tnum mt-1.5 text-[13px] text-muted">Dépensé en totalité sur les plateformes. Minimum {formatFcfa(limits.minAdBudget)}.</p>
+        <p className="tnum mt-1.5 text-[13px] text-muted">Minimum {formatFcfa(limits.minAdBudget)}.</p>
       </div>
 
       <div>
@@ -242,18 +244,18 @@ export function BudgetFields({ data, value, onChange, recommended }: {
           </div>
         </div>
         <p className={cn("tnum mt-1.5 text-[13px]", daily > 0 && daily < limits.minDailyBudget ? "text-clay" : "text-muted")}>
-          {daily > 0 ? <>Soit {formatFcfa(daily)} par jour{daily < limits.minDailyBudget ? ` : le minimum est de ${formatFcfa(limits.minDailyBudget)} par jour` : ""}.</> : "De 1 à 90 jours."}
+          {daily > 0 ? <>{formatFcfa(daily)} par jour{daily < limits.minDailyBudget ? ` : minimum ${formatFcfa(limits.minDailyBudget)}` : ""}.</> : "De 1 à 90 jours."}
         </p>
       </div>
 
-      <Field label="Date de début souhaitée" htmlFor="startDate" hint={end ? `Fin prévue le ${end}` : undefined} className="max-w-xs">
+      <Field label="Début" htmlFor="startDate" hint={end ? `Fin le ${end}` : undefined} className="max-w-xs">
         <Input id="startDate" type="date" min={today} value={value.startDate} onChange={(e) => onChange({ startDate: e.target.value })} />
       </Field>
 
       {value.platforms.length > 1 && (
         <details className="group rounded-md bg-paper">
           <summary className="flex items-center justify-between gap-3 px-4 py-3 text-[13.5px] font-medium text-ink">
-            Répartition entre les plateformes
+            Répartition
             <span className="flex items-center gap-2 text-[13px] font-normal text-muted"><span className="tnum">{value.platforms.map((p) => `${value.budgetSplit[p] ?? 0} %`).join(" · ")}</span><ChevronDown className="size-4 transition-transform group-open:rotate-180" /></span>
           </summary>
           <div className="space-y-3 px-4 pb-4">
@@ -275,20 +277,19 @@ export function BudgetFields({ data, value, onChange, recommended }: {
   );
 }
 
-export function LevelPicker({ levels, value, onChange, baseLabel, baseFee, expert }: { levels: EditorData["levels"]; value: string | null; onChange: (code: string | null) => void; baseLabel: string; baseFee: number; expert?: boolean }) {
+export function LevelPicker({ levels, value, onChange, baseFee, expert }: { levels: EditorData["levels"]; value: string | null; onChange: (code: string | null) => void; baseFee: number; expert?: boolean }) {
   const base = value === null || !levels.some((l) => l.code === value);
   return (
     <ChoiceList>
       {!expert && (
         <ChoiceRow active={base} onClick={() => onChange(null)}>
-          <span className="flex items-baseline justify-between gap-3"><span className="font-medium text-ink">Je fournis mes textes et visuels</span><span className="tnum shrink-0 text-sm font-semibold">{formatFcfa(baseFee)}</span></span>
-          <span className="mt-0.5 block text-[13.5px] text-muted">{baseLabel} : nous vérifions, configurons et lançons votre publicité.</span>
+          <span className="flex items-baseline justify-between gap-3"><span className="font-medium text-ink">J&apos;ai mes textes et visuels</span><span className="tnum shrink-0 text-sm font-semibold">{formatFcfa(baseFee)}</span></span>
+          <span className="mt-0.5 block text-[13.5px] text-muted">Nous vérifions et lançons.</span>
         </ChoiceRow>
       )}
       {levels.filter((l) => !expert || l.kind === "MANAGEMENT" || l.kind === "PACK").map((l) => (
         <ChoiceRow key={l.code} active={value === l.code} onClick={() => onChange(l.code)}>
           <span className="flex items-baseline justify-between gap-3"><span className="font-medium text-ink">{l.name}</span><span className="tnum shrink-0 text-sm font-semibold">{formatFcfa(Math.max(l.fee, baseFee))}</span></span>
-          <span className="mt-0.5 block text-[13.5px] text-muted">{l.description}</span>
           {value === l.code && l.features.length > 0 && <ul className="mt-2 animate-rise space-y-1 text-[13px] text-ink-soft">{l.features.map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 size-3.5 shrink-0 text-green" />{f}</li>)}</ul>}
         </ChoiceRow>
       ))}
@@ -296,25 +297,27 @@ export function LevelPicker({ levels, value, onChange, baseLabel, baseFee, exper
   );
 }
 
-/** Avancement : une barre en segments. Les étapes déjà atteintes sont cliquables. */
-export function Stepper({ steps, current, reached, onSelect, disabled }: { steps: string[]; current: number; reached: number; onSelect: (n: number) => void; disabled?: boolean }) {
+/** Avancement : un pictogramme par étape. Les étapes déjà atteintes sont cliquables. */
+export function Stepper({ steps, current, reached, onSelect, disabled }: { steps: { title: string; icon: React.ReactNode }[]; current: number; reached: number; onSelect: (n: number) => void; disabled?: boolean }) {
   return (
-    <div>
-      <p className="mb-2 text-[13px] text-muted">Étape {current} sur {steps.length} · <span className="font-medium text-ink">{steps[current - 1]}</span></p>
-      <ol className="flex gap-1.5" aria-label="Étapes">
-        {steps.map((label, i) => {
-          const n = i + 1;
-          const active = n === current;
-          const clickable = n <= reached && !active && !disabled;
-          return (
-            <li key={label} className="flex-1">
-              <button type="button" disabled={!clickable} onClick={() => onSelect(n)} aria-current={active ? "step" : undefined} aria-label={`Étape ${n} : ${label}`} className="block w-full py-1.5 disabled:cursor-default">
-                <span className={cn("block h-1.5 rounded-full transition-colors", n < current ? "bg-green" : active ? "bg-forest" : "bg-sand")} />
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
+    <ol className="flex items-start" aria-label="Étapes">
+      {steps.map((step, i) => {
+        const n = i + 1;
+        const active = n === current;
+        const done = n < current;
+        const clickable = n <= reached && !active && !disabled;
+        return (
+          <li key={step.title} className="relative flex flex-1 flex-col items-center">
+            {i > 0 && <span aria-hidden className={cn("absolute right-1/2 top-5 h-0.5 w-full -translate-y-1/2", done || active ? "bg-green" : "bg-line")} />}
+            <button type="button" disabled={!clickable} onClick={() => onSelect(n)} aria-current={active ? "step" : undefined} aria-label={`Étape ${n} : ${step.title}`}
+              className={cn("relative flex size-10 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-default [&_svg]:size-[18px]",
+                active ? "border-forest bg-forest text-white shadow-lift" : done ? "border-green bg-green text-white" : "border-line bg-surface text-muted")}>
+              {done ? <Check strokeWidth={3} /> : step.icon}
+            </button>
+            <span className={cn("mt-1.5 text-xs", active ? "font-semibold text-ink" : "text-muted")}>{step.title}</span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

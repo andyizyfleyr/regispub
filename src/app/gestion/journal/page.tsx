@@ -20,7 +20,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   const names = new Map(actors.map((a) => [a.id, a.name]));
   return (
     <>
-      <PageHeader title="Journal d'audit" description="Trace des actions sensibles : paiements, statuts, tarifs, comptes, paramètres." />
+      <PageHeader title="Journal d'audit" />
       <div className="mb-4"><SearchForm action="/gestion/journal" q={q} placeholder="Action (ex. payment, refund) ou identifiant…" /></div>
       <Card>
         {rows.length ? (
@@ -38,7 +38,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
             </Table>
             <Pagination page={page} total={total} base="/gestion/journal" params={{ q }} />
           </>
-        ) : <EmptyState icon={<ScrollText />} title="Aucune entrée" description="Aucune action ne correspond à cette recherche." />}
+        ) : <EmptyState icon={<ScrollText />} title="Aucune entrée" />}
       </Card>
     </>
   );

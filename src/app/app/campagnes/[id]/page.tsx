@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, ChevronDown, FileText, Images } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, ChevronDown, FileText, Images, Info, MessageSquareText } from "lucide-react";
 import { AdPreview } from "@/components/app/ad-preview";
 import { CampaignActions, CreativeReview } from "@/components/app/campaign-client-parts";
 import { CampaignSummary } from "@/components/app/campaign-summary";
@@ -64,7 +64,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
   return (
     <>
       <Link href="/app/campagnes" className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pl-2 pr-3 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
-        <ArrowLeft className="size-3.5" />Mes campagnes
+        <ArrowLeft className="size-3.5" />Campagnes
       </Link>
 
       <header className="mb-6 animate-rise">
@@ -91,43 +91,42 @@ export default async function CampaignPage({ params, searchParams }: { params: P
 
       {status === "PENDING_PAYMENT" && order && (
         <Notice tone="warn" title="Paiement en attente" className="mb-5">
-          Votre campagne sera prise en charge dès que le paiement de <span className="tnum font-medium">{formatFcfa(order.total)}</span> sera confirmé.{" "}
-          <Link href={`/app/paiements/${order.id}`} className="font-medium underline">Payer maintenant</Link>
+          <Link href={`/app/paiements/${order.id}`} className="inline-flex items-center gap-1 font-medium underline">Payer <span className="tnum">{formatFcfa(order.total)}</span><ArrowRight className="size-3.5" /></Link>
         </Notice>
       )}
-      {status === "AWAITING_INFO" && <Notice tone="warn" title="Nous avons besoin d'informations" className="mb-5">Votre gestionnaire attend un complément pour avancer. <Link href={`${base}?onglet=messages`} className="font-medium underline">Voir les messages</Link></Notice>}
-      {pendingReview > 0 && tab !== "creations" && <Notice tone="info" title={`${pendingReview} création${pendingReview > 1 ? "s" : ""} à valider`} className="mb-5">Votre validation est nécessaire avant le lancement. <Link href={`${base}?onglet=creations`} className="font-medium underline">Voir les créations</Link></Notice>}
+      {status === "AWAITING_INFO" && <Notice tone="warn" title="Une précision est attendue" className="mb-5"><Link href={`${base}?onglet=messages`} className="inline-flex items-center gap-1 font-medium underline">Répondre<ArrowRight className="size-3.5" /></Link></Notice>}
+      {pendingReview > 0 && tab !== "creations" && <Notice tone="info" title={`${pendingReview} création${pendingReview > 1 ? "s" : ""} à valider`} className="mb-5"><Link href={`${base}?onglet=creations`} className="inline-flex items-center gap-1 font-medium underline">Voir<ArrowRight className="size-3.5" /></Link></Notice>}
 
       <TabsNav current={tab} className="mb-5" tabs={[
-        { id: "suivi", label: "Résultats", href: base },
-        { id: "creations", label: "Créations", href: `${base}?onglet=creations`, count: pendingReview || undefined },
-        { id: "messages", label: "Messages", href: `${base}?onglet=messages`, count: unread || undefined },
-        { id: "details", label: "Détails", href: `${base}?onglet=details` },
+        { id: "suivi", label: "Résultats", icon: <BarChart3 />, href: base },
+        { id: "creations", label: "Créations", icon: <Images />, href: `${base}?onglet=creations`, count: pendingReview || undefined },
+        { id: "messages", label: "Messages", icon: <MessageSquareText />, href: `${base}?onglet=messages`, count: unread || undefined },
+        { id: "details", label: "Détails", icon: <Info />, href: `${base}?onglet=details` },
       ]} />
 
       {tab === "suivi" && (
         <div className="space-y-6">
           <MetricsView report={await loadCampaignReport(c.id, { validatedOnly: true })} kpis={objective?.config.kpis ?? []} adBudget={c.adBudget} />
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-muted">Chiffres relevés sur les plateformes publicitaires et validés par votre gestionnaire{c.manager ? ` (${c.manager.name})` : ""}.</p>
-            {["RUNNING", "PAUSED", "COMPLETED"].includes(status) && <Button asChild variant="outline" size="sm"><Link href={`${base}/rapport`}><FileText />Rapport de campagne</Link></Button>}
+            <p className="text-xs text-muted">Chiffres validés par votre gestionnaire{c.manager ? ` (${c.manager.name})` : ""}.</p>
+            {["RUNNING", "PAUSED", "COMPLETED"].includes(status) && <Button asChild variant="outline" size="sm"><Link href={`${base}/rapport`}><FileText />Rapport</Link></Button>}
           </div>
         </div>
       )}
 
       {tab === "creations" && (
         <Card>
-          <CardHeader title="Créations publicitaires" description="Visuels et vidéos de la campagne. Ceux soumis par notre équipe attendent votre validation." />
+          <CardHeader title="Créations" />
           {creatives.length ? (
             <CreativeReview items={creatives.map((a) => ({ linkId: a.id, assetId: a.asset.id, name: a.asset.name, kind: a.asset.kind, format: a.asset.format, approval: a.approval, feedback: a.feedback, byTeam: a.addedById !== user.id }))} />
-          ) : <EmptyState icon={<Images />} title="Aucune création pour l'instant" description="Les visuels préparés par notre équipe apparaîtront ici pour validation." />}
+          ) : <EmptyState icon={<Images />} title="Aucune création" />}
         </Card>
       )}
 
       {tab === "messages" && (
         <Card>
-          <CardHeader title="Échanges avec votre gestionnaire" description={c.manager ? `${c.manager.name} suit votre campagne.` : "Un gestionnaire vous sera attribué après le paiement."} />
-          <Thread campaignId={c.id} canPost={!["CANCELLED"].includes(status)} disabledReason="Cette campagne est annulée : la messagerie est fermée. Contactez le support depuis votre compte."
+          <CardHeader title="Messages" description={c.manager ? `Gestionnaire : ${c.manager.name}` : "Gestionnaire attribué après paiement."} />
+          <Thread campaignId={c.id} canPost={!["CANCELLED"].includes(status)} disabledReason="Campagne annulée : messagerie fermée."
             messages={(await db.message.findMany({ where: { campaignId: c.id, internal: false }, orderBy: { createdAt: "asc" }, take: 200, include: { sender: { select: { name: true, role: true } } } }))
               .map((m) => ({ id: m.id, body: m.body, internal: false, createdAt: m.createdAt.toISOString(), mine: m.senderId === user.id, author: m.sender.name, role: m.sender.role === "CLIENT" ? null : ROLE_LABELS[m.sender.role as RoleName] }))} />
         </Card>
@@ -140,7 +139,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
             <div className="rounded-lg border border-line bg-surface px-4 py-4 sm:px-5">
               <CampaignSummary c={c} compact />
               <DefinitionList className="mt-2.5 border-t border-line pt-2.5" items={[
-                { label: "Votre gestionnaire", value: c.manager?.name ?? "En cours d'attribution" },
+                { label: "Gestionnaire", value: c.manager?.name ?? "Bientôt attribué" },
                 { label: "Référence", value: <span className="font-mono text-[13px]">{c.reference}</span> },
               ]} />
             </div>
@@ -149,20 +148,20 @@ export default async function CampaignPage({ params, searchParams }: { params: P
 
           {order && (
             <List>
-              <ListRow href={`/app/paiements/${order.id}`} title="Commande et reçu" subtitle={<span className="font-mono text-[12.5px]">{order.reference}</span>} trailing={<span className="tnum font-semibold text-ink">{formatFcfa(order.total)}</span>} />
+              <ListRow href={`/app/paiements/${order.id}`} title="Reçu" subtitle={<span className="font-mono text-[12.5px]">{order.reference}</span>} trailing={<span className="tnum font-semibold text-ink">{formatFcfa(order.total)}</span>} />
             </List>
           )}
 
           {copy && (
             <details className="group rounded-lg border border-line bg-surface">
-              <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">Aperçu de l&apos;annonce<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+              <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">Aperçu<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
               <div className="border-t border-line p-4"><div className="mx-auto max-w-sm"><AdPreview platform={(c.platforms[0] ?? "FACEBOOK") as PlatformCode} pageName={c.business?.name ?? user.name} copy={copy} imageId={firstImage?.asset.id ?? null} /></div></div>
             </details>
           )}
 
           {c.revisions.length > 0 && (
             <section aria-labelledby="demandes">
-              <SectionTitle id="demandes">Demandes de modification</SectionTitle>
+              <SectionTitle id="demandes">Modifications demandées</SectionTitle>
               <List>
                 {c.revisions.map((r) => (
                   <li key={r.id} className="px-4 py-3.5 text-sm sm:px-5">

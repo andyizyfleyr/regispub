@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bell, Building2, CalendarClock, Gift, LifeBuoy, UserRound } from "lucide-react";
+import { Bell, Building2, CalendarClock, Check, Gift, LifeBuoy, Star, Ticket, UserRound, Users } from "lucide-react";
 import { BusinessDialog, CopyField, RedeemPoints } from "@/components/app/account-parts";
 import { WhatsappIcon } from "@/components/icons";
 import { ActionButton, ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
@@ -21,12 +21,12 @@ import { subscribeAction } from "@/server/actions/payments";
 export const metadata: Metadata = { title: "Mon compte" };
 
 const TABS = ["profil", "entreprises", "fidelite", "abonnement", "support"] as const;
-const MENU: Record<(typeof TABS)[number], { label: string; hint: string; icon: typeof Gift }> = {
-  profil: { label: "Profil et mot de passe", hint: "Nom, téléphone, notifications", icon: UserRound },
-  entreprises: { label: "Mes entreprises", hint: "Les activités pour lesquelles vous faites de la publicité", icon: Building2 },
-  fidelite: { label: "Fidélité et parrainage", hint: "Points, bons d'achat, lien de parrainage", icon: Gift },
-  abonnement: { label: "Accompagnement mensuel", hint: "Formules et abonnements en cours", icon: CalendarClock },
-  support: { label: "Aide et réclamations", hint: "Poser une question, suivre une demande", icon: LifeBuoy },
+const MENU: Record<(typeof TABS)[number], { label: string; icon: typeof Gift }> = {
+  profil: { label: "Profil", icon: UserRound },
+  entreprises: { label: "Entreprises", icon: Building2 },
+  fidelite: { label: "Fidélité", icon: Gift },
+  abonnement: { label: "Abonnement", icon: CalendarClock },
+  support: { label: "Aide", icon: LifeBuoy },
 };
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ onglet?: string; erreur?: string }> }) {
@@ -42,8 +42,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       <>
         <PageHeader title="Mon compte" description={user.email} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {TABS.map((id, i) => { const m = MENU[id]; return <Tile key={id} href={`${base}?onglet=${id}`} icon={<m.icon />} tone={toneAt(i)} title={m.label} text={m.hint} hideTextOnMobile arrow={false} />; })}
-          <Tile href="/app/notifications" icon={<Bell />} tone="neutral" title="Notifications" text="L'historique de vos alertes" hideTextOnMobile arrow={false} />
+          {TABS.map((id, i) => { const m = MENU[id]; return <Tile key={id} href={`${base}?onglet=${id}`} icon={<m.icon />} tone={toneAt(i)} title={m.label} arrow={false} />; })}
+          <Tile href="/app/notifications" icon={<Bell />} tone="neutral" title="Notifications" arrow={false} />
         </div>
       </>
     );
@@ -51,22 +51,21 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader title={MENU[tab].label} back={{ href: base, label: "Mon compte" }} />
+      <PageHeader title={MENU[tab].label} back={{ href: base, label: "Compte" }} />
 
       {tab === "profil" && (
         <div className="space-y-6">
           <Card>
-            <CardHeader title="Informations personnelles" />
+            <CardHeader title="Mes informations" />
             <CardBody>
               <ActionForm action={updateProfileAction} className="space-y-4">
                 <Field label="Nom complet" htmlFor="p-name"><Input id="p-name" name="name" required maxLength={80} defaultValue={user.name} autoComplete="name" /><FieldError name="name" /></Field>
-                <Field label="Téléphone" htmlFor="p-phone" hint="Utilisé pour les notifications WhatsApp et proposé au paiement."><Input id="p-phone" name="phone" type="tel" inputMode="tel" required defaultValue={user.phone ? formatPhone(user.phone) : ""} autoComplete="tel" /><FieldError name="phone" /></Field>
+                <Field label="Téléphone" htmlFor="p-phone"><Input id="p-phone" name="phone" type="tel" inputMode="tel" required defaultValue={user.phone ? formatPhone(user.phone) : ""} autoComplete="tel" /><FieldError name="phone" /></Field>
                 <Field label="Type de compte" htmlFor="p-type"><Select id="p-type" name="accountType" defaultValue={user.accountType}><option value="INDIVIDUAL">Particulier</option><option value="PROFESSIONAL">Professionnel</option></Select></Field>
                 <fieldset className="space-y-2">
                   <legend className="mb-1 text-[13px] font-medium text-ink-soft">Notifications</legend>
                   <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" name="notifyEmail" defaultChecked={user.notifyEmail} className="size-4 accent-forest" />Par e-mail</label>
                   <label className="flex items-center gap-2.5 text-sm"><input type="checkbox" name="notifyWhatsapp" defaultChecked={user.notifyWhatsapp} className="size-4 accent-forest" />Par WhatsApp</label>
-                  <p className="text-xs text-muted">Les notifications dans l&apos;application restent toujours actives. L&apos;envoi par e-mail et WhatsApp dépend des canaux activés sur la plateforme.</p>
                 </fieldset>
                 <SubmitButton pendingLabel="Enregistrement…">Enregistrer</SubmitButton>
               </ActionForm>
@@ -77,8 +76,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             <CardBody>
               <ActionForm action={changePasswordAction} resetOnSuccess className="space-y-4">
                 <Field label="Mot de passe actuel" htmlFor="pw-cur"><Input id="pw-cur" name="current" type="password" required autoComplete="current-password" /><FieldError name="current" /></Field>
-                <Field label="Nouveau mot de passe" htmlFor="pw-new" hint="10 caractères minimum, avec lettres et chiffres."><Input id="pw-new" name="password" type="password" required minLength={10} autoComplete="new-password" /><FieldError name="password" /></Field>
-                <SubmitButton variant="outline" pendingLabel="Modification…">Modifier le mot de passe</SubmitButton>
+                <Field label="Nouveau mot de passe" htmlFor="pw-new" hint="10 caractères, lettres et chiffres."><Input id="pw-new" name="password" type="password" required minLength={10} autoComplete="new-password" /><FieldError name="password" /></Field>
+                <SubmitButton variant="outline" pendingLabel="Modification…">Modifier</SubmitButton>
               </ActionForm>
             </CardBody>
           </Card>
@@ -97,7 +96,7 @@ async function Businesses({ userId }: { userId: string }) {
   const list = await db.business.findMany({ where: { ownerId: userId }, orderBy: { createdAt: "asc" }, include: { _count: { select: { campaigns: true } } } });
   return (
     <Card>
-      <CardHeader title="Mes entreprises" description="Gérez plusieurs activités depuis le même compte." action={<BusinessDialog />} />
+      <CardHeader title="Mes entreprises" action={<BusinessDialog />} />
       {list.length ? (
         <ul className="divide-y divide-line">
           {list.map((b) => (
@@ -114,7 +113,7 @@ async function Businesses({ userId }: { userId: string }) {
             </li>
           ))}
         </ul>
-      ) : <EmptyState icon={<Building2 />} title="Aucune entreprise" description="Ajoutez votre activité pour gagner du temps à chaque nouvelle campagne." />}
+      ) : <EmptyState icon={<Building2 />} title="Aucune entreprise" />}
     </Card>
   );
 }
@@ -130,13 +129,13 @@ async function Loyalty({ userId, points, referralCode, settings }: { userId: str
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-3">
-        <StatTile label="Points" value={formatNumber(points)} hint={`Valeur : ${formatFcfa(points * settings.loyaltyPointValue)}`} tone="marigold" />
-        <StatTile label="Filleuls" value={formatNumber(referrals)} />
-        <StatTile label="Bons" value={formatNumber(vouchers.filter((v) => v.usedCount < (v.maxUses ?? Infinity) && (!v.endsAt || v.endsAt > now)).length)} hint="disponibles" />
+        <StatTile label="Points" value={formatNumber(points)} hint={`= ${formatFcfa(points * settings.loyaltyPointValue)}`} icon={<Star />} tone="marigold" />
+        <StatTile label="Filleuls" value={formatNumber(referrals)} icon={<Users />} tone="sky" />
+        <StatTile label="Bons" value={formatNumber(vouchers.filter((v) => v.usedCount < (v.maxUses ?? Infinity) && (!v.endsAt || v.endsAt > now)).length)} icon={<Ticket />} tone="violet" />
       </div>
       <div className="space-y-6">
         <Card>
-          <CardHeader title="Programme de fidélité" description={`${settings.loyaltyPointsPer1000} point par tranche de 1 000 F de frais de prestation payés. 1 point = ${formatFcfa(settings.loyaltyPointValue)}.`} />
+          <CardHeader title="Mes points" description={`${settings.loyaltyPointsPer1000} point par 1 000 F de prestation. 1 point = ${formatFcfa(settings.loyaltyPointValue)}.`} />
           <CardBody><RedeemPoints balance={points} min={settings.loyaltyMinRedeem} pointValue={settings.loyaltyPointValue} /></CardBody>
           {entries.length > 0 && (
             <ul className="divide-y divide-line border-t border-line">
@@ -151,14 +150,14 @@ async function Loyalty({ userId, points, referralCode, settings }: { userId: str
         </Card>
         <div className="space-y-6">
           <Card>
-            <CardHeader title="Parrainage" description={`Recevez un bon de ${formatFcfa(settings.referralReward)} au premier paiement de chaque filleul.`} />
+            <CardHeader title="Parrainage" description={`${formatFcfa(settings.referralReward)} offerts par filleul qui paie.`} />
             <CardBody className="space-y-3">
               <CopyField value={link} label="Lien de parrainage" />
-              <p className="text-xs text-muted">Votre code : <span className="font-mono text-ink">{referralCode}</span>. Le bon est valable sur les frais de prestation, jamais sur le budget publicitaire.</p>
+              <p className="text-xs text-muted">Code : <span className="font-mono text-ink">{referralCode}</span> · valable sur la prestation.</p>
             </CardBody>
           </Card>
           <Card>
-            <CardHeader title="Mes bons d'achat" />
+            <CardHeader title="Mes bons" />
             {vouchers.length ? (
               <ul className="divide-y divide-line">
                 {vouchers.map((v) => {
@@ -171,7 +170,7 @@ async function Loyalty({ userId, points, referralCode, settings }: { userId: str
                   );
                 })}
               </ul>
-            ) : <p className="px-5 py-4 text-sm text-muted">Aucun bon pour l&apos;instant. Convertissez vos points ou parrainez un proche pour en obtenir.</p>}
+            ) : <p className="px-5 py-4 text-sm text-muted">Aucun bon pour l&apos;instant.</p>}
           </Card>
         </div>
       </div>
@@ -188,27 +187,26 @@ async function SubscriptionTab({ userId, error }: { userId: string; error?: stri
   const names = new Map(plans.map((p) => [p.code, p.name]));
   return (
     <div className="space-y-6">
-      {error && <Notice tone="danger" title="Souscription impossible">{error}</Notice>}
+      {error && <Notice tone="danger" title="Impossible">{error}</Notice>}
       <div className="space-y-4">
         {plans.map((p) => (
           <Card key={p.id}>
             <CardBody>
               <h2 className="text-lg font-semibold">{p.name}</h2>
-              <p className="mt-1 text-sm text-muted">{p.description}</p>
               <p className="mt-4"><span className="tnum font-display text-3xl font-semibold">{formatFcfa(p.fee)}</span><span className="text-sm text-muted"> / {p.periodDays ?? 30} jours</span></p>
-              <ul className="mt-4 space-y-1.5 text-sm text-ink-soft">{p.features.map((f) => <li key={f} className="flex gap-2"><span className="mt-2 size-1.5 shrink-0 rounded-full bg-green" />{f}</li>)}</ul>
+              <ul className="mt-4 space-y-1.5 text-sm text-ink-soft">{p.features.slice(0, 4).map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-green" />{f}</li>)}</ul>
               <form action={subscribeAction} className="mt-5 flex flex-wrap items-end gap-3">
                 <input type="hidden" name="serviceCode" value={p.code} />
                 {businesses.length > 0 && (
-                  <Field label="Entreprise concernée" htmlFor={`sub-${p.id}`} className="min-w-48 flex-1"><Select id={`sub-${p.id}`} name="businessId" defaultValue={businesses[0]!.id}>{businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</Select></Field>
+                  <Field label="Entreprise" htmlFor={`sub-${p.id}`} className="min-w-48 flex-1"><Select id={`sub-${p.id}`} name="businessId" defaultValue={businesses[0]!.id}>{businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</Select></Field>
                 )}
                 <Button type="submit" variant="accent">Souscrire</Button>
               </form>
-              <p className="mt-3 text-xs text-muted">Paiement par Mobile Money pour une période, sans prélèvement automatique : le renouvellement se fait à votre initiative. Le budget publicitaire n&apos;est pas inclus.</p>
+              <p className="mt-3 text-xs text-muted">Sans prélèvement automatique. Hors budget publicitaire.</p>
             </CardBody>
           </Card>
         ))}
-        {!plans.length && <Card><EmptyState title="Aucune formule disponible" description="Les formules d'accompagnement mensuel seront proposées ici." /></Card>}
+        {!plans.length && <Card><EmptyState title="Aucune formule" /></Card>}
       </div>
       {subs.length > 0 && (
         <Card>
@@ -236,7 +234,7 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
   return (
     <div className="flex flex-col gap-6">
       <Card className="order-2">
-        <CardHeader title="Mes demandes" description="Réclamations, questions de paiement et demandes de remboursement." />
+        <CardHeader title="Mes demandes" />
         {tickets.length ? (
           <ul className="divide-y divide-line">
             {tickets.map((t) => (
@@ -246,11 +244,11 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
                 </div>
                 <p className="mt-0.5 text-xs text-muted"><span className="font-mono">{t.reference}</span> · {t.category} · {formatDateTime(t.createdAt)}</p>
                 <p className="mt-2 whitespace-pre-wrap text-ink-soft">{t.body}</p>
-                {t.resolution && <p className="mt-2 rounded-md bg-green-soft px-3 py-2 text-[13px] text-forest">Réponse de l&apos;équipe : {t.resolution}</p>}
+                {t.resolution && <p className="mt-2 rounded-md bg-green-soft px-3 py-2 text-[13px] text-forest">Réponse : {t.resolution}</p>}
               </li>
             ))}
           </ul>
-        ) : <EmptyState icon={<LifeBuoy />} title="Aucune demande" description="Un problème ? Écrivez-nous avec le formulaire." />}
+        ) : <EmptyState icon={<LifeBuoy />} title="Aucune demande" />}
       </Card>
       <div className="space-y-4">
         <Card>
@@ -258,9 +256,9 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
           <CardBody>
             <ActionForm action={createTicketAction} resetOnSuccess className="space-y-4">
               <Field label="Catégorie" htmlFor="t-cat"><Select id="t-cat" name="category" defaultValue="Campagne">{["Paiement", "Remboursement", "Campagne", "Compte", "Autre"].map((c) => <option key={c}>{c}</option>)}</Select></Field>
-              {campaigns.length > 0 && <Field label="Campagne concernée" htmlFor="t-camp" optional><Select id="t-camp" name="campaignId" defaultValue=""><option value="">Aucune</option>{campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>}
+              {campaigns.length > 0 && <Field label="Campagne" htmlFor="t-camp" optional><Select id="t-camp" name="campaignId" defaultValue=""><option value="">Aucune</option>{campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></Field>}
               <Field label="Objet" htmlFor="t-sub"><Input id="t-sub" name="subject" required minLength={5} maxLength={120} /><FieldError name="subject" /></Field>
-              <Field label="Votre message" htmlFor="t-body"><Textarea id="t-body" name="body" rows={5} required minLength={20} maxLength={3000} placeholder="Décrivez la situation. Pour un paiement, indiquez la référence de la commande." /><FieldError name="body" /></Field>
+              <Field label="Message" htmlFor="t-body"><Textarea id="t-body" name="body" rows={5} required minLength={20} maxLength={3000} placeholder="Pour un paiement, indiquez la référence." /><FieldError name="body" /></Field>
               <SubmitButton pendingLabel="Envoi…">Envoyer</SubmitButton>
             </ActionForm>
           </CardBody>
@@ -268,7 +266,7 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
         {(wa || email) && (
           <Card>
             <CardBody className="space-y-2 text-sm">
-              <p className="font-medium text-ink">Contact direct</p>
+              <p className="font-medium text-ink">Contact</p>
               {wa && <a href={wa} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-green hover:underline"><WhatsappIcon className="size-4" />WhatsApp {formatPhone(whatsapp)}</a>}
               {email && <a href={`mailto:${email}`} className="block text-green hover:underline">{email}</a>}
             </CardBody>

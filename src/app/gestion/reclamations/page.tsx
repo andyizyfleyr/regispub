@@ -26,7 +26,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
   const base = "/gestion/reclamations";
   return (
     <>
-      <PageHeader title="Réclamations" description="Demandes des clients : paiements, remboursements, campagnes, comptes." />
+      <PageHeader title="Réclamations" />
       <div className="mb-4"><FilterChips current={view} items={[{ id: "ouvertes", label: "À traiter", href: base }, { id: "closes", label: "Résolues", href: `${base}?vue=closes` }]} /></div>
       {tickets.length || selected ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
@@ -62,7 +62,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
             </Card>
           )}
         </div>
-      ) : <Card><EmptyState icon={<LifeBuoy />} title="Aucune réclamation" description="Les demandes envoyées par les clients apparaissent ici." /></Card>}
+      ) : <Card><EmptyState icon={<LifeBuoy />} title="Aucune réclamation" /></Card>}
     </>
   );
 }

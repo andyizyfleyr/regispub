@@ -30,7 +30,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <PageHeader title="Paiements" description="Transactions Mobile Money, vérifiées de serveur à serveur auprès du prestataire." />
+      <PageHeader title="Paiements" />
       {mode.mode === "simulation" && <Notice tone="warn" title="Mode simulation" className="mb-5">Le simulateur de paiement est actif : ces transactions ne correspondent à aucun encaissement réel.</Notice>}
       <TabsNav current={refundsView ? "remboursements" : "paiements"} tabs={[{ id: "paiements", label: "Transactions", href: base }, { id: "remboursements", label: "Remboursements", href: `${base}?vue=remboursements`, count: pendingRefunds || undefined }]} />
       {refundsView ? <Refunds canRefund={canRefund} /> : <Transactions sp={sp} canRefund={canRefund} canVerify={can(user.role, "payment.verify")} showFullPhone={canRefund} />}
@@ -89,7 +89,7 @@ async function Transactions({ sp, canRefund, canVerify, showFullPhone }: { sp: {
             </Table>
             <Pagination page={page} total={total} base={base} params={params} />
           </>
-        ) : <EmptyState icon={<CreditCard />} title="Aucun paiement" description="Aucune transaction ne correspond à ces critères." />}
+        ) : <EmptyState icon={<CreditCard />} title="Aucun paiement" />}
       </Card>
     </>
   );
@@ -120,7 +120,7 @@ async function Refunds({ canRefund }: { canRefund: boolean }) {
               </li>
             ))}
           </ul>
-        ) : <EmptyState icon={<Undo2 />} title="Aucun remboursement" description="Les remboursements se créent depuis une transaction confirmée." />}
+        ) : <EmptyState icon={<Undo2 />} title="Aucun remboursement" />}
       </Card>
     </>
   );

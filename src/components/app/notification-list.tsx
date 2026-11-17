@@ -35,7 +35,7 @@ export async function NotificationList({ userId, fallbackHref, embedded }: { use
             ))}
           </ul>
         </Card>
-      ) : <EmptyState icon={<Bell />} title="Aucune notification" description="Les confirmations de paiement, messages et changements de statut apparaîtront ici." />}
+      ) : <EmptyState icon={<Bell />} title="Aucune notification" />}
     </>
   );
 }

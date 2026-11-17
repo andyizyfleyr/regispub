@@ -78,13 +78,14 @@ export function Stat({ label, value, hint, icon, tone = "neutral", className }: 
 }
 
 /** Onglets en pastilles (liens) : l'onglet actif est porté par l'URL. */
-export function TabsNav({ tabs, current, className }: { tabs: { href: string; label: string; id: string; count?: number }[]; current: string; className?: string }) {
+export function TabsNav({ tabs, current, className }: { tabs: { href: string; label: string; id: string; count?: number; icon?: React.ReactNode }[]; current: string; className?: string }) {
   return (
     <div className={cn("scrollbar-none -mx-4 mb-6 overflow-x-auto px-4 sm:mx-0 sm:px-0", className)}>
       <nav className="inline-flex gap-1 rounded-full bg-sand p-1">
         {tabs.map((t) => (
           <Link key={t.id} href={t.href} scroll={false} aria-current={t.id === current ? "page" : undefined}
             className={cn("flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors", t.id === current ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>
+            {t.icon && <span aria-hidden className="[&_svg]:size-4">{t.icon}</span>}
             {t.label}
             {t.count ? <span className="tnum rounded-full bg-marigold px-1.5 text-[11px] font-semibold leading-5 text-forest">{t.count}</span> : null}
           </Link>

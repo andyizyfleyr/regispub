@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarPlus, Check, Copy, LoaderCircle, Sparkles, Trash2 } from "lucide-react";
+import { Binoculars, CalendarDays, CalendarPlus, Check, Copy, Hash, Lightbulb, LoaderCircle, MessageCircleQuestion, Sparkles, Stethoscope, Trash2, Type } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformBadge } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
+import { TILE_TONES, toneAt } from "@/components/ui/tile";
 import type { Advice, CalendarPlan, Captions, Competition, Diagnostic, Hashtags, Ideas } from "@/lib/ai/schemas";
 import type { PlatformCode } from "@/lib/catalog/platforms";
 import { cn, formatDay } from "@/lib/utils";
@@ -19,23 +20,25 @@ import { deleteCalendarEntryAction, runAssistantAction, saveCalendarAction, togg
 type Kind = "diagnostic" | "calendar" | "ideas" | "captions" | "hashtags" | "competition" | "advice";
 type FieldDef = { name: string; label: string; placeholder?: string; long?: boolean; options?: string[]; optional?: boolean };
 
+const TOOL_ICONS: Record<Kind, typeof Stethoscope> = { diagnostic: Stethoscope, calendar: CalendarDays, ideas: Lightbulb, captions: Type, hashtags: Hash, competition: Binoculars, advice: MessageCircleQuestion };
+
 const TOOLS: { kind: Kind; label: string; description: string; needsModel?: boolean; fields: FieldDef[] }[] = [
   { kind: "diagnostic", label: "Diagnostic", description: "Points forts, points faibles et priorités de votre présence en ligne.", fields: [
-    { name: "Objectif principal", label: "Votre objectif principal", options: ["Vendre plus", "Recevoir plus de messages", "Gagner des abonnés", "Me faire connaître", "Fidéliser mes clients"] },
+    { name: "Objectif principal", label: "Votre objectif", options: ["Vendre plus", "Recevoir plus de messages", "Gagner des abonnés", "Me faire connaître", "Fidéliser mes clients"] },
     { name: "Fréquence de publication", label: "Vous publiez", options: ["Rarement", "1 à 2 fois par semaine", "3 à 5 fois par semaine", "Tous les jours"] },
-    { name: "Difficultés", label: "Vos difficultés actuelles", long: true, optional: true, placeholder: "Peu de messages, pas le temps de publier…" },
+    { name: "Difficultés", label: "Vos difficultés", long: true, optional: true, placeholder: "Peu de messages, pas le temps de publier…" },
   ] },
   { kind: "calendar", label: "Calendrier", description: "Un planning de publications prêt à enregistrer.", fields: [
     { name: "Durée", label: "Période", options: ["7 jours", "14 jours", "30 jours"] },
     { name: "Rythme", label: "Rythme", options: ["3 publications par semaine", "5 publications par semaine", "1 publication par jour"] },
-    { name: "topic", label: "Thème ou produit à mettre en avant", optional: true, placeholder: "Nouvelle collection, promotion de fin de mois…" },
+    { name: "topic", label: "Thème ou produit", optional: true, placeholder: "Nouvelle collection, promotion de fin de mois…" },
   ] },
   { kind: "ideas", label: "Idées", description: "Des idées de publications et de vidéos courtes.", fields: [
     { name: "topic", label: "Produit, service ou thème", placeholder: "Pagnes tissés, livraison de repas…" },
     { name: "Format préféré", label: "Format", options: ["Tous les formats", "Vidéo courte", "Image", "Carrousel", "Story"] },
   ] },
   { kind: "captions", label: "Légendes", description: "Des textes prêts à publier.", fields: [
-    { name: "topic", label: "Sujet de la publication", placeholder: "Arrivage de sacs en cuir à 15 000 F" },
+    { name: "topic", label: "Sujet", placeholder: "Arrivage de sacs en cuir à 15 000 F" },
     { name: "Ton", label: "Ton", options: ["Chaleureux", "Professionnel", "Dynamique", "Humoristique"] },
     { name: "Plateforme", label: "Plateforme", options: ["Facebook", "Instagram", "TikTok"] },
   ] },
@@ -43,7 +46,7 @@ const TOOLS: { kind: Kind; label: string; description: string; needsModel?: bool
     { name: "topic", label: "Sujet", placeholder: "Coiffure afro à Cotonou" },
   ] },
   { kind: "competition", label: "Concurrence", needsModel: true, description: "Une lecture de ce que vous observez chez vos concurrents.", fields: [
-    { name: "Concurrents observés", label: "Décrivez vos concurrents et ce qu'ils publient", long: true, placeholder: "Noms, types de publications, prix, promotions, ce qui semble bien fonctionner…" },
+    { name: "Concurrents observés", label: "Vos concurrents", long: true, placeholder: "Noms, types de publications, prix, promotions, ce qui semble bien fonctionner…" },
   ] },
   { kind: "advice", label: "Conseil", needsModel: true, description: "Posez une question marketing précise.", fields: [
     { name: "Question", label: "Votre question", long: true, placeholder: "Comment relancer mes anciens clients sur WhatsApp sans les déranger ?" },
@@ -90,20 +93,29 @@ export function Assistant({ businesses, hasModel, entries, today }: { businesses
   }
 
   if (!businesses.length) {
-    return <Notice tone="info" title="Ajoutez d'abord votre entreprise">L&apos;assistant personnalise ses réponses à partir de votre activité, de votre secteur et de votre ville. <Link href="/app/compte?onglet=entreprises" className="font-medium underline">Ajouter mon entreprise</Link></Notice>;
+    return <Notice tone="info" title="Ajoutez d'abord votre entreprise"><Link href="/app/compte?onglet=entreprises" className="font-medium underline">Ajouter mon entreprise</Link></Notice>;
   }
 
   return (
     <div className="space-y-6">
       <div className="min-w-0 space-y-4">
-        <Field label="Que voulez-vous faire ?" htmlFor="as-tool">
-          <Select id="as-tool" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>{TOOLS.map((t) => <option key={t.kind} value={t.kind}>{t.label}</option>)}</Select>
-        </Field>
+        <div role="tablist" aria-label="Outils" className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+          {TOOLS.map((t, i) => {
+            const Icon = TOOL_ICONS[t.kind];
+            const on = t.kind === kind;
+            return (
+              <button key={t.kind} type="button" role="tab" aria-selected={on} title={t.description} onClick={() => setKind(t.kind)}
+                className={cn("flex flex-col items-center gap-1.5 rounded-xl border bg-surface px-1 py-3 text-center transition-[border-color,box-shadow,background-color]", on ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card hover:border-line-strong")}>
+                <span aria-hidden className={cn("flex size-9 items-center justify-center rounded-xl", TILE_TONES[toneAt(i)])}><Icon className="size-[18px]" /></span>
+                <span className="text-[12px] font-medium leading-tight text-ink">{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
         <Card>
           <CardBody>
-            <p className="mb-4 text-sm text-muted">{tool.description}</p>
             {locked ? (
-              <Notice tone="warn" title="Outil indisponible pour le moment">Cette analyse nécessite un modèle d&apos;IA, qui n&apos;est pas encore activé sur la plateforme. Les autres outils fonctionnent avec des suggestions guidées.</Notice>
+              <Notice tone="warn" title="Bientôt disponible">Cet outil n&apos;est pas encore activé.</Notice>
             ) : (
               <form onSubmit={run} className="space-y-4">
                 {businesses.length > 1 && (
@@ -137,7 +149,7 @@ export function Assistant({ businesses, hasModel, entries, today }: { businesses
                 const res = await saveCalendarAction(businessId || null, startDate, (result.data as CalendarPlan).entries);
                 if (!res.ok) toast.error(res.error); else { toast.success(`${res.data.count} publication(s) ajoutée(s) à votre calendrier.`); router.refresh(); }
               }} />
-              <p className="border-t border-line pt-3 text-xs text-muted">Propositions à relire et à adapter : elles reposent uniquement sur les informations que vous avez fournies et ne garantissent aucun résultat.</p>
+              <p className="border-t border-line pt-3 text-xs text-muted">Propositions à relire. Aucun résultat garanti.</p>
             </CardBody>
           </Card>
         ) : null}
@@ -193,7 +205,7 @@ function CalendarList({ entries }: { entries: Entry[] }) {
   if (!entries.length) return null;
   return (
     <Card>
-      <CardHeader title="Mon calendrier éditorial" description="Cochez les publications réalisées. La publication reste manuelle sur vos pages." />
+      <CardHeader title="Mon calendrier" description="Cochez ce qui est publié." />
       <ul className="divide-y divide-line">
         {entries.map((e) => (
           <li key={e.id} className="flex items-start gap-3 px-4 py-3 sm:px-5">

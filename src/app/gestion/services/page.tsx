@@ -24,7 +24,7 @@ export default async function ServicesPage() {
   const minFee = effectiveMinFee(settings);
   return (
     <>
-      <PageHeader title="Prestations et tarifs" description="Les frais de prestation s'ajoutent au budget publicitaire, qui n'est jamais inclus." actions={<ServiceDialog minFee={minFee} />} />
+      <PageHeader title="Prestations et tarifs" actions={<ServiceDialog minFee={minFee} />} />
       <Notice tone="info" className="mb-5" title={`Plancher : ${formatFcfa(minFee)}`}>Aucune prestation ne peut être facturée en dessous de ce montant, même après remise. Le plancher se règle dans les paramètres et ne descend jamais sous 10 000 F. Un changement de tarif ne modifie pas les commandes déjà passées.</Notice>
       <div className="space-y-6">
         {Object.entries(KINDS).map(([kind, meta]) => {

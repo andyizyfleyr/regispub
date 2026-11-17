@@ -4,7 +4,7 @@ import * as React from "react";
 import { useFormStatus } from "react-dom";
 import { ArrowRight, ChevronDown, LoaderCircle } from "lucide-react";
 import { ObjectiveIcon } from "@/components/icons";
-import { getObjective, OBJECTIVE_CATEGORIES, OBJECTIVES, type ObjectiveCategory } from "@/lib/catalog/objectives";
+import { getObjective, OBJECTIVE_CATEGORIES, OBJECTIVES, objectiveShort, type ObjectiveCategory } from "@/lib/catalog/objectives";
 import { SectionTitle } from "@/components/ui/list";
 import { TileBody, tileClass, toneAt, type TileTone } from "@/components/ui/tile";
 import { createCampaignAction } from "@/server/actions/campaigns";
@@ -23,8 +23,8 @@ export function ObjectiveShortcut({ code, tone = "green" }: { code: string; tone
   return (
     <li>
       <form action={createCampaignAction.bind(null, "SELF_SERVICE", o.code)} className="h-full">
-        <button type="submit" className={tileClass}>
-          <TileBody icon={<ObjectiveIcon name={o.icon} />} tone={tone} title={o.label} text={<span className="line-clamp-2">{o.description}</span>} hideTextOnMobile arrow={<span className="mt-1"><Arrow /></span>} />
+        <button type="submit" className={tileClass} title={o.label}>
+          <TileBody icon={<ObjectiveIcon name={o.icon} />} tone={tone} title={objectiveShort(o)} arrow={<span className="mt-1"><Arrow /></span>} />
         </button>
       </form>
     </li>
@@ -42,7 +42,7 @@ export function ObjectiveBrowser() {
   return (
     <div className="space-y-6">
       <section aria-labelledby="objectifs">
-        <SectionTitle id="objectifs">Les plus demandés</SectionTitle>
+        <SectionTitle id="objectifs">Populaires</SectionTitle>
         <ul className={GRID}>{POPULAR.map((code, i) => <ObjectiveShortcut key={code} code={code} tone={toneAt(i)} />)}</ul>
       </section>
       {all ? (
@@ -54,7 +54,7 @@ export function ObjectiveBrowser() {
         ))
       ) : (
         <button type="button" onClick={() => setAll(true)} className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-line-strong py-3.5 text-sm font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
-          Voir tous les objectifs<ChevronDown className="size-4" />
+          Tous les objectifs<ChevronDown className="size-4" />
         </button>
       )}
     </div>

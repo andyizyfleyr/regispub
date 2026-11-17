@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
-import { ArrowRight, Headset } from "lucide-react";
+import { ArrowRight, BadgeCheck, ClipboardList, Headset, Palette, Smartphone } from "lucide-react";
+import { WhatsappIcon } from "@/components/icons";
 import { CampaignRow } from "@/components/app/campaign-row";
 import { Button } from "@/components/ui/button";
 import { List, SectionTitle } from "@/components/ui/list";
-import { Banner, TILE_TONES, toneAt } from "@/components/ui/tile";
+import { Banner, StepTile, toneAt } from "@/components/ui/tile";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
-import { cn, formatFcfa } from "@/lib/utils";
+import { formatFcfa } from "@/lib/utils";
 import { createCampaignAction } from "@/server/actions/campaigns";
 
 export const metadata: Metadata = { title: "Confier ma publicité à un expert" };
 
 const STEPS = [
-  { title: "Vous décrivez", text: "Votre activité, votre objectif, votre budget. Cinq minutes suffisent." },
-  { title: "Vous payez", text: "Par Mobile Money. Budget et prestation affichés séparément." },
-  { title: "Nous préparons", text: "Textes, visuels, ciblage. Vous échangez avec lui par messagerie." },
-  { title: "Vous validez", text: "Nous lançons ensuite la campagne et suivons les résultats." },
+  { title: "Vous décrivez", icon: <ClipboardList /> },
+  { title: "Vous payez", icon: <Smartphone /> },
+  { title: "Nous préparons", icon: <Palette /> },
+  { title: "Vous validez", icon: <BadgeCheck /> },
 ];
 
 export default async function ExpertPage() {
@@ -30,28 +31,21 @@ export default async function ExpertPage() {
   return (
     <div className="animate-rise space-y-8">
       <Banner decoration={<Headset />}>
-        <h1 className="max-w-md text-[26px] font-semibold leading-tight text-white sm:text-[32px]">Confiez votre publicité à un expert</h1>
-        <p className="mt-2 max-w-md text-[15px] text-white/75">Vous décrivez votre besoin, notre équipe s&apos;occupe du reste. Rien n&apos;est diffusé sans votre accord.</p>
-        <form action={createCampaignAction.bind(null, "EXPERT", undefined)} className="mt-5"><Button type="submit" variant="accent" size="lg">Remplir mon brief<ArrowRight /></Button></form>
+        <h1 className="max-w-md text-[26px] font-semibold leading-tight text-white sm:text-[32px]">Un expert s&apos;en charge</h1>
+        <p className="mt-1.5 max-w-md text-[15px] text-white/75">Rien n&apos;est diffusé sans votre accord.</p>
+        <form action={createCampaignAction.bind(null, "EXPERT", undefined)} className="mt-5"><Button type="submit" variant="accent" size="lg">Commencer<ArrowRight /></Button></form>
       </Banner>
 
       {drafts.length > 0 && (
         <section aria-labelledby="briefs">
-          <SectionTitle id="briefs">Reprendre un brief</SectionTitle>
+          <SectionTitle id="briefs">Brouillons</SectionTitle>
           <List className="shadow-card">{drafts.map((c) => <li key={c.id}><CampaignRow c={c} /></li>)}</List>
         </section>
       )}
 
-      <section aria-labelledby="etapes">
-        <SectionTitle id="etapes">Comment ça se passe</SectionTitle>
+      <section aria-label="Étapes">
         <ol className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {STEPS.map((s, i) => (
-            <li key={s.title} className="rounded-xl border border-line bg-surface p-4 shadow-card">
-              <span className={cn("tnum flex size-9 items-center justify-center rounded-xl font-display text-base font-semibold", TILE_TONES[toneAt(i)])}>{i + 1}</span>
-              <span className="mt-3 block text-[15px] font-semibold leading-snug text-ink">{s.title}</span>
-              <span className="mt-1 block text-[13.5px] leading-snug text-muted">{s.text}</span>
-            </li>
-          ))}
+          {STEPS.map((s, i) => <StepTile key={s.title} n={i + 1} icon={s.icon} title={s.title} tone={toneAt(i)} />)}
         </ol>
       </section>
 
@@ -62,12 +56,11 @@ export default async function ExpertPage() {
             {services.map((s) => (
               <div key={s.id} className="rounded-xl border border-line bg-surface p-5 shadow-card">
                 <p className="text-[15px] font-semibold text-ink">{s.name}</p>
-                <p className="mt-2"><span className="tnum font-display text-[26px] font-semibold leading-none">{formatFcfa(s.fee)}</span><span className="ml-1.5 text-[13px] text-muted">par campagne</span></p>
-                <p className="mt-2 text-[13.5px] leading-snug text-muted">{s.description}</p>
+                <p className="mt-2"><span className="tnum font-display text-[26px] font-semibold leading-none">{formatFcfa(s.fee)}</span><span className="ml-1.5 text-[13px] text-muted">/ campagne</span></p>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-[13px] text-muted">Hors budget publicitaire, que vous fixez librement.{wa && <> Une question ? <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer" className="font-medium text-green hover:underline">Écrivez-nous sur WhatsApp</a>.</>}</p>
+          <p className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[13px] text-muted">Hors budget publicitaire.{wa && <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-medium text-green hover:underline"><WhatsappIcon className="size-4" />Une question ?</a>}</p>
         </section>
       )}
     </div>

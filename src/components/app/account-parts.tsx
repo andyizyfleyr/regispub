@@ -20,8 +20,8 @@ export function BusinessDialog({ business }: { business?: BusinessData }) {
   const b = business;
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{b ? <Button variant="ghost" size="sm"><Pencil />Modifier</Button> : <Button size="sm"><Plus />Ajouter une entreprise</Button>}</DialogTrigger>
-      <DialogContent title={b ? "Modifier l'entreprise" : "Nouvelle entreprise"} description="Ces informations servent à préparer vos campagnes et à personnaliser l'assistant.">
+      <DialogTrigger asChild>{b ? <Button variant="ghost" size="sm"><Pencil />Modifier</Button> : <Button size="sm"><Plus />Ajouter</Button>}</DialogTrigger>
+      <DialogContent title={b ? "Modifier l'entreprise" : "Nouvelle entreprise"}>
         <ActionForm action={saveBusinessAction} onSuccess={() => setOpen(false)} className="space-y-4">
           {b && <input type="hidden" name="id" value={b.id} />}
           <div className="space-y-4">
@@ -32,7 +32,7 @@ export function BusinessDialog({ business }: { business?: BusinessData }) {
           </div>
           <Field label="Description" htmlFor="b-desc" optional><Textarea id="b-desc" name="description" rows={3} maxLength={1000} defaultValue={b?.description ?? ""} placeholder="Ce que vous vendez, à qui, ce qui vous distingue." /></Field>
           <div className="space-y-4">
-            <Field label="WhatsApp professionnel" htmlFor="b-wa" optional><Input id="b-wa" name="whatsapp" type="tel" inputMode="tel" defaultValue={b?.whatsapp ?? ""} placeholder="01 97 00 00 00" /><FieldError name="whatsapp" /></Field>
+            <Field label="WhatsApp" htmlFor="b-wa" optional><Input id="b-wa" name="whatsapp" type="tel" inputMode="tel" defaultValue={b?.whatsapp ?? ""} placeholder="01 97 00 00 00" /><FieldError name="whatsapp" /></Field>
             <Field label="Site web" htmlFor="b-web" optional><Input id="b-web" name="website" type="url" defaultValue={b?.website ?? ""} placeholder="https://" /><FieldError name="website" /></Field>
             <Field label="Page Facebook" htmlFor="b-fb" optional><Input id="b-fb" name="facebookUrl" type="url" defaultValue={b?.facebookUrl ?? ""} placeholder="https://facebook.com/…" /><FieldError name="facebookUrl" /></Field>
             <Field label="Compte Instagram" htmlFor="b-ig" optional><Input id="b-ig" name="instagramUrl" type="url" defaultValue={b?.instagramUrl ?? ""} placeholder="https://instagram.com/…" /><FieldError name="instagramUrl" /></Field>

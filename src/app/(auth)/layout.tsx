@@ -13,11 +13,11 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       <aside className="relative hidden flex-col justify-between bg-forest p-12 text-white lg:flex">
         <Link href="/"><Logo light /></Link>
         <div className="max-w-md">
-          <p className="font-display text-[34px] font-semibold leading-[1.1]">La publicité en ligne, enfin accessible sans carte bancaire.</p>
+          <p className="font-display text-[34px] font-semibold leading-[1.1]">La publicité en ligne, sans carte bancaire.</p>
           <ul className="mt-10 space-y-5 text-[15px] text-white/80">
-            <li className="flex gap-3"><Smartphone className="mt-0.5 size-5 shrink-0 text-marigold" />Paiement par MTN Mobile Money, Moov Money ou Celtiis Cash.</li>
-            <li className="flex gap-3"><Users className="mt-0.5 size-5 shrink-0 text-marigold" />Une équipe qui prépare, lance et suit vos campagnes.</li>
-            <li className="flex gap-3"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-marigold" />Budget publicitaire et frais de service toujours affichés séparément.</li>
+            <li className="flex gap-3"><Smartphone className="mt-0.5 size-5 shrink-0 text-marigold" />Payez par Mobile Money</li>
+            <li className="flex gap-3"><Users className="mt-0.5 size-5 shrink-0 text-marigold" />Une équipe lance votre campagne</li>
+            <li className="flex gap-3"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-marigold" />Prix affichés avant de payer</li>
           </ul>
         </div>
         <p className="text-sm text-white/50">Cotonou, Bénin</p>

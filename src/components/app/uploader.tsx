@@ -45,7 +45,7 @@ type UploadResponse = { asset?: UploadedAsset; error?: string; code?: string } |
 /** Message d'échec : celui du serveur avec sa référence, sinon le code de réponse (page d'erreur de l'hébergeur, coupure…). */
 const failure = (res: Response, json: UploadResponse) =>
   json?.error ? (json.code ? `${json.error} (réf. ${json.code})` : json.error) : `L'envoi a échoué (réponse ${res.status} du serveur). Réessayez.`;
-const NETWORK_ERROR = "Connexion interrompue pendant l'envoi. Vérifiez votre réseau et réessayez.";
+const NETWORK_ERROR = "Connexion interrompue. Réessayez.";
 
 async function postJson(body: unknown) {
   let res: Response;
@@ -111,8 +111,8 @@ export function Uploader({ accept = "media", multiple = true, onUploaded, label,
     >
       <input ref={input} type="file" className="sr-only" accept={ACCEPT[accept]} multiple={multiple} onChange={(e) => void handle(e.target.files)} disabled={busy > 0} />
       {busy > 0 ? <LoaderCircle className="size-5 animate-spin text-green" /> : <Upload className="size-5 text-muted" />}
-      <span className="text-sm font-medium text-ink">{busy > 0 ? "Envoi en cours…" : label ?? "Importer des fichiers"}</span>
-      <span className="text-xs text-muted">{hint ?? "Images JPG, PNG ou WebP · Vidéos MP4 ou MOV (60 Mo)"}</span>
+      <span className="text-sm font-medium text-ink">{busy > 0 ? "Envoi…" : label ?? "Importer"}</span>
+      <span className="text-xs text-muted">{hint ?? "Photo ou vidéo · 60 Mo max"}</span>
     </label>
   );
 }

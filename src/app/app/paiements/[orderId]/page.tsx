@@ -44,7 +44,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
   const paidPayment = order.payments.find((p) => p.status === "SUCCEEDED" && !p.duplicate);
   const last = order.payments[0];
   const lastFailure = last && ["FAILED", "CANCELLED", "EXPIRED"].includes(last.status)
-    ? last.failureReason ?? (last.status === "EXPIRED" ? "La demande a expiré sans validation sur votre téléphone." : last.status === "CANCELLED" ? "La demande a été annulée." : "Le paiement a été refusé par l'opérateur.")
+    ? last.failureReason ?? (last.status === "EXPIRED" ? "Demande expirée sans validation." : last.status === "CANCELLED" ? "La demande a été annulée." : "Paiement refusé par l'opérateur.")
     : null;
   const isPaid = order.status === "PAID" || order.status === "PARTIALLY_REFUNDED" || order.status === "REFUNDED";
   const title = order.campaign?.name ?? order.serviceLabel;
@@ -58,14 +58,13 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
           {isPaid && (
             <div className="rounded-lg border border-green/25 bg-green-soft p-6">
               <CircleCheck className="size-8 text-green" />
-              <h2 className="mt-3 text-xl font-semibold">Merci, votre paiement est confirmé</h2>
-              <p className="mt-1.5 text-sm text-ink-soft">
-                {formatFcfa(order.total)} reçus le {order.paidAt ? formatDateTime(order.paidAt) : ""}{paidPayment ? ` depuis le ${maskPhone(paidPayment.phone)}` : ""}.
-                {order.campaign ? " Un gestionnaire prend votre campagne en charge ; vous serez prévenu à chaque étape." : " Votre accompagnement est actif."}
+              <h2 className="mt-3 text-xl font-semibold">Merci !</h2>
+              <p className="tnum mt-1.5 text-sm text-ink-soft">
+                {formatFcfa(order.total)} reçus{order.paidAt ? ` le ${formatDateTime(order.paidAt)}` : ""}{paidPayment ? ` · ${maskPhone(paidPayment.phone)}` : ""}.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <Button asChild><a href={`/api/receipts/${order.id}`} target="_blank" rel="noreferrer"><Download />Télécharger le reçu</a></Button>
-                {order.campaign && <Button asChild variant="outline"><Link href={`/app/campagnes/${order.campaign.id}`}>Suivre ma campagne <ArrowRight /></Link></Button>}
+                <Button asChild><a href={`/api/receipts/${order.id}`} target="_blank" rel="noreferrer"><Download />Reçu</a></Button>
+                {order.campaign && <Button asChild variant="outline"><Link href={`/app/campagnes/${order.campaign.id}`}>Ma campagne <ArrowRight /></Link></Button>}
               </div>
             </div>
           )}
@@ -78,7 +77,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
               {order.invoiceNumber && <p className="mt-4 text-xs text-muted">Reçu n° <span className="font-mono">{order.invoiceNumber}</span></p>}
             </CardBody>
           </Card>
-          {order.status === "PENDING" && order.campaign && <p className="mt-2.5 text-[13px] text-muted">Une erreur ? <Link href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}?etape=4`} className="font-medium text-green hover:underline">Modifier la campagne</Link></p>}
+          {order.status === "PENDING" && order.campaign && <p className="mt-2.5 text-[13px] text-muted"><Link href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}?etape=4`} className="font-medium text-green hover:underline">Modifier la campagne</Link></p>}
         </section>
 
           {order.status === "PENDING" && (
@@ -86,12 +85,12 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
               <Checkout orderId={order.id} total={order.total} operators={mode.operators} defaultPhone={user.phone?.startsWith("+229") ? formatPhone(user.phone).replace(/^\+229\s?/, "") : ""}
                 simulation={mode.mode === "simulation"} promoCode={order.promoCode?.code ?? null} canCancel={!open} lastFailure={lastFailure}
                 open={open ? { id: open.id, operator: open.operator as OperatorCode, phone: open.phone, expiresAt: open.expiresAt.toISOString(), redirectUrl: open.redirectUrl } : null} />
-            ) : <Notice tone="danger" title="Paiement indisponible">Le paiement Mobile Money n&apos;est pas encore activé sur cette plateforme. Votre commande est conservée ; contactez le support pour la régler.</Notice>
+            ) : <Notice tone="danger" title="Paiement indisponible">Votre commande est conservée. Contactez le support.</Notice>
           )}
 
           {(order.status === "CANCELLED" || order.status === "EXPIRED") && (
-            <Notice tone="info" title="Cette commande n'est plus payable">
-              {order.campaign && order.campaign.status === "DRAFT" ? <>Vous pouvez reprendre la campagne et repasser commande. <Link className="font-medium underline" href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}`}>Reprendre</Link></> : "Créez une nouvelle campagne pour passer une nouvelle commande."}
+            <Notice tone="info" title="Commande expirée">
+              {order.campaign && order.campaign.status === "DRAFT" ? <><Link className="font-medium underline" href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}`}>Reprendre la campagne</Link></> : "Créez une nouvelle campagne."}
             </Notice>
           )}
 
@@ -112,7 +111,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
           {order.payments.length > 0 && (
             <details className="group rounded-lg border border-line bg-surface">
               <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">
-                Tentatives de paiement<span className="tnum text-[13px] font-normal text-muted">{order.payments.length}</span>
+                Tentatives<span className="tnum text-[13px] font-normal text-muted">{order.payments.length}</span>
               </summary>
               <ul className="divide-y divide-line border-t border-line">
                 {order.payments.map((p) => (

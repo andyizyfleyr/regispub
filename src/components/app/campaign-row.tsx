@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { PlatformStack } from "@/components/icons";
 import { CampaignStatusBadge } from "@/components/ui/badge";
-import { getObjective } from "@/lib/catalog/objectives";
+import { getObjective, objectiveShort } from "@/lib/catalog/objectives";
 import type { PlatformCode } from "@/lib/catalog/platforms";
 import { formatFcfa, formatPureDate } from "@/lib/utils";
 
@@ -26,7 +26,7 @@ export function CampaignRow({ c, base = "/app", extra }: { c: CampaignRowData; b
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-ink">{c.name}</p>
         <p className="truncate text-[13.5px] text-muted">
-          {objective?.label ?? "Objectif à définir"}
+          {objective ? objectiveShort(objective) : "Objectif à définir"}
           {c.adBudget > 0 && <> · <span className="tnum">{formatFcfa(c.adBudget)}</span></>}
           {c.startDate && <span className="hidden sm:inline"> · {formatPureDate(c.startDate)}{c.endDate ? ` → ${formatPureDate(c.endDate)}` : ""}</span>}
         </p>

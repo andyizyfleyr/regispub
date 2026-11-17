@@ -41,7 +41,7 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title={`Bonjour ${user.name.split(" ")[0]}`} description="Vue d'ensemble de l'activité à traiter." />
+      <PageHeader title={`Bonjour ${user.name.split(" ")[0]}`} />
       {refus && <Notice tone="danger" title="Accès refusé" className="mb-5">Votre rôle ne donne pas accès à cette page.</Notice>}
       {issues.map((i) => <Notice key={i.name} tone="warn" title={i.name} className="mb-5">{i.detail} <Link href="/gestion/integrations" className="font-medium underline">Voir les intégrations</Link></Notice>)}
 
@@ -62,12 +62,12 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         <Card>
-          <CardHeader title="Campagnes à faire avancer" description="Les plus anciennes d'abord." action={<Link href="/gestion/campagnes" className="flex items-center gap-1 text-[13px] font-medium text-green hover:underline">Tout voir <ArrowRight className="size-3.5" /></Link>} />
+          <CardHeader title="Campagnes à faire avancer" action={<Link href="/gestion/campagnes" className="flex items-center gap-1 text-[13px] font-medium text-green hover:underline">Tout voir <ArrowRight className="size-3.5" /></Link>} />
           {todo.length ? (
             <div className="divide-y divide-line">
               {todo.map((c) => <CampaignRow key={c.id} c={c} base="/gestion" extra={<span className="text-xs text-muted">{c.user.name} · {c.manager ? c.manager.name : "non attribuée"}</span>} />)}
             </div>
-          ) : <EmptyState icon={<CircleCheck />} title="Rien en attente" description="Aucune campagne ne demande d'action pour le moment." />}
+          ) : <EmptyState icon={<CircleCheck />} title="Rien en attente" />}
         </Card>
         {seeMoney && (
           <Card className="self-start">

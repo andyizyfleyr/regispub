@@ -41,9 +41,9 @@ export function MetricsView({ report, kpis, adBudget, staff }: { report: Campaig
   if (!report.totals.days) {
     return (
       <Card>
-        <EmptyState icon={<BarChart3 />} title="Pas encore de statistiques" description={staff
+        <EmptyState icon={<BarChart3 />} title="Pas encore de résultats" description={staff
           ? "Importez un export CSV du gestionnaire de publicités ou synchronisez la campagne. Les chiffres ne sont visibles du client qu'après validation."
-          : "Les résultats apparaissent ici dès que votre gestionnaire a validé les premiers chiffres de diffusion. Aucun chiffre n'est estimé."} />
+          : "Ils s'affichent dès les premiers chiffres validés."} />
       </Card>
     );
   }
@@ -59,7 +59,7 @@ export function MetricsView({ report, kpis, adBudget, staff }: { report: Campaig
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {primary.map((k, i) => { const Icon = METRIC_ICONS[k]; return <StatTile key={k} label={METRIC_LABELS[k]} value={metricValue(k, report)} hint={HINTS[k]} icon={<Icon />} tone={toneAt(i)} />; })}
+        {primary.map((k, i) => { const Icon = METRIC_ICONS[k]; return <StatTile key={k} label={METRIC_LABELS[k]} value={metricValue(k, report)} hint={staff ? HINTS[k] : undefined} icon={<Icon />} tone={toneAt(i)} />; })}
       </div>
       <div className="rounded-xl border border-line bg-surface p-4 shadow-card sm:p-5">
         <div className="flex items-baseline justify-between gap-3">
@@ -71,12 +71,11 @@ export function MetricsView({ report, kpis, adBudget, staff }: { report: Campaig
             <div className="h-full rounded-full bg-gradient-to-r from-green to-mint" style={{ width: `${spentShare * 100}%` }} />
           </div>
         )}
-        <p className="mt-2 text-xs text-muted">Hors frais de prestation.</p>
       </div>
 
       {series.length > 0 && report.daily.length > 1 && (
         <Card>
-          <CardHeader title="Évolution quotidienne" description={`Du ${formatPureDate(report.firstDate!)} au ${formatPureDate(report.lastDate!)}`} />
+          <CardHeader title="Par jour" description={`Du ${formatPureDate(report.firstDate!)} au ${formatPureDate(report.lastDate!)}`} />
           <CardBody><MetricsChart data={report.daily.map((d) => ({ ...d }))} series={series} /></CardBody>
         </Card>
       )}
@@ -84,7 +83,7 @@ export function MetricsView({ report, kpis, adBudget, staff }: { report: Campaig
       <details className="group rounded-lg border border-line bg-surface" open={staff || undefined}>
         <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">Tous les indicateurs<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
         <Figures bare className="border-t border-line" items={secondary.filter((k) => k !== "spend").map((k) => ({ label: METRIC_LABELS[k], hint: HINTS[k], value: metricValue(k, report) }))} />
-        {report.derived.roi === null && <p className="border-t border-line px-4 py-3 text-xs text-muted sm:px-5">Le retour sur investissement n&apos;est calculé que si le chiffre d&apos;affaires généré a été communiqué à votre gestionnaire.</p>}
+        {report.derived.roi === null && <p className="border-t border-line px-4 py-3 text-xs text-muted sm:px-5">Retour sur investissement : communiquez votre chiffre d&apos;affaires à votre gestionnaire.</p>}
       </details>
 
       {perPlatform && !staff && (

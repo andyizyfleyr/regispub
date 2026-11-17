@@ -20,10 +20,10 @@ export function CampaignActions({ id, canCancel, canRevise }: { id: string; canC
     <div className="flex flex-wrap gap-2">
       {canRevise && (
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button variant="outline" size="sm"><PenLine />Demander une modification</Button></DialogTrigger>
-          <DialogContent title="Demander une modification" description="Budget, ciblage, texte, visuel, dates… Votre gestionnaire vous répond avant d'appliquer le changement.">
-            <Textarea rows={5} maxLength={1500} value={text} onChange={(e) => setText(e.target.value)} placeholder="Décrivez précisément ce que vous souhaitez changer." aria-label="Modification souhaitée" />
-            <p className="mt-2 text-xs text-muted">Une modification du budget publicitaire peut entraîner un complément de paiement ou un remboursement partiel, traité par notre équipe.</p>
+          <DialogTrigger asChild><Button variant="outline" size="sm"><PenLine />Modifier</Button></DialogTrigger>
+          <DialogContent title="Demander une modification">
+            <Textarea rows={5} maxLength={1500} value={text} onChange={(e) => setText(e.target.value)} placeholder="Que faut-il changer ?" aria-label="Modification souhaitée" />
+            <p className="mt-2 text-xs text-muted">Changer le budget peut entraîner un complément ou un remboursement.</p>
             <div className="mt-4 flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setOpen(false)}>Fermer</Button>
               <Button disabled={busy || text.trim().length < 10} onClick={async () => {
@@ -31,9 +31,9 @@ export function CampaignActions({ id, canCancel, canRevise }: { id: string; canC
                 const res = await requestRevisionAction(id, text);
                 setBusy(false);
                 if (!res.ok) { toast.error(res.error); return; }
-                toast.success("Demande envoyée à votre gestionnaire.");
+                toast.success("Demande envoyée.");
                 setText(""); setOpen(false); router.refresh();
-              }}>{busy ? "Envoi…" : "Envoyer la demande"}</Button>
+              }}>{busy ? "Envoi…" : "Envoyer"}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -76,7 +76,7 @@ export function CreativeReview({ items }: { items: ReviewItem[] }) {
           <div className="min-w-0 flex-1 space-y-2.5">
             <div>
               <p className="truncate text-sm font-medium" title={it.name}>{it.name}</p>
-              <div className="mt-1">{it.approval !== "NOT_REQUIRED" ? <StateBadge kind="approval" value={it.approval} /> : <span className="text-[13px] text-muted">{it.byTeam ? "Préparé par notre équipe" : "Fourni par vous"}</span>}</div>
+              <div className="mt-1">{it.approval !== "NOT_REQUIRED" ? <StateBadge kind="approval" value={it.approval} /> : <span className="text-[13px] text-muted">{it.byTeam ? "Par notre équipe" : "Par vous"}</span>}</div>
             </div>
             {it.feedback && <p className="rounded-md bg-sand px-3 py-2 text-[13px] text-ink-soft"><MessageSquareWarning className="mr-1.5 inline size-3.5" />{it.feedback}</p>}
             {it.approval === "PENDING" && (editing === it.linkId ? (
@@ -101,5 +101,5 @@ export function CreativeReview({ items }: { items: ReviewItem[] }) {
 }
 
 export function PrintButton() {
-  return <Button className="no-print" variant="outline" size="sm" onClick={() => window.print()}><Printer />Imprimer ou enregistrer en PDF</Button>;
+  return <Button className="no-print" variant="outline" size="sm" onClick={() => window.print()}><Printer />Imprimer / PDF</Button>;
 }

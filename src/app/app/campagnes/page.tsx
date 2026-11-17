@@ -32,13 +32,13 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Pr
   const tabs = Object.entries(FILTERS).filter(([id, f]) => id === "toutes" || id === current || countFor(f.statuses) > 0).map(([id, f]) => ({ id, label: f.label, href: `/app/campagnes?etat=${id}` }));
   return (
     <>
-      <PageHeader title="Mes campagnes" actions={<Button asChild variant="accent"><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer une publicité</Link></Button>} />
-      {sp.limite && <Notice tone="warn" className="mb-4">Vous avez atteint le nombre maximal de brouillons. Terminez ou supprimez un brouillon avant d&apos;en créer un nouveau.</Notice>}
+      <PageHeader title="Mes campagnes" actions={<Button asChild variant="accent"><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer</Link></Button>} />
+      {sp.limite && <Notice tone="warn" className="mb-4">Trop de brouillons. Terminez-en un ou supprimez-le.</Notice>}
       {tabs.length > 2 && <TabsNav current={current} tabs={tabs} className="mb-4" />}
       {campaigns.length ? (
         <List>{campaigns.map((c) => <li key={c.id}><CampaignRow c={c} /></li>)}</List>
       ) : (
-        <EmptyState icon={<Megaphone />} title={current === "toutes" ? "Aucune campagne pour l'instant" : "Aucune campagne dans cette catégorie"} description="Créez une publicité vous-même ou confiez-la à un expert." action={<Button asChild><Link href="/app/creer">Créer ma publicité</Link></Button>} />
+        <EmptyState icon={<Megaphone />} title={current === "toutes" ? "Aucune campagne" : "Rien ici"} action={<Button asChild><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer</Link></Button>} />
       )}
     </>
   );

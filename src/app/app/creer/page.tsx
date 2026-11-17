@@ -22,11 +22,11 @@ export default async function CreatePage() {
   const managementFee = services.length ? Math.min(...services.map((s) => s.fee)) : null;
   return (
     <div className="space-y-8">
-      <PageHeader title="Que voulez-vous obtenir ?" description="Choisissez un objectif. La suite se fait en quatre étapes." />
+      <PageHeader title="Que voulez-vous obtenir ?" />
 
       {drafts.length > 0 && (
         <section aria-labelledby="brouillons">
-          <SectionTitle id="brouillons">Reprendre un brouillon</SectionTitle>
+          <SectionTitle id="brouillons">Brouillons</SectionTitle>
           <List>{drafts.map((c) => <li key={c.id}><CampaignRow c={c} /></li>)}</List>
         </section>
       )}
@@ -34,9 +34,13 @@ export default async function CreatePage() {
       <ObjectiveBrowser />
 
       <Banner decoration={<Headset />} className="sm:py-7">
-        <h2 className="text-xl font-semibold text-white">Vous préférez déléguer ?</h2>
-        <p className="mt-1.5 max-w-md text-[15px] text-white/75">Un gestionnaire prépare textes, visuels et ciblage.{managementFee ? <span className="tnum"> Dès {formatFcfa(managementFee)}.</span> : null}</p>
-        <Button asChild variant="accent" className="mt-4"><Link href="/app/expert">Confier à un expert<ArrowRight /></Link></Button>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-white">Vous préférez déléguer ?</h2>
+            {managementFee ? <p className="tnum mt-1 text-[15px] text-white/75">Dès {formatFcfa(managementFee)}</p> : null}
+          </div>
+          <Button asChild variant="accent"><Link href="/app/expert"><Headset />Un expert<ArrowRight /></Link></Button>
+        </div>
       </Banner>
     </div>
   );

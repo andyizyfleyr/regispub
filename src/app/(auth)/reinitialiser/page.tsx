@@ -15,7 +15,7 @@ export default async function ResetPage({ searchParams }: { searchParams: Promis
       <h1 className="text-[28px] font-semibold">Nouveau mot de passe</h1>
       <ActionForm action={resetPasswordAction} className="mt-7 space-y-4" refresh={false}>
         <input type="hidden" name="token" value={jeton} />
-        <Field label="Nouveau mot de passe" htmlFor="password" hint="8 caractères minimum, avec une lettre et un chiffre."><Input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" /></Field>
+        <Field label="Nouveau mot de passe" htmlFor="password" hint="8 caractères, une lettre et un chiffre."><Input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" /></Field>
         <SubmitButton size="lg" className="w-full">Enregistrer</SubmitButton>
       </ActionForm>
     </>

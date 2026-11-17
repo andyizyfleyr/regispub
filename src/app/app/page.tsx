@@ -28,31 +28,30 @@ export default async function DashboardPage() {
   const hasCampaigns = campaigns.length > 0;
   const firstName = user.name.split(" ")[0];
   const lead = !hasCampaigns
-    ? "Choisissez la façon de faire qui vous convient."
+    ? "Lancez votre première publicité."
     : todo.length
-      ? `${todo.length} action${todo.length > 1 ? "s" : ""} vous attend${todo.length > 1 ? "ent" : ""}.`
+      ? `${todo.length} action${todo.length > 1 ? "s" : ""} à faire`
       : active
-        ? `${active} campagne${active > 1 ? "s" : ""} en cours. Rien à faire pour le moment.`
-        : "Aucune campagne en cours.";
+        ? `${active} campagne${active > 1 ? "s" : ""} en cours`
+        : "Aucune campagne en cours";
 
   return (
     <div className="animate-rise space-y-8">
       <Banner decoration={<Megaphone />}>
-        <p className="text-sm text-white/70">Bonjour {firstName}</p>
-        <h1 className="mt-1 max-w-md text-[26px] font-semibold leading-tight text-white sm:text-[32px]">{hasCampaigns ? "Prêt pour votre prochaine publicité ?" : "Lancez votre première publicité"}</h1>
-        <p className="mt-2 text-[15px] text-white/75">{lead}</p>
+        <h1 className="max-w-md text-[26px] font-semibold leading-tight text-white sm:text-[32px]">Bonjour {firstName}</h1>
+        <p className="mt-1.5 text-[15px] text-white/75">{lead}</p>
         {hasCampaigns && (
           <div className="mt-5 flex flex-wrap gap-2.5">
-            <Button asChild variant="accent" size="lg"><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer une publicité</Link></Button>
-            <Button asChild variant="outline" size="lg" className="border-white/25 bg-white/10 text-white hover:border-white/50 hover:bg-white/15"><Link href="/app/expert"><Headset />Confier à un expert</Link></Button>
+            <Button asChild variant="accent" size="lg"><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer</Link></Button>
+            <Button asChild variant="outline" size="lg" className="border-white/25 bg-white/10 text-white hover:border-white/50 hover:bg-white/15"><Link href="/app/expert"><Headset />Un expert</Link></Button>
           </div>
         )}
       </Banner>
 
       {!hasCampaigns && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Tile href="/app/creer" icon={<Plus strokeWidth={2.4} />} tone="marigold" title="Je crée ma publicité" text="Quatre étapes, quelques minutes. Nous proposons le texte et l'audience." />
-          <Tile href="/app/expert" icon={<Headset />} tone="green" title="Je confie ma publicité à un expert" text="Vous décrivez votre besoin, un gestionnaire prépare tout." />
+        <div className="grid grid-cols-2 gap-3">
+          <Tile href="/app/creer" icon={<Plus strokeWidth={2.4} />} tone="marigold" title="Je crée moi-même" />
+          <Tile href="/app/expert" icon={<Headset />} tone="green" title="Un expert s'en charge" />
         </div>
       )}
 
@@ -64,7 +63,7 @@ export default async function DashboardPage() {
               const status = c.status as CampaignStatusName;
               const meta = TODO_META[status]!;
               const href = status === "PENDING_PAYMENT" && c.orders[0] ? `/app/paiements/${c.orders[0].id}` : status === "CLIENT_REVIEW" ? `/app/campagnes/${c.id}?onglet=creations` : `/app/campagnes/${c.id}?onglet=messages`;
-              return <ListRow key={c.id} href={href} icon={<meta.icon />} tone="marigold" title={c.name} subtitle={STATUS_META[status].clientHint} className="hover:bg-marigold-soft/70"
+              return <ListRow key={c.id} href={href} icon={<meta.icon />} tone="marigold" title={c.name} subtitle={STATUS_META[status].label} className="hover:bg-marigold-soft/70"
                 trailing={<span className="rounded-full bg-forest px-3 py-1.5 text-[13px] font-medium text-white">{meta.cta}</span>} chevron={false} />;
             })}
           </List>

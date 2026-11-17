@@ -20,7 +20,7 @@ export default async function PromosPage({ searchParams }: { searchParams: Promi
   const now = new Date();
   return (
     <>
-      <PageHeader title="Codes promotionnels" description="Les remises portent uniquement sur les frais de prestation, jamais sur le budget publicitaire." />
+      <PageHeader title="Codes promotionnels" />
       <div className="mb-4"><FilterChips current={personal ? "bons" : "codes"} items={[{ id: "codes", label: "Codes de campagne", href: "/gestion/promos" }, { id: "bons", label: "Bons fidélité et parrainage", href: "/gestion/promos?vue=bons" }]} /></div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Card className="min-w-0 self-start">

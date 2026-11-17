@@ -1,8 +1,8 @@
 import { cn, formatFcfa } from "@/lib/utils";
 import type { QuoteLine } from "@/lib/pricing/quote";
 
-const LABELS: Record<QuoteLine["kind"], string> = { AD_BUDGET: "Budget publicitaire", SERVICE_FEE: "Frais de prestation", EXTRA_PLATFORM: "Plateforme supplémentaire", DISCOUNT: "Remise", PAYMENT_FEE: "Frais de paiement" };
-const HINTS: Partial<Record<QuoteLine["kind"], string>> = { AD_BUDGET: "Reversé en totalité aux plateformes publicitaires", SERVICE_FEE: "Rémunère notre travail", PAYMENT_FEE: "Prélevés par l'opérateur Mobile Money" };
+const LABELS: Record<QuoteLine["kind"], string> = { AD_BUDGET: "Budget publicitaire", SERVICE_FEE: "Prestation", EXTRA_PLATFORM: "Plateforme en plus", DISCOUNT: "Remise", PAYMENT_FEE: "Frais de paiement" };
+const HINTS: Partial<Record<QuoteLine["kind"], string>> = { AD_BUDGET: "100 % investi en publicité" };
 
 /** Détail d'un devis : budget publicitaire, frais de prestation, frais de paiement et total, toujours séparés. */
 export function QuoteLines({ lines, total, className, totalLabel = "Total à payer" }: { lines: QuoteLine[]; total: number; className?: string; totalLabel?: string }) {

@@ -16,7 +16,7 @@ export default async function IntegrationsPage() {
   const areas = Array.from(new Set(items.map((i) => i.area)));
   return (
     <>
-      <PageHeader title="Intégrations" description="État réel de chaque service externe, lu depuis la configuration du serveur." />
+      <PageHeader title="Intégrations" />
       <Notice tone="info" className="mb-5" title="Lecture de cette page">
         « Opérationnel » : configuré et utilisé. « Simulation » : aucun échange réel. « À configurer » : le code est prêt, il manque des clés. « Autorisation requise » : dépend d&apos;une validation de Meta, TikTok ou WhatsApp sur vos comptes. « En attente » : non proposé pour l&apos;instant. Les clés se définissent dans les variables d&apos;environnement de l&apos;hébergement, jamais dans cette interface.
       </Notice>
@@ -39,7 +39,7 @@ export default async function IntegrationsPage() {
           </Card>
         ))}
         <Card>
-          <CardHeader title="Points d'entrée techniques" description="À déclarer chez les prestataires." />
+          <CardHeader title="Points d'entrée techniques" />
           <dl className="divide-y divide-line text-sm">
             {[
               ["Webhook FedaPay", `${env.appUrl}/api/webhooks/payments/fedapay`],

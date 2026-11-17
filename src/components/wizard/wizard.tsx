@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleCheck, ImagePlus, LoaderCircle, Trash2, WandSparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleCheck, Eye, Heart, ImageIcon, ImagePlus, Lightbulb, ListChecks, LoaderCircle, MapPin, Megaphone, Pencil, Share2, SlidersHorizontal, Sparkles, Store, Tag, Target, Trash2, Type, Users, Wallet, WandSparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdPreview } from "@/components/app/ad-preview";
 import { AssetThumb, Uploader } from "@/components/app/uploader";
@@ -10,10 +10,9 @@ import { PlatformIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
-import { Figures } from "@/components/ui/list";
 import { Notice } from "@/components/ui/misc";
 import type { AdCopy, EditorData, LinkedAsset, StrategyState } from "@/lib/campaigns/editor-data";
-import { getObjective } from "@/lib/catalog/objectives";
+import { getObjective, objectiveShort } from "@/lib/catalog/objectives";
 import { defaultSplit, PLATFORMS, platformLabel, type PlatformCode } from "@/lib/catalog/platforms";
 import { AGE_BOUNDS, CITIES_BY_COUNTRY, CUSTOMER_CATEGORIES, GENDERS, INTEREST_GROUPS, LANGUAGES, SECTORS, TARGET_COUNTRIES, type Targeting } from "@/lib/catalog/targeting";
 import { cn, formatFcfa } from "@/lib/utils";
@@ -23,10 +22,10 @@ import {
 import { BudgetFields, Chip, LevelPicker, ObjectivePicker, PlatformPicker, QuotePanel, Section, Stepper, useQuote } from "./parts";
 
 export const WIZARD_STEPS = [
-  { title: "Objectif", heading: "Que voulez-vous obtenir ?", lead: "Choisissez où diffuser et le résultat attendu." },
-  { title: "Votre annonce", heading: "Présentez ce que vous proposez", lead: "Quelques informations et une photo suffisent." },
-  { title: "Audience", heading: "À qui montrer votre publicité ?", lead: "Nous proposons une audience adaptée à votre activité. Vous pouvez l'ajuster." },
-  { title: "Budget", heading: "Fixez votre budget", lead: "Vous voyez le total avant de payer." },
+  { title: "Objectif", heading: "Que voulez-vous obtenir ?", icon: <Target /> },
+  { title: "Annonce", heading: "Votre annonce", icon: <ImageIcon /> },
+  { title: "Audience", heading: "À qui la montrer ?", icon: <Users /> },
+  { title: "Budget", heading: "Votre budget", icon: <Wallet /> },
 ];
 const LAST = WIZARD_STEPS.length;
 const DEFAULT_NAMES = ["Nouvelle campagne", "Campagne confiée à un expert"];
@@ -142,26 +141,25 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
   return (
     <div ref={top} className="mx-auto max-w-3xl scroll-mt-24">
       <div className="mb-6 flex items-center justify-between gap-3">
-        <button type="button" onClick={quit} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2.5 pr-3.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60">
-          <X className="size-3.5" />Enregistrer et quitter
+        <button type="button" onClick={quit} disabled={busy} title="Enregistrer et quitter" className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2.5 pr-3.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60">
+          <X className="size-3.5" />Quitter
         </button>
-        <span className={cn("flex items-center gap-1.5 text-[13px] text-green transition-opacity duration-300", saved ? "opacity-100" : "opacity-0")} aria-live="polite"><CircleCheck className="size-4" />Brouillon enregistré</span>
+        <span className={cn("flex items-center gap-1.5 text-[13px] text-green transition-opacity duration-300", saved ? "opacity-100" : "opacity-0")} aria-live="polite"><CircleCheck className="size-4" />Enregistré</span>
       </div>
 
-      <div className="mb-7"><Stepper steps={WIZARD_STEPS.map((x) => x.title)} current={step} reached={reached} onSelect={go} disabled={busy} /></div>
+      <div className="mb-7"><Stepper steps={WIZARD_STEPS} current={step} reached={reached} onSelect={go} disabled={busy} /></div>
 
       <header key={step} className="mb-6 animate-rise">
         <h1 className="text-[24px] font-semibold leading-tight sm:text-[28px]">{meta.heading}</h1>
-        <p className="mt-1.5 text-muted">{meta.lead}</p>
       </header>
 
       <div key={`step-${step}`} className="animate-rise">
         {step === 1 && (
           <div className="space-y-7">
-            <Section title="Où diffuser votre publicité ?" description="Une ou plusieurs plateformes.">
+            <Section icon={<Share2 />} tone="sky" title="Où diffuser ?">
               <PlatformPicker value={s.platforms} onChange={setPlatforms} extraFee={data.limits.extraPlatformFee} />
             </Section>
-            <Section title="Votre objectif">
+            <Section icon={<Target />} tone="marigold" title="Votre objectif">
               <ObjectivePicker value={s.objective} platforms={s.platforms} baseFees={data.baseFees} onChange={setObjective} />
             </Section>
           </div>
@@ -171,7 +169,7 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
         {step === 4 && <BudgetStep s={s} set={set} data={data} links={links} promo={promo} setPromo={setPromo} onTotal={setTotal} onEdit={go} />}
       </div>
 
-      {warnings.length > 0 && <Notice tone="warn" className="mt-6" title="À vérifier avant le lancement">{warnings.map((w) => <p key={w}>{w}</p>)}</Notice>}
+      {warnings.length > 0 && <Notice tone="warn" className="mt-6" title="À vérifier">{warnings.map((w) => <p key={w}>{w}</p>)}</Notice>}
       {error && <Notice tone="danger" className="mt-6">{error}</Notice>}
 
       <div className="safe-bottom sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-line bg-surface/95 px-4 pt-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
@@ -180,7 +178,7 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
           <Button type="button" size="lg" disabled={busy} onClick={() => go(step + 1)}>{busy && <LoaderCircle className="animate-spin" />}Continuer<ArrowRight /></Button>
         ) : (
           <Button type="button" size="lg" variant="accent" disabled={busy} onClick={order}>
-            {busy && <LoaderCircle className="animate-spin" />}Passer au paiement{total ? <span className="tnum hidden sm:inline"> · {formatFcfa(total)}</span> : null}<ArrowRight />
+            {busy && <LoaderCircle className="animate-spin" />}Payer{total ? <span className="tnum hidden sm:inline"> · {formatFcfa(total)}</span> : null}<ArrowRight />
           </Button>
         )}
       </div>
@@ -221,7 +219,7 @@ export function MediaGrid({ campaignId, role, items, setLinks, library, accept =
           <DialogTrigger className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line-strong bg-paper px-2 text-center text-sm font-medium text-ink transition-colors hover:border-green hover:bg-green-soft/40">
             <ImagePlus className="size-5 text-muted" />Mes fichiers
           </DialogTrigger>
-          <DialogContent title="Mes fichiers" description="Réutilisez un fichier déjà importé." side="bottom">
+          <DialogContent title="Mes fichiers" side="bottom">
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {candidates.map((a) => (
                 <button key={a.id} type="button" onClick={() => { void attach(a); setOpen(false); }} className="aspect-square overflow-hidden rounded-md border border-line transition-colors hover:border-green">
@@ -265,7 +263,7 @@ function PhonePreview({ s, links }: { s: State; links: LinkedAsset[] }) {
           </div>
         </div>
       </div>
-      <p className="mx-auto mt-3 max-w-[19rem] text-center text-xs text-muted">Aperçu indicatif sur {PLATFORMS[current].label}. Le rendu final dépend de l&apos;emplacement.</p>
+      <p className="mx-auto mt-3 max-w-[19rem] text-center text-xs text-muted">Aperçu indicatif · {PLATFORMS[current].label}</p>
     </div>
   );
 }
@@ -297,14 +295,14 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
     if (!res.ok) { toast.error(res.error); return; }
     setNotice((res.data.notice as string | null) ?? null);
     set({ strategy: res.data.strategy as StrategyState, adCopy: (res.data.adCopy as AdCopy | null) ?? s.adCopy });
-    toast.success("Texte proposé. Modifiez-le librement.");
+    toast.success("Texte proposé.");
   }
 
   const summary = "flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3.5 text-sm font-medium text-ink sm:px-5";
 
   return (
     <div className="space-y-7">
-      <Section title="Votre activité" description="Le nom affiché sur l'annonce et l'endroit où vos clients vous contactent.">
+      <Section icon={<Store />} title="Votre activité">
         <div className="space-y-4">
           {!editBusiness ? (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3.5 sm:px-5">
@@ -324,30 +322,30 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
                   </Select>
                 </Field>
               )}
-              <Field label="Nom de l'entreprise ou de la marque" htmlFor="bname"><Input id="bname" value={s.business.name} maxLength={80} onChange={(e) => setB({ name: e.target.value })} placeholder="Boutique Afi" /></Field>
+              <Field label="Nom de l'entreprise" htmlFor="bname"><Input id="bname" value={s.business.name} maxLength={80} onChange={(e) => setB({ name: e.target.value })} placeholder="Boutique Afi" /></Field>
               <Field label="Secteur" htmlFor="sector">
                 <Select id="sector" value={s.business.sector} onChange={(e) => setB({ sector: e.target.value })}><option value="" disabled>Choisir…</option>{SECTORS.map((x) => <option key={x}>{x}</option>)}</Select>
               </Field>
               <Field label="Ville" htmlFor="city"><Input id="city" value={s.business.city} maxLength={60} onChange={(e) => setB({ city: e.target.value })} placeholder="Cotonou" /></Field>
             </>
           )}
-          <Field label="Numéro WhatsApp" htmlFor="wa" optional={!needs.includes("whatsapp")} hint="Les clients intéressés vous écrivent ici.">
+          <Field label="Numéro WhatsApp" htmlFor="wa" optional={!needs.includes("whatsapp")}>
             <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />
           </Field>
           {showLink ? (
-            <Field label="Lien de votre page" htmlFor="url" optional={!needs.includes("page")} hint="Page Facebook, compte Instagram ou TikTok.">
+            <Field label="Lien de votre page" htmlFor="url" optional={!needs.includes("page")}>
               <Input id="url" type="url" value={s.destinationUrl} maxLength={300} onChange={(e) => set({ destinationUrl: e.target.value })} placeholder="https://facebook.com/votrepage" />
             </Field>
           ) : (
-            <button type="button" onClick={() => setShowLink(true)} className="text-[13.5px] font-medium text-green hover:underline">+ Ajouter le lien de ma page</button>
+            <button type="button" onClick={() => setShowLink(true)} className="text-[13.5px] font-medium text-green hover:underline">+ Lien de ma page</button>
           )}
         </div>
       </Section>
 
-      <Section title="Ce que vous proposez" description="Décrivez-le comme vous le diriez à un client.">
+      <Section icon={<Tag />} tone="marigold" title="Votre offre">
         <div className="space-y-4">
           <Field label="Produit ou service" htmlFor="pname" optional><Input id="pname" value={s.productName} maxLength={120} onChange={(e) => set({ productName: e.target.value })} placeholder="Robes en pagne sur mesure" /></Field>
-          <Field label="Description" htmlFor="pdesc" hint={<span className="flex justify-between gap-3"><span>Ce qui le rend intéressant, pour qui, comment commander.</span><span className="tnum shrink-0">{s.productDescription.trim().length} / 1 500</span></span>}>
+          <Field label="Description" htmlFor="pdesc" hint={<span className="tnum block text-right">{s.productDescription.trim().length} / 1 500</span>}>
             <Textarea id="pdesc" rows={4} value={s.productDescription} maxLength={1500} onChange={(e) => set({ productDescription: e.target.value })} placeholder="Robes cousues main en wax, tailles 36 à 52, livraison à Cotonou et Calavi en 48 h…" />
           </Field>
           <Field label="Prix" htmlFor="price" optional className="max-w-[14rem]">
@@ -359,32 +357,32 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
         </div>
       </Section>
 
-      <Section title="Photo ou vidéo" description={needs.includes("video") ? "Une vidéo est recommandée pour cet objectif." : "Une belle photo de votre produit fait la moitié du travail."}>
+      <Section icon={<ImageIcon />} tone="sky" title="Photo ou vidéo" description={needs.includes("video") ? "Vidéo recommandée." : undefined}>
         <MediaGrid campaignId={s.id} role="CREATIVE" items={media} setLinks={setLinks} library={data.library} />
-        {media.length === 0 && pack && <p className="mt-3 text-[13.5px] text-muted">Pas de visuel ? À la dernière étape, choisissez « {pack.name} » : notre équipe les réalise.</p>}
+        {media.length === 0 && pack && <p className="mt-3 text-[13.5px] text-muted">Pas de visuel ? Choisissez « {pack.name} » à l&apos;étape 4.</p>}
       </Section>
 
-      <Section title="Texte de l'annonce" description="Écrivez-le vous-même, ou laissez-nous vous proposer un texte."
+      <Section icon={<Type />} tone="violet" title="Texte"
         action={<Button type="button" variant="soft" size="sm" disabled={writing} onClick={write}>{writing ? <LoaderCircle className="animate-spin" /> : <WandSparkles />}{writing ? "Rédaction…" : st ? "Autre proposition" : "Rédiger pour moi"}</Button>}>
         <div className="space-y-4">
           {notice && <Notice tone="info">{notice}</Notice>}
-          <Field label="Texte principal" htmlFor="copy-b" hint={<span className="flex justify-between gap-3"><span>Laissez vide si vous préférez que notre équipe le rédige.</span><span className="tnum shrink-0">{copy.body.length} / 900</span></span>}>
+          <Field label="Texte principal" htmlFor="copy-b" hint={<span className="flex justify-between gap-3"><span>Vide = rédigé par notre équipe.</span><span className="tnum shrink-0">{copy.body.length} / 900</span></span>}>
             <Textarea id="copy-b" rows={4} value={copy.body} maxLength={900} onChange={(e) => setCopy({ body: e.target.value })} placeholder="Offrez-vous une robe unique, cousue à vos mesures…" />
           </Field>
           <Field label="Titre" htmlFor="copy-h"><Input id="copy-h" value={copy.headline} maxLength={90} onChange={(e) => setCopy({ headline: e.target.value })} placeholder="Votre robe sur mesure en 48 h" /></Field>
           <Field label="Bouton" htmlFor="copy-c">
-            <Select id="copy-c" value={copy.cta} onChange={(e) => setCopy({ cta: e.target.value })}><option value="">Choisi par notre équipe</option>{ctas.map((c) => <option key={c} value={c}>{c}</option>)}</Select>
+            <Select id="copy-c" value={copy.cta} onChange={(e) => setCopy({ cta: e.target.value })}><option value="">Au choix de l&apos;équipe</option>{ctas.map((c) => <option key={c} value={c}>{c}</option>)}</Select>
           </Field>
 
           {alternatives.length > 0 && (
             <details className="group">
-              <summary className={summary}>Voir {alternatives.length} autre{alternatives.length > 1 ? "s" : ""} proposition{alternatives.length > 1 ? "s" : ""}<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+              <summary className={summary}><span className="flex items-center gap-2.5"><Sparkles className="size-4 text-violet" />{alternatives.length} autre{alternatives.length > 1 ? "s" : ""} texte{alternatives.length > 1 ? "s" : ""}</span><ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
               <div className="mt-2 divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
                 {alternatives.map((t, i) => (
                   <button key={i} type="button" onClick={() => set({ adCopy: { headline: t.headline, body: t.body, cta: t.cta } })} className="block w-full px-4 py-3.5 text-left transition-colors hover:bg-paper sm:px-5">
                     <span className="block text-sm font-medium leading-snug text-ink">{t.headline}</span>
                     <span className="mt-0.5 line-clamp-2 block text-[13.5px] leading-snug text-muted">{t.body}</span>
-                    <span className="mt-1.5 block text-[13px] font-medium text-green">Utiliser ce texte</span>
+                    <span className="mt-1.5 block text-[13px] font-medium text-green">Utiliser</span>
                   </button>
                 ))}
               </div>
@@ -393,7 +391,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
 
           {st && (st.hooks.length > 0 || st.visualConcepts.length > 0) && (
             <details className="group">
-              <summary className={summary}>Idées pour votre publicité<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+              <summary className={summary}><span className="flex items-center gap-2.5"><Lightbulb className="size-4 text-[#9a6400]" />Idées</span><ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
               <div className="mt-2 space-y-4 rounded-lg border border-line bg-surface px-4 py-4 text-[13.5px] sm:px-5">
                 {st.hooks.length > 0 && (
                   <div>
@@ -403,7 +401,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
                 )}
                 {st.visualConcepts.length > 0 && (
                   <div>
-                    <p className="mb-1.5 font-medium text-ink">Idées de visuels</p>
+                    <p className="mb-1.5 font-medium text-ink">Visuels</p>
                     <ul className="space-y-1.5 text-ink-soft">{st.visualConcepts.slice(0, 3).map((v, i) => <li key={i}><span className="text-ink">{v.title}</span><span className="block text-[13px] text-muted">{v.description}</span></li>)}</ul>
                   </div>
                 )}
@@ -412,7 +410,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
           )}
 
           <details className="group">
-            <summary className={summary}>Voir l&apos;aperçu de l&apos;annonce<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
+            <summary className={summary}><span className="flex items-center gap-2.5"><Eye className="size-4 text-green" />Aperçu</span><ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
             <div className="mt-3"><PhonePreview s={s} links={links} /></div>
           </details>
         </div>
@@ -469,47 +467,59 @@ function AudienceStep({ s, set }: StepProps) {
     <div className="space-y-6">
       <section aria-labelledby="audience">
         <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <h2 id="audience" className="text-[15px] font-semibold tracking-normal [font-family:var(--font-sans)]">{loading ? "Analyse de votre activité…" : "Audience proposée"}</h2>
+          <h2 id="audience" className="text-[15px] font-semibold tracking-normal [font-family:var(--font-sans)]">{loading ? "Analyse…" : "Audience proposée"}</h2>
           <button type="button" disabled={loading} onClick={() => suggest()} className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-green hover:underline disabled:opacity-60">
-            {loading ? <LoaderCircle className="size-4 animate-spin" /> : <WandSparkles className="size-4" />}Proposer à nouveau
+            {loading ? <LoaderCircle className="size-4 animate-spin" /> : <WandSparkles className="size-4" />}Reproposer
           </button>
         </div>
-        <Figures className={cn("transition-opacity", loading && "opacity-50")} items={[
-          { label: "Zone", value: zone || "À définir" },
-          { label: "Profil", value: `${gender}, ${t.ageMin}–${t.ageMax >= 65 ? "65+" : t.ageMax} ans` },
-          { label: "Centres d'intérêt", value: interests.length ? `${interests.length} sélectionné${interests.length > 1 ? "s" : ""}` : "Audience large" },
-        ]} />
-        {rationale && <p className="mt-2.5 text-[13.5px] leading-relaxed text-muted">{rationale.text}</p>}
+        <ul className={cn("grid gap-2.5 transition-opacity sm:grid-cols-3", loading && "opacity-50")}>
+          {[
+            { icon: <MapPin />, tone: "bg-green-soft text-green", label: "Zone", value: zone || "À définir" },
+            { icon: <Users />, tone: "bg-sky-soft text-sky", label: "Profil", value: `${gender}, ${t.ageMin}–${t.ageMax >= 65 ? "65+" : t.ageMax} ans` },
+            { icon: <Heart />, tone: "bg-rose-soft text-rose", label: "Intérêts", value: interests.length ? `${interests.length} choisi${interests.length > 1 ? "s" : ""}` : "Audience large" },
+          ].map((x) => (
+            <li key={x.label} className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3.5 shadow-card sm:flex-col sm:items-start sm:p-4">
+              <span aria-hidden className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5", x.tone)}>{x.icon}</span>
+              <span className="min-w-0"><span className="block text-[12.5px] text-muted">{x.label}</span><span className="block text-[15px] font-semibold leading-snug text-ink">{x.value}</span></span>
+            </li>
+          ))}
+        </ul>
+        {rationale && (
+          <details className="group mt-2.5 text-[13.5px] text-muted">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-medium text-ink-soft [&::-webkit-details-marker]:hidden"><Lightbulb className="size-4 text-[#9a6400]" />Pourquoi ?<ChevronDown className="size-3.5 transition-transform group-open:rotate-180" /></summary>
+            <p className="mt-1.5 leading-relaxed">{rationale.text}</p>
+          </details>
+        )}
       </section>
 
-      <Field label="Décrivez vos clients avec vos mots" htmlFor="aud" optional hint="Cette note aide votre gestionnaire à affiner le ciblage.">
+      <Field label="Vos clients, avec vos mots" htmlFor="aud" optional>
         <Textarea id="aud" rows={2} value={s.audienceNote} maxLength={600} onChange={(e) => set({ audienceNote: e.target.value })} placeholder="Femmes actives de Cotonou qui aiment les tenues en pagne, mariées ou fiancées…" />
       </Field>
 
       <div className="rounded-lg border border-line bg-surface">
         <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left sm:px-5">
-          <span><span className="block font-medium text-ink">Personnaliser l&apos;audience</span><span className="block text-[13.5px] text-muted">Zone, âge, genre et centres d&apos;intérêt. Facultatif.</span></span>
+          <span className="flex items-center gap-2.5 font-medium text-ink"><SlidersHorizontal className="size-4 text-green" />Personnaliser</span>
           <ChevronDown className={cn("size-5 shrink-0 text-muted transition-transform", open && "rotate-180")} />
         </button>
         {open && (
           <div className="animate-rise space-y-7 border-t border-line px-4 py-5 sm:px-5">
             <div className="space-y-4">
-              <h3 className="text-[15px] font-semibold [font-family:var(--font-sans)]">Zone géographique</h3>
+              <h3 className="flex items-center gap-2 text-[15px] font-semibold [font-family:var(--font-sans)]"><MapPin className="size-4 text-green" />Zone</h3>
               <div>
                 <p className="mb-2 text-[13px] font-medium text-ink-soft">Pays</p>
                 <div className="flex flex-wrap gap-1.5">{TARGET_COUNTRIES.map((c) => <Chip key={c.code} active={t.countries.includes(c.code)} onClick={() => { const countries = toggle(t.countries, c.code); const ok = new Set(countries.flatMap((x) => CITIES_BY_COUNTRY[x] ?? [])); setT({ countries: countries.length ? countries : t.countries, cities: t.cities.filter((x) => ok.has(x)) }); }}>{c.name}</Chip>)}</div>
               </div>
               {cities.length > 0 && (
                 <div>
-                  <p className="mb-2 text-[13px] font-medium text-ink-soft">Villes <span className="font-normal text-muted">— aucune sélection = tout le pays</span></p>
+                  <p className="mb-2 text-[13px] font-medium text-ink-soft">Villes <span className="font-normal text-muted">— aucune = tout le pays</span></p>
                   <div className="flex flex-wrap gap-1.5">{cities.map(({ city }) => <Chip key={city} active={t.cities.includes(city)} onClick={() => setT({ cities: toggle(t.cities, city) })}>{city}</Chip>)}</div>
                 </div>
               )}
-              <Field label="Précision sur la zone" htmlFor="zone" optional hint="Quartiers, rayon autour de votre boutique…"><Input id="zone" value={t.zoneNote} maxLength={300} onChange={(e) => setT({ zoneNote: e.target.value })} placeholder="5 km autour de Fidjrossè" /></Field>
+              <Field label="Précision" htmlFor="zone" optional><Input id="zone" value={t.zoneNote} maxLength={300} onChange={(e) => setT({ zoneNote: e.target.value })} placeholder="5 km autour de Fidjrossè" /></Field>
             </div>
 
             <div className="space-y-4 border-t border-line pt-6">
-              <h3 className="text-[15px] font-semibold [font-family:var(--font-sans)]">Profil</h3>
+              <h3 className="flex items-center gap-2 text-[15px] font-semibold [font-family:var(--font-sans)]"><Users className="size-4 text-sky" />Profil</h3>
               <div>
                 <p className="mb-2 text-[13px] font-medium text-ink-soft">Genre</p>
                 <div className="inline-flex gap-1 rounded-full bg-sand p-1">
@@ -525,11 +535,11 @@ function AudienceStep({ s, set }: StepProps) {
                 <p className="mb-2 text-[13px] font-medium text-ink-soft">Types de clients</p>
                 <div className="flex flex-wrap gap-1.5">{CUSTOMER_CATEGORIES.map((c) => <Chip key={c} active={t.categories.includes(c)} onClick={() => setT({ categories: toggle(t.categories, c) })}>{c}</Chip>)}</div>
               </div>
-              <p className="text-xs text-muted">Nos campagnes s&apos;adressent aux adultes (18 ans et plus).</p>
+              <p className="text-xs text-muted">18 ans et plus uniquement.</p>
             </div>
 
             <div className="space-y-3 border-t border-line pt-6">
-              <div className="flex items-baseline justify-between"><h3 className="text-[15px] font-semibold [font-family:var(--font-sans)]">Centres d&apos;intérêt</h3><span className="tnum text-xs text-muted">{t.interests.length} sélectionné{t.interests.length > 1 ? "s" : ""}</span></div>
+              <div className="flex items-baseline justify-between"><h3 className="flex items-center gap-2 text-[15px] font-semibold [font-family:var(--font-sans)]"><Heart className="size-4 text-rose" />Centres d&apos;intérêt</h3><span className="tnum text-xs text-muted">{t.interests.length} sélectionné{t.interests.length > 1 ? "s" : ""}</span></div>
               {INTEREST_GROUPS.map((g) => {
                 const picked = g.items.filter((i) => t.interests.includes(i)).length;
                 return (
@@ -547,7 +557,7 @@ function AudienceStep({ s, set }: StepProps) {
             <div className="border-t border-line pt-6">
               <label className="flex items-start gap-3">
                 <input type="checkbox" className="mt-1 size-4" checked={t.customAudience.requested} onChange={(e) => setT({ customAudience: { ...t.customAudience, requested: e.target.checked } })} />
-                <span><span className="block text-sm font-medium text-ink">Recibler mes clients existants</span><span className="block text-[13px] text-muted">Personnes ayant déjà interagi avec votre page, ou profils similaires. Notre équipe vérifie la faisabilité avec vous.</span></span>
+                <span><span className="block text-sm font-medium text-ink">Recibler mes clients existants</span><span className="block text-[13px] text-muted">Faisabilité vérifiée avec vous.</span></span>
               </label>
               {t.customAudience.requested && <Textarea className="mt-3" rows={2} maxLength={500} value={t.customAudience.note} onChange={(e) => setT({ customAudience: { ...t.customAudience, note: e.target.value } })} placeholder="Ex. : personnes ayant déjà écrit à ma page ces 90 derniers jours" aria-label="Précision sur l'audience personnalisée" />}
             </div>
@@ -569,39 +579,39 @@ function BudgetStep({ s, set, data, links, promo, setPromo, onTotal, onEdit }: S
   const total = quote.quote?.total ?? null;
   React.useEffect(() => { onTotal(total); }, [total, onTotal]);
 
-  const rows: { label: string; value: string; step: number }[] = [
-    { label: "Objectif", value: `${objective?.label ?? "—"} · ${platformLabel(s.platforms)}`, step: 1 },
-    { label: "Annonce", value: `${s.business.name || "—"} · ${s.adCopy?.headline || "texte rédigé par notre équipe"} · ${visuals ? `${visuals} visuel${visuals > 1 ? "s" : ""}` : "visuels à créer"}`, step: 2 },
-    { label: "Audience", value: `${t.cities.length ? t.cities.slice(0, 3).join(", ") + (t.cities.length > 3 ? "…" : "") : t.countries.map((c) => TARGET_COUNTRIES.find((x) => x.code === c)?.name).join(", ")} · ${t.ageMin}–${t.ageMax === 65 ? "65+" : t.ageMax} ans · ${GENDERS.find((g) => g.id === t.gender)?.label}`, step: 3 },
+  const rows: { label: string; icon: React.ReactNode; value: string; step: number }[] = [
+    { label: "Objectif", icon: <Megaphone />, value: `${objective ? objectiveShort(objective) : "—"} · ${platformLabel(s.platforms)}`, step: 1 },
+    { label: "Annonce", icon: <ImageIcon />, value: `${s.business.name || "—"} · ${s.adCopy?.headline || "texte par notre équipe"} · ${visuals ? `${visuals} visuel${visuals > 1 ? "s" : ""}` : "visuels à créer"}`, step: 2 },
+    { label: "Audience", icon: <Users />, value: `${t.cities.length ? t.cities.slice(0, 3).join(", ") + (t.cities.length > 3 ? "…" : "") : t.countries.map((c) => TARGET_COUNTRIES.find((x) => x.code === c)?.name).join(", ")} · ${t.ageMin}–${t.ageMax === 65 ? "65+" : t.ageMax} ans · ${GENDERS.find((g) => g.id === t.gender)?.label}`, step: 3 },
   ];
 
   return (
     <div className="space-y-7">
-        <Section title="Budget et durée" description="Ce montant est dépensé sur les plateformes pour montrer votre publicité.">
+        <Section icon={<Wallet />} title="Budget et durée">
           <BudgetFields data={data} value={{ adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "", budgetSplit: s.budgetSplit, platforms: s.platforms }} onChange={set}
             recommended={objective ? { daily: objective.config.recommendedDailyBudget, days: objective.config.recommendedDays } : null} />
         </Section>
 
-        <Section title="Notre accompagnement" description="Choisissez ce que notre équipe fait pour vous.">
-          <LevelPicker levels={data.levels} value={s.serviceCode} onChange={(serviceCode) => set({ serviceCode })} baseLabel={objective?.label ?? "Campagne"} baseFee={baseFee} />
+        <Section icon={<Sparkles />} tone="violet" title="Formule">
+          <LevelPicker levels={data.levels} value={s.serviceCode} onChange={(serviceCode) => set({ serviceCode })} baseFee={baseFee} />
         </Section>
 
-        <Section title="Récapitulatif">
+        <Section icon={<ListChecks />} tone="sky" title="Récapitulatif">
           <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
             {rows.map((r) => (
               <li key={r.label} className="flex items-center gap-3 px-4 py-3">
-                <span className="w-[4.5rem] shrink-0 text-[13px] text-muted">{r.label}</span>
+                <span title={r.label} className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sand text-ink-soft [&_svg]:size-4">{r.icon}<span className="sr-only">{r.label}</span></span>
                 <span className="min-w-0 flex-1 truncate text-sm text-ink">{r.value}</span>
-                <button type="button" onClick={() => onEdit(r.step)} className="shrink-0 rounded-full px-2.5 py-1 text-[13px] font-medium text-green hover:bg-green-soft">Modifier</button>
+                <button type="button" onClick={() => onEdit(r.step)} aria-label={`Modifier : ${r.label}`} title="Modifier" className="flex size-8 shrink-0 items-center justify-center rounded-full text-green hover:bg-green-soft"><Pencil className="size-4" /></button>
               </li>
             ))}
           </ul>
-          <Field label="Nom de la campagne" htmlFor="cname" hint="Pour la retrouver dans votre espace." className="mt-4"><Input id="cname" value={s.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} /></Field>
+          <Field label="Nom de la campagne" htmlFor="cname" className="mt-4"><Input id="cname" value={s.name} maxLength={80} onChange={(e) => set({ name: e.target.value })} /></Field>
         </Section>
 
         <section data-quote className="space-y-2.5">
           <QuotePanel state={quote} promo={promo} onPromo={setPromo} />
-          <p className="text-[13px] leading-relaxed text-muted">Le paiement se fait à l&apos;écran suivant. Les résultats d&apos;une campagne ne peuvent pas être garantis.</p>
+          <p className="text-[13px] leading-relaxed text-muted">Les résultats ne sont pas garantis.</p>
         </section>
     </div>
   );

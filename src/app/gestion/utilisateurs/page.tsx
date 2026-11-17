@@ -35,7 +35,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const base = "/gestion/utilisateurs";
   return (
     <>
-      <PageHeader title="Clients et entreprises" description="Comptes clients, activités déclarées et volume de commandes." />
+      <PageHeader title="Clients et entreprises" />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <SearchForm action={base} q={q} placeholder="Nom, e-mail, téléphone, entreprise…" hidden={{ etat: params.etat }} />
         <FilterChips current={suspended ? "suspendus" : "tous"} items={[{ id: "tous", label: "Tous", href: hrefWith(base, params, { etat: undefined, page: undefined }) }, { id: "suspendus", label: "Suspendus", href: hrefWith(base, params, { etat: "suspendus", page: undefined }) }]} />
@@ -62,7 +62,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
             </Table>
             <Pagination page={page} total={total} base={base} params={params} />
           </>
-        ) : <EmptyState icon={<Users />} title="Aucun client" description="Aucun compte ne correspond à ces critères." />}
+        ) : <EmptyState icon={<Users />} title="Aucun client" />}
       </Card>
     </>
   );

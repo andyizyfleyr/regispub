@@ -18,8 +18,7 @@ export default async function AssistantPage() {
   const status = aiStatus();
   return (
     <>
-      <PageHeader title="Assistant marketing" description="Des idées de contenus et des conseils adaptés à votre activité." />
-      {!status.text && <p className="mb-5 text-[13.5px] text-muted">Les réponses s&apos;appuient sur des modèles préparés par notre équipe et adaptés à votre secteur.</p>}
+      <PageHeader title="Assistant" />
       <Assistant businesses={businesses} hasModel={Boolean(status.text)} today={toIsoDate(today)}
         entries={entries.map((e) => ({ id: e.id, date: toIsoDate(e.date), platform: e.platform, title: e.title, caption: e.caption, hashtags: e.hashtags, done: e.done }))} />
     </>

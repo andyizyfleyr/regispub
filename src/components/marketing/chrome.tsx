@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Logo } from "@/components/icons";
+import { Logo, WhatsappIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { isStaff } from "@/lib/auth/permissions";
 import { getSessionUser } from "@/lib/auth/session";
@@ -11,9 +11,9 @@ export async function MarketingHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
         <Link href="/" aria-label="RegisPub — accueil"><Logo /></Link>
         <nav className="hidden items-center gap-7 text-sm text-ink-soft md:flex">
-          <Link href="/#fonctionnement" className="hover:text-ink">Fonctionnement</Link>
+          <Link href="/#fonctionnement" className="hover:text-ink">Étapes</Link>
           <Link href="/#objectifs" className="hover:text-ink">Objectifs</Link>
-          <Link href="/services" className="hover:text-ink">Services et tarifs</Link>
+          <Link href="/services" className="hover:text-ink">Tarifs</Link>
           <Link href="/#questions" className="hover:text-ink">Questions</Link>
         </nav>
         <div className="flex items-center gap-2">
@@ -37,16 +37,16 @@ export function MarketingFooter({ supportWhatsapp, supportEmail }: { supportWhat
       <div className="mx-auto max-w-6xl px-5 py-8">
         <Logo />
         <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft">
-          <li><Link href="/services" className="hover:text-ink">Services et tarifs</Link></li>
-          <li><Link href="/conditions" className="hover:text-ink">Conditions d&apos;utilisation</Link></li>
+          <li><Link href="/services" className="hover:text-ink">Tarifs</Link></li>
+          <li><Link href="/conditions" className="hover:text-ink">Conditions</Link></li>
           <li><Link href="/connexion" className="hover:text-ink">Espace client</Link></li>
-          {supportWhatsapp && <li><a href={`https://wa.me/${supportWhatsapp.replace(/\D/g, "")}`} className="hover:text-ink">WhatsApp : {supportWhatsapp}</a></li>}
+          {supportWhatsapp && <li><a href={`https://wa.me/${supportWhatsapp.replace(/\D/g, "")}`} className="inline-flex items-center gap-1.5 hover:text-ink"><WhatsappIcon className="size-4" />{supportWhatsapp}</a></li>}
           {supportEmail && <li><a href={`mailto:${supportEmail}`} className="hover:text-ink">{supportEmail}</a></li>}
         </ul>
       </div>
       <div className="border-t border-line">
         <p className="mx-auto max-w-6xl px-5 py-5 text-xs text-muted">
-          © {new Date().getFullYear()} RegisPub. Facebook et Instagram sont des marques de Meta Platforms ; TikTok est une marque de ByteDance. RegisPub est un prestataire indépendant et n&apos;est affilié à aucune de ces plateformes ni aux opérateurs de téléphonie cités.
+          © {new Date().getFullYear()} RegisPub · Prestataire indépendant, non affilié à Meta, TikTok ni aux opérateurs cités.
         </p>
       </div>
     </footer>

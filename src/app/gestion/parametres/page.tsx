@@ -24,10 +24,10 @@ export default async function SettingsPage() {
   );
   return (
     <>
-      <PageHeader title="Paramètres" description="Règles tarifaires et informations de la plateforme. Chaque modification est tracée dans le journal d'audit." />
+      <PageHeader title="Paramètres" />
       <ActionForm action={saveSettingsAction} className="space-y-6">
         <Card>
-          <CardHeader title="Tarification" description="S'applique aux prochains devis ; les commandes existantes ne changent pas." />
+          <CardHeader title="Tarification" />
           <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {num("minServiceFee", "Frais de prestation minimum (F)", "Jamais inférieur à 10 000 F.", 500)}
             {num("extraPlatformFee", "Supplément par plateforme additionnelle (F)", "Meta (Facebook + Instagram) compte pour une plateforme.", 500)}
@@ -56,7 +56,7 @@ export default async function SettingsPage() {
           </CardBody>
         </Card>
         <Card>
-          <CardHeader title="Entreprise et support" description="Repris sur les reçus et les pages d'aide." />
+          <CardHeader title="Entreprise et support" />
           <CardBody className="grid gap-4 sm:grid-cols-2">
             {text("companyName", "Raison sociale")}
             {text("companyTaxId", "IFU / RCCM")}

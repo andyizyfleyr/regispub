@@ -6,17 +6,17 @@ export type CampaignStatusName =
   | "READY_TO_LAUNCH" | "RUNNING" | "PAUSED" | "COMPLETED" | "CANCELLED";
 
 export const STATUS_META: Record<CampaignStatusName, { label: string; tone: "neutral" | "warn" | "info" | "ok" | "danger"; clientHint: string }> = {
-  DRAFT: { label: "Brouillon", tone: "neutral", clientHint: "Terminez la configuration pour passer commande." },
-  PENDING_PAYMENT: { label: "En attente de paiement", tone: "warn", clientHint: "Réglez votre commande par Mobile Money pour démarrer." },
-  PAID: { label: "Payé", tone: "info", clientHint: "Paiement confirmé. Un gestionnaire prend votre campagne en charge." },
-  AWAITING_INFO: { label: "En attente d'informations", tone: "warn", clientHint: "Notre équipe a besoin d'une précision de votre part." },
-  IN_PREPARATION: { label: "En préparation", tone: "info", clientHint: "Votre campagne est en cours de préparation." },
-  CLIENT_REVIEW: { label: "En validation client", tone: "warn", clientHint: "Vérifiez les créations proposées et validez-les." },
-  READY_TO_LAUNCH: { label: "Prêt à lancer", tone: "info", clientHint: "Tout est validé. Le lancement est programmé." },
-  RUNNING: { label: "En cours", tone: "ok", clientHint: "Votre publicité est diffusée." },
-  PAUSED: { label: "En pause", tone: "warn", clientHint: "La diffusion est suspendue temporairement." },
-  COMPLETED: { label: "Terminé", tone: "neutral", clientHint: "La campagne est terminée. Consultez le bilan." },
-  CANCELLED: { label: "Annulé", tone: "danger", clientHint: "Cette campagne a été annulée." },
+  DRAFT: { label: "Brouillon", tone: "neutral", clientHint: "À terminer pour commander." },
+  PENDING_PAYMENT: { label: "En attente de paiement", tone: "warn", clientHint: "Payez pour démarrer." },
+  PAID: { label: "Payé", tone: "info", clientHint: "Paiement reçu. Un gestionnaire s'en occupe." },
+  AWAITING_INFO: { label: "En attente d'informations", tone: "warn", clientHint: "Une précision est attendue." },
+  IN_PREPARATION: { label: "En préparation", tone: "info", clientHint: "Préparation en cours." },
+  CLIENT_REVIEW: { label: "En validation client", tone: "warn", clientHint: "Créations à valider." },
+  READY_TO_LAUNCH: { label: "Prêt à lancer", tone: "info", clientHint: "Lancement programmé." },
+  RUNNING: { label: "En cours", tone: "ok", clientHint: "Diffusion en cours." },
+  PAUSED: { label: "En pause", tone: "warn", clientHint: "Diffusion suspendue." },
+  COMPLETED: { label: "Terminé", tone: "neutral", clientHint: "Terminée. Consultez le bilan." },
+  CANCELLED: { label: "Annulé", tone: "danger", clientHint: "Campagne annulée." },
 };
 
 export const ALL_STATUSES = Object.keys(STATUS_META) as CampaignStatusName[];

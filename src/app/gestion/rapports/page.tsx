@@ -43,7 +43,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader title="Rapports" description="Activité commerciale et résultats publicitaires validés." />
+      <PageHeader title="Rapports" />
       <div className="mb-5"><FilterChips current={String(days)} items={Object.keys(PERIODS).map((p) => ({ id: p, label: `${p} derniers jours`, href: p === "30" ? "/gestion/rapports" : `/gestion/rapports?periode=${p}` }))} /></div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -66,7 +66,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Campagnes par statut" description="Toutes périodes confondues." />
+          <CardHeader title="Campagnes par statut" />
           <ul className="divide-y divide-line">
             {(Object.keys(STATUS_META) as CampaignStatusName[]).filter((s) => s !== "DRAFT").map((s) => {
               const n = byStatus.find((b) => b.status === s)?._count ?? 0;
@@ -94,7 +94,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Résultats publicitaires" description="Statistiques validées, toutes campagnes confondues. « — » : non mesuré." />
+        <CardHeader title="Résultats publicitaires" />
         {totals.days ? (
           <Table head={["Plateforme", "Impressions", "Portée", "Clics", "CTR", "CPC", "CPM", "Dépenses"]}>
             {[...platforms, { platform: "TOTAL" as const, ...totals, ...d }].map((p) => (

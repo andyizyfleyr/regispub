@@ -12,8 +12,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <h1 className="text-[28px] font-semibold">Connexion</h1>
-      <p className="mt-1.5 text-muted">Accédez à vos campagnes et à vos paiements.</p>
-      {sp.reinitialise && <Notice tone="ok" className="mt-5">Mot de passe modifié. Vous pouvez vous connecter.</Notice>}
+      {sp.reinitialise && <Notice tone="ok" className="mt-5">Mot de passe modifié.</Notice>}
       <ActionForm action={loginAction} className="mt-7 space-y-4" refresh={false}>
         <input type="hidden" name="next" value={sp.next ?? ""} />
         <Field label="Adresse e-mail" htmlFor="email"><Input id="email" name="email" type="email" autoComplete="email" required placeholder="vous@exemple.com" /></Field>

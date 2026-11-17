@@ -19,11 +19,11 @@ export default async function PaymentsPage() {
   const total = paid._sum.total ?? 0;
   return (
     <>
-      <PageHeader title="Paiements" description="Vos commandes et vos reçus." />
+      <PageHeader title="Paiements" />
       {total > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-3">
           <StatTile label="Total payé" value={formatFcfa(total)} icon={<Wallet />} tone="green" />
-          <StatTile label="Dont budget publicitaire" value={formatFcfa(paid._sum.adBudget ?? 0)} icon={<Megaphone />} tone="marigold" hint="Reversé aux plateformes" />
+          <StatTile label="Dont publicité" value={formatFcfa(paid._sum.adBudget ?? 0)} icon={<Megaphone />} tone="marigold" />
         </div>
       )}
       {orders.length ? (
@@ -35,7 +35,7 @@ export default async function PaymentsPage() {
               trailing={<span className="tnum font-semibold text-ink">{formatFcfa(o.total)}</span>} />
           ))}
         </List>
-      ) : <EmptyState icon={<ReceiptText />} title="Aucune commande" description="Vos commandes et reçus apparaîtront ici après votre première campagne." />}
+      ) : <EmptyState icon={<ReceiptText />} title="Aucune commande" />}
     </>
   );
 }

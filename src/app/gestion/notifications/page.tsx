@@ -23,7 +23,7 @@ export default async function StaffNotifications({ searchParams }: { searchParam
   const channels = notificationChannelsStatus();
   return (
     <>
-      <PageHeader title="Notifications" description="Vos alertes internes et les messages envoyés aux clients." />
+      <PageHeader title="Notifications" />
       <TabsNav current={view} tabs={[{ id: "miennes", label: "Mes notifications", href: `${base}?vue=miennes` }, ...(canSend ? [{ id: "envoi", label: "Envoyer aux clients", href: `${base}?vue=envoi` }, { id: "journal", label: "Journal des envois", href: `${base}?vue=journal` }] : [])]} />
 
       {view === "miennes" && <NotificationList userId={user.id} fallbackHref="/gestion" embedded />}
@@ -31,7 +31,7 @@ export default async function StaffNotifications({ searchParams }: { searchParam
       {view === "envoi" && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <Card>
-            <CardHeader title="Nouvelle notification" description="Toujours délivrée dans l'application ; e-mail et WhatsApp en option." />
+            <CardHeader title="Nouvelle notification" />
             <CardBody>
               <ActionForm action={sendNotificationAction} resetOnSuccess className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -75,7 +75,7 @@ async function Deliveries() {
             </tr>
           ))}
         </Table>
-      ) : <EmptyState title="Aucun envoi externe" description="Les tentatives d'envoi par e-mail et WhatsApp sont consignées ici, y compris celles non parties faute de configuration." />}
+      ) : <EmptyState title="Aucun envoi externe" />}
     </Card>
   );
 }

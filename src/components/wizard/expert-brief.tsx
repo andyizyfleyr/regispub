@@ -36,7 +36,7 @@ export function ExpertBrief({ data }: { data: EditorData }) {
 
   async function save(thenOrder: boolean) {
     setError(null);
-    if (!s.objective) { setError("Choisissez l'objectif principal de votre campagne."); return; }
+    if (!s.objective) { setError("Choisissez un objectif."); return; }
     setBusy(thenOrder ? "order" : "save");
     const res = await saveCampaignAction(c.id, {
       platforms: s.platforms, objective: s.objective, business: s.business, name: s.name, brief: s.brief, productName: s.productName, productPrice: s.productPrice,
@@ -52,7 +52,7 @@ export function ExpertBrief({ data }: { data: EditorData }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-7">
-        <Section icon={<ClipboardList />} title="Votre besoin" description="Dites-nous ce que vous voulez obtenir, avec vos mots.">
+        <Section icon={<ClipboardList />} title="Votre besoin">
           <div className="space-y-4">
           <div className="space-y-4">
             <Field label="Plateformes" htmlFor="eb-platforms">
@@ -60,7 +60,7 @@ export function ExpertBrief({ data }: { data: EditorData }) {
                 {PLATFORM_CHOICES.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
               </Select>
             </Field>
-            <Field label="Objectif principal" htmlFor="eb-objective">
+            <Field label="Objectif" htmlFor="eb-objective">
               <Select id="eb-objective" value={s.objective ?? ""} onChange={(e) => set({ objective: e.target.value })}>
                 <option value="" disabled>Choisir…</option>
                 {(Object.keys(OBJECTIVE_CATEGORIES) as ObjectiveCategory[]).map((cat) => (
@@ -69,18 +69,17 @@ export function ExpertBrief({ data }: { data: EditorData }) {
               </Select>
             </Field>
           </div>
-          {objective && <p className="text-[13px] text-muted">{objective.description}</p>}
-          <Field label="Décrivez votre besoin" htmlFor="eb-brief" hint={`${s.brief.trim().length} / 3 000 — votre activité, ce que vous voulez promouvoir, votre clientèle, vos contraintes.`}>
+          <Field label="Décrivez votre besoin" htmlFor="eb-brief" hint={<span className="tnum block text-right">{s.brief.trim().length} / 3 000</span>}>
             <Textarea id="eb-brief" rows={7} maxLength={3000} value={s.brief} onChange={(e) => set({ brief: e.target.value })} placeholder="Je vends des perruques naturelles à Cotonou. Je veux recevoir plus de commandes sur WhatsApp pour la collection de fin d'année. Mes clientes ont entre 20 et 40 ans…" />
           </Field>
           <div className="space-y-4">
-            <Field label="Produit ou service concerné" htmlFor="eb-product" optional><Input id="eb-product" maxLength={120} value={s.productName} onChange={(e) => set({ productName: e.target.value })} /></Field>
+            <Field label="Produit ou service" htmlFor="eb-product" optional><Input id="eb-product" maxLength={120} value={s.productName} onChange={(e) => set({ productName: e.target.value })} /></Field>
             <Field label="Nom de la campagne" htmlFor="eb-name"><Input id="eb-name" maxLength={80} value={s.name} onChange={(e) => set({ name: e.target.value })} /></Field>
           </div>
           </div>
         </Section>
 
-        <Section icon={<Store />} title="Votre entreprise" description="Pour que votre gestionnaire sache à qui il s'adresse.">
+        <Section icon={<Store />} tone="marigold" title="Votre entreprise">
           <div className="space-y-4">
           {data.businesses.length > 0 && (
             <Field label="Entreprise" htmlFor="eb-business">
@@ -101,25 +100,25 @@ export function ExpertBrief({ data }: { data: EditorData }) {
           </div>
         </Section>
 
-        <Section icon={<FolderUp />} title="Vos fichiers" description="Photos, vidéos, logo, catalogue PDF : tout ce qui peut aider notre équipe. Facultatif.">
+        <Section icon={<FolderUp />} tone="sky" title="Vos fichiers" description="Photos, vidéos, logo. Facultatif.">
           <MediaGrid campaignId={c.id} role="BRIEF_FILE" items={links.filter((l) => l.role === "BRIEF_FILE")} setLinks={setLinks} library={data.library} accept="any" />
         </Section>
 
-        <Section icon={<Wallet />} title="Budget publicitaire et durée" description="Le montant dépensé sur les plateformes pour diffuser votre publicité.">
+        <Section icon={<Wallet />} title="Budget et durée">
           <BudgetFields data={data} value={{ adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "", budgetSplit: s.budgetSplit, platforms: s.platforms }} onChange={set}
             recommended={objective ? { daily: objective.config.recommendedDailyBudget, days: objective.config.recommendedDays } : null} />
         </Section>
 
-        <Section icon={<Sparkles />} title="Formule" description="Ce que notre équipe prend en charge.">
-          <LevelPicker expert levels={data.levels} value={s.serviceCode} onChange={(serviceCode) => set({ serviceCode })} baseLabel="" baseFee={objective ? data.baseFees[objective.serviceCode] ?? data.limits.minServiceFee : data.limits.minServiceFee} />
+        <Section icon={<Sparkles />} tone="violet" title="Formule">
+          <LevelPicker expert levels={data.levels} value={s.serviceCode} onChange={(serviceCode) => set({ serviceCode })} baseFee={objective ? data.baseFees[objective.serviceCode] ?? data.limits.minServiceFee : data.limits.minServiceFee} />
         </Section>
 
       <section className="space-y-3 border-t border-line pt-7">
         <QuotePanel state={quote} promo={promo} onPromo={setPromo} />
         {error && <Notice tone="danger">{error}</Notice>}
-        <Button type="button" size="lg" variant="accent" className="w-full" disabled={busy !== null} onClick={() => save(true)}>{busy === "order" && <LoaderCircle className="animate-spin" />}Passer au paiement<ArrowRight /></Button>
+        <Button type="button" size="lg" variant="accent" className="w-full" disabled={busy !== null} onClick={() => save(true)}>{busy === "order" && <LoaderCircle className="animate-spin" />}Payer<ArrowRight /></Button>
         <Button type="button" variant="ghost" className="w-full" disabled={busy !== null} onClick={() => save(false)}>{busy === "save" && <LoaderCircle className="animate-spin" />}Enregistrer le brouillon</Button>
-        <p className="text-xs leading-relaxed text-muted">Après paiement, un gestionnaire vous contacte par la messagerie de la campagne. Les créations vous sont soumises avant toute diffusion. <Link href="/conditions" className="underline">Conditions</Link></p>
+        <p className="text-xs leading-relaxed text-muted">Vous validez les créations avant toute diffusion. <Link href="/conditions" className="underline">Conditions</Link></p>
       </section>
     </div>
   );

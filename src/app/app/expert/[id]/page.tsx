@@ -17,7 +17,7 @@ export default async function ExpertBriefPage({ params }: { params: Promise<{ id
   if (data.campaign.mode !== "EXPERT") redirect(`/app/creer/${id}`);
   return (
     <>
-      <PageHeader title="Votre brief" back={{ href: "/app/expert", label: "Confier à un expert" }} description="Plus votre brief est précis, plus la campagne sera pertinente. Vous pourrez compléter par messagerie ensuite." />
+      <PageHeader title="Votre brief" back={{ href: "/app/expert", label: "Expert" }} />
       <ExpertBrief data={data} />
     </>
   );

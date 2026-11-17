@@ -29,9 +29,9 @@ export type Objective = {
 export type MetricKey = "impressions" | "reach" | "clicks" | "ctr" | "cpc" | "cpm" | "engagements" | "videoViews" | "conversions" | "leads" | "spend" | "roi";
 
 export const OBJECTIVE_CATEGORIES: Record<ObjectiveCategory, { label: string; description: string }> = {
-  community: { label: "Développer ma communauté", description: "Gagner des abonnés et faire vivre vos pages." },
-  business: { label: "Développer mes ventes", description: "Obtenir des commandes, des prospects et des clients." },
-  awareness: { label: "Gagner en visibilité", description: "Faire connaître votre marque, un produit ou un événement." },
+  community: { label: "Communauté", description: "Gagner des abonnés et faire vivre vos pages." },
+  business: { label: "Ventes", description: "Obtenir des commandes, des prospects et des clients." },
+  awareness: { label: "Visibilité", description: "Faire connaître votre marque, un produit ou un événement." },
 };
 
 const ALL: PlatformCode[] = ["FACEBOOK", "INSTAGRAM", "TIKTOK"];
@@ -158,6 +158,17 @@ export const OBJECTIVES: Objective[] = [
 ];
 
 const byCode = new Map(OBJECTIVES.map((o) => [o.code, o]));
+
+/** Libellés courts pour les tuiles et les choix : le résultat obtenu, en deux ou trois mots. */
+const SHORT_LABELS: Record<string, string> = {
+  page_likes: "Mentions J'aime", fb_followers: "Abonnés Facebook", ig_followers: "Abonnés Instagram", tiktok_growth: "Abonnés TikTok",
+  engagement: "Réactions et partages", page_awareness: "Page plus connue",
+  sales: "Ventes", whatsapp_orders: "Commandes WhatsApp", leads: "Prospects", calls: "Appels", store_visits: "Clients en boutique",
+  product_promo: "Promotion d'un produit", quote_requests: "Demandes de devis",
+  company_awareness: "Entreprise plus connue", post_reach: "Portée des publications", video_views: "Vues vidéo", event_promo: "Événement",
+  product_launch: "Lancement de produit", brand_building: "Image de marque",
+};
+export const objectiveShort = (o: { code: string; label: string }) => SHORT_LABELS[o.code] ?? o.label;
 export const getObjective = (code: string | null | undefined) => (code ? byCode.get(code) ?? null : null);
 
 export function objectivesFor(platforms: PlatformCode[]) {
