@@ -89,13 +89,13 @@ export default async function CampaignPage({ params, searchParams }: { params: P
 
   return (
     <>
-      <Link href="/app/campagnes" className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pl-2 pr-3 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
+      <Link href="/app/campagnes" className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pl-2 pr-3 text-[0.8125rem] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink">
         <ArrowLeft className="size-3.5" />Campagnes
       </Link>
 
       <header className="mb-6 animate-rise">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="text-[24px] font-semibold leading-tight sm:text-[28px]">{c.name}</h1>
+          <h1 className="text-[1.5rem] font-semibold leading-tight sm:text-[1.75rem]">{c.name}</h1>
           <CampaignStatusBadge status={status} />
         </div>
         <p className="mt-1.5 text-muted">{STATUS_META[status].clientHint}</p>
@@ -167,7 +167,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
               <CampaignSummary c={c} compact />
               <DefinitionList className="mt-2.5 border-t border-line pt-2.5" items={[
                 { label: "Gestionnaire", value: c.manager?.name ?? "Bientôt attribué" },
-                { label: "Référence", value: <span className="font-mono text-[13px]">{c.reference}</span> },
+                { label: "Référence", value: <span className="font-mono text-[0.8125rem]">{c.reference}</span> },
               ]} />
             </div>
             <div className="mt-3"><CampaignActions id={c.id} canCancel={clientCanCancel(status)} canRevise={!["PENDING_PAYMENT", "COMPLETED", "CANCELLED"].includes(status)} /></div>
@@ -175,7 +175,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
 
           {order && (
             <List>
-              <ListRow href={`/app/paiements/${order.id}`} title="Reçu" subtitle={<span className="font-mono text-[12.5px]">{order.reference}</span>} trailing={<span className="tnum font-semibold text-ink">{formatFcfa(order.total)}</span>} />
+              <ListRow href={`/app/paiements/${order.id}`} title="Reçu" subtitle={<span className="font-mono text-[0.78125rem]">{order.reference}</span>} trailing={<span className="tnum font-semibold text-ink">{formatFcfa(order.total)}</span>} />
             </List>
           )}
 
@@ -193,7 +193,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
                 {c.revisions.map((r) => (
                   <li key={r.id} className="px-4 py-3.5 text-sm sm:px-5">
                     <div className="flex items-start justify-between gap-3"><p className="whitespace-pre-wrap text-ink">{r.description}</p><StateBadge kind="revision" value={r.status} /></div>
-                    {r.response && <p className="mt-2 rounded-md bg-sand px-3 py-2 text-[13px] text-ink-soft">Réponse : {r.response}</p>}
+                    {r.response && <p className="mt-2 rounded-md bg-sand px-3 py-2 text-[0.8125rem] text-ink-soft">Réponse : {r.response}</p>}
                     <p className="mt-1.5 text-xs text-muted">{formatDateTime(r.createdAt)}</p>
                   </li>
                 ))}

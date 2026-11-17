@@ -91,7 +91,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
 
             {clientFiles.length > 0 && (
               <Card>
-                <CardHeader title={`Fichiers du client (${clientFiles.length})`} action={<Link href={`${base}?onglet=creations`} className="text-[13px] font-medium text-green hover:underline">Tout voir</Link>} />
+                <CardHeader title={`Fichiers du client (${clientFiles.length})`} action={<Link href={`${base}?onglet=creations`} className="text-[0.8125rem] font-medium text-green hover:underline">Tout voir</Link>} />
                 <CardBody>
                   <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 xl:grid-cols-5">
                     {clientFiles.slice(0, 10).map((a) => (
@@ -107,8 +107,8 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
                 <CardHeader title="Paramétrage publicitaire recommandé" />
                 <CardBody>
                   <DefinitionList items={[
-                    ...(platforms.some((p) => p !== "TIKTOK") ? [{ label: "Objectif Meta", value: objective.config.metaObjective ? <span className="font-mono text-[13px]">{objective.config.metaObjective}</span> : "Non adapté" }, { label: "Optimisation Meta", value: objective.config.metaOptimization ? <span className="font-mono text-[13px]">{objective.config.metaOptimization}</span> : null }] : []),
-                    ...(platforms.includes("TIKTOK") ? [{ label: "Objectif TikTok", value: objective.config.tiktokObjective ? <span className="font-mono text-[13px]">{objective.config.tiktokObjective}</span> : "Non adapté" }, { label: "Optimisation TikTok", value: objective.config.tiktokOptimization ? <span className="font-mono text-[13px]">{objective.config.tiktokOptimization}</span> : null }] : []),
+                    ...(platforms.some((p) => p !== "TIKTOK") ? [{ label: "Objectif Meta", value: objective.config.metaObjective ? <span className="font-mono text-[0.8125rem]">{objective.config.metaObjective}</span> : "Non adapté" }, { label: "Optimisation Meta", value: objective.config.metaOptimization ? <span className="font-mono text-[0.8125rem]">{objective.config.metaOptimization}</span> : null }] : []),
+                    ...(platforms.includes("TIKTOK") ? [{ label: "Objectif TikTok", value: objective.config.tiktokObjective ? <span className="font-mono text-[0.8125rem]">{objective.config.tiktokObjective}</span> : "Non adapté" }, { label: "Optimisation TikTok", value: objective.config.tiktokOptimization ? <span className="font-mono text-[0.8125rem]">{objective.config.tiktokOptimization}</span> : null }] : []),
                     { label: "Formats conseillés", value: objective.config.formats.join(", ") },
                     { label: "Boutons d'action", value: objective.config.ctas.join(", ") },
                     { label: "Prérequis", value: objective.config.requires.length ? objective.config.requires.join(", ") : "Aucun" },
@@ -121,10 +121,10 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
               <Card>
                 <CardHeader title="Texte et stratégie" description={strategy ? (isRecord(c.strategy) && c.strategy.engine === "ai" ? "Stratégie générée par IA, relue par le client." : "Stratégie issue des suggestions guidées.") : undefined} />
                 <CardBody className="space-y-4 text-sm">
-                  {copy && <div className="rounded-md border border-line bg-paper p-4"><p className="font-medium text-ink">{copy.headline}</p><p className="mt-1.5 whitespace-pre-wrap text-ink-soft">{copy.body}</p>{copy.cta && <p className="mt-2 text-[13px] text-green">Bouton : {copy.cta}</p>}</div>}
+                  {copy && <div className="rounded-md border border-line bg-paper p-4"><p className="font-medium text-ink">{copy.headline}</p><p className="mt-1.5 whitespace-pre-wrap text-ink-soft">{copy.body}</p>{copy.cta && <p className="mt-2 text-[0.8125rem] text-green">Bouton : {copy.cta}</p>}</div>}
                   {strategy?.analysis && <p className="text-ink-soft">{strategy.analysis}</p>}
-                  {strategy?.audiences?.length ? <div><h4 className="text-[13px] font-semibold">Audiences proposées</h4><ul className="mt-1.5 list-disc space-y-1 pl-5 text-ink-soft">{strategy.audiences.map((a, i) => <li key={i}><span className="font-medium text-ink">{a.name}</span> — {a.description}</li>)}</ul></div> : null}
-                  {strategy?.variants?.length ? <div><h4 className="text-[13px] font-semibold">Variantes A/B</h4><ul className="mt-1.5 list-disc space-y-1 pl-5 text-ink-soft">{strategy.variants.map((v, i) => <li key={i}><span className="font-medium text-ink">{v.name}</span> — {v.angle}</li>)}</ul></div> : null}
+                  {strategy?.audiences?.length ? <div><h4 className="text-[0.8125rem] font-semibold">Audiences proposées</h4><ul className="mt-1.5 list-disc space-y-1 pl-5 text-ink-soft">{strategy.audiences.map((a, i) => <li key={i}><span className="font-medium text-ink">{a.name}</span> — {a.description}</li>)}</ul></div> : null}
+                  {strategy?.variants?.length ? <div><h4 className="text-[0.8125rem] font-semibold">Variantes A/B</h4><ul className="mt-1.5 list-disc space-y-1 pl-5 text-ink-soft">{strategy.variants.map((v, i) => <li key={i}><span className="font-medium text-ink">{v.name}</span> — {v.angle}</li>)}</ul></div> : null}
                 </CardBody>
               </Card>
             )}
@@ -135,7 +135,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
                 {c.statusEvents.map((e) => (
                   <li key={e.id} className="relative pl-5 text-sm before:absolute before:left-0 before:top-1.5 before:size-2 before:rounded-full before:bg-line-strong">
                     <p className="font-medium text-ink">{STATUS_META[e.toStatus as CampaignStatusName].label}</p>
-                    {e.note && <p className="text-[13px] text-ink-soft">{e.note}</p>}
+                    {e.note && <p className="text-[0.8125rem] text-ink-soft">{e.note}</p>}
                     <p className="text-xs text-muted">{formatDateTime(e.createdAt)}{e.actorId ? ` · ${actorName.get(e.actorId) ?? "compte supprimé"}` : " · automatique"}</p>
                   </li>
                 ))}
@@ -176,8 +176,8 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
                 <p className="text-muted">{c.user.accountType === "PROFESSIONAL" ? "Compte professionnel" : "Particulier"}</p>
                 <a href={`mailto:${c.user.email}`} className="block truncate text-green hover:underline">{c.user.email}</a>
                 {c.user.phone && (wa ? <a href={wa} target="_blank" rel="noreferrer" className="tnum block text-green hover:underline">{formatPhone(c.user.phone)}</a> : <p className="tnum">{formatPhone(c.user.phone)}</p>)}
-                {c.business && <p className="pt-2 text-[13px] text-ink-soft">{c.business.name} · {c.business.sector}{c.business.city ? ` · ${c.business.city}` : ""}</p>}
-                {c.business && [...PLATFORM_CODES.filter((p) => !platforms.includes(p)).map((p) => accounts[p]), c.business.website].filter(Boolean).map((u) => <a key={u} href={u!} target="_blank" rel="noreferrer nofollow" className="block truncate text-[13px] text-green hover:underline">{u}</a>)}
+                {c.business && <p className="pt-2 text-[0.8125rem] text-ink-soft">{c.business.name} · {c.business.sector}{c.business.city ? ` · ${c.business.city}` : ""}</p>}
+                {c.business && [...PLATFORM_CODES.filter((p) => !platforms.includes(p)).map((p) => accounts[p]), c.business.website].filter(Boolean).map((u) => <a key={u} href={u!} target="_blank" rel="noreferrer nofollow" className="block truncate text-[0.8125rem] text-green hover:underline">{u}</a>)}
               </CardBody>
             </Card>
             {order && can(user.role, "order.view") && (
@@ -185,12 +185,12 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
                 <CardHeader title="Commande" action={<StateBadge kind="order" value={order.status} />} />
                 <CardBody>
                   <DefinitionList className="sm:grid-cols-2" items={[
-                    { label: "Référence", value: <span className="font-mono text-[13px]">{order.reference}</span> },
+                    { label: "Référence", value: <span className="font-mono text-[0.8125rem]">{order.reference}</span> },
                     { label: "Total", value: <span className="tnum font-medium">{formatFcfa(order.total)}</span> },
                     { label: "Budget publicitaire", value: <span className="tnum">{formatFcfa(order.adBudget)}</span> },
                     { label: "Prestation nette", value: <span className="tnum">{formatFcfa(order.serviceFee - order.discount)}</span> },
                   ]} />
-                  {can(user.role, "payment.view") && <Link href={`/gestion/paiements?q=${order.reference}`} className="mt-3 inline-block text-[13px] font-medium text-green hover:underline">Voir les paiements</Link>}
+                  {can(user.role, "payment.view") && <Link href={`/gestion/paiements?q=${order.reference}`} className="mt-3 inline-block text-[0.8125rem] font-medium text-green hover:underline">Voir les paiements</Link>}
                 </CardBody>
               </Card>
             )}

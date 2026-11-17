@@ -65,11 +65,11 @@ function NavLinks({ items, pathname, onNavigate }: { items: NavItem[]; pathname:
             <Link
               href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
               className={cn(
-                "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-[14.5px] transition-colors",
+                "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-[0.90625rem] transition-colors",
                 active ? "bg-forest font-semibold text-white shadow-[0_8px_18px_-10px_rgb(11_42_31/0.7)]" : "text-ink-soft hover:bg-sand hover:text-ink",
               )}
             >
-              <item.icon className={cn("size-[18px] shrink-0 transition-colors", active ? "text-marigold" : "text-muted group-hover:text-ink-soft")} />
+              <item.icon className={cn("size-[1.125rem] shrink-0 transition-colors", active ? "text-marigold" : "text-muted group-hover:text-ink-soft")} />
               {item.label}
             </Link>
           </React.Fragment>
@@ -80,10 +80,10 @@ function NavLinks({ items, pathname, onNavigate }: { items: NavItem[]; pathname:
 }
 
 function Avatar({ name, className }: { name: string; className?: string }) {
-  return <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0b2a1f,#0b7a53)] text-[12.5px] font-semibold text-white", className)}>{initials(name)}</span>;
+  return <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0b2a1f,#0b7a53)] text-[0.78125rem] font-semibold text-white", className)}>{initials(name)}</span>;
 }
 
-const menuItem = "flex cursor-pointer items-center gap-2.5 rounded-sm px-2.5 py-2 text-[14px] text-ink-soft outline-none data-[highlighted]:bg-paper data-[highlighted]:text-ink [&_svg]:size-4 [&_svg]:text-muted";
+const menuItem = "flex cursor-pointer items-center gap-2.5 rounded-sm px-2.5 py-2 text-[0.875rem] text-ink-soft outline-none data-[highlighted]:bg-paper data-[highlighted]:text-ink [&_svg]:size-4 [&_svg]:text-muted";
 
 function UserMenu({ user, area, compact }: { user: { name: string; roleLabel: string }; area: "client" | "staff"; compact?: boolean }) {
   const [pending, start] = React.useTransition();
@@ -93,11 +93,11 @@ function UserMenu({ user, area, compact }: { user: { name: string; roleLabel: st
         aria-label="Menu du compte"
         className={cn("flex items-center gap-3 rounded-md text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-green", compact ? "rounded-full ring-2 ring-surface" : "w-full bg-paper p-2 hover:bg-sand")}
       >
-        <Avatar name={user.name} className={compact ? "size-10 text-[12.5px]" : undefined} />
+        <Avatar name={user.name} className={compact ? "size-9 text-[0.75rem] sm:size-10" : undefined} />
         {!compact && (
           <>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13.5px] font-medium text-ink">{user.name}</span>
+              <span className="block truncate text-[0.84375rem] font-medium text-ink">{user.name}</span>
               <span className="block truncate text-xs text-muted">{user.roleLabel}</span>
             </span>
             <ChevronsUpDown className="mr-1 size-4 shrink-0 text-muted" />
@@ -107,7 +107,7 @@ function UserMenu({ user, area, compact }: { user: { name: string; roleLabel: st
       <DropdownMenu.Portal>
         <DropdownMenu.Content align={compact ? "end" : "start"} side={compact ? "bottom" : "top"} sideOffset={8} className="z-50 w-60 animate-pop rounded-lg border border-line/70 bg-surface p-1.5 shadow-pop">
           <div className="px-2.5 pb-2 pt-1.5">
-            <p className="truncate text-[13.5px] font-semibold text-ink">{user.name}</p>
+            <p className="truncate text-[0.84375rem] font-semibold text-ink">{user.name}</p>
             <p className="truncate text-xs text-muted">{user.roleLabel}</p>
           </div>
           <DropdownMenu.Separator className="my-1 h-px bg-line" />
@@ -139,7 +139,7 @@ export function AppShell({ area, user, unread, allowed, children }: {
   const title = EXTRA_TITLES.find(([re]) => re.test(pathname))?.[1] ?? all.find((i) => isActive(pathname, i))?.label ?? (client ? "Accueil" : "Gestion");
 
   const bell = (
-    <Link href={notifHref} className="relative flex size-10 items-center justify-center rounded-full bg-surface text-ink-soft shadow-card transition-colors hover:text-ink" aria-label={`Notifications${unread ? ` (${unread} non lues)` : ""}`}>
+    <Link href={notifHref} className="relative flex size-9 items-center justify-center rounded-full bg-surface text-ink-soft shadow-card transition-colors hover:text-ink sm:size-10" aria-label={`Notifications${unread ? ` (${unread} non lues)` : ""}`}>
       <Bell className="size-5" />
       {unread > 0 && (
         <span className="absolute -right-0.5 -top-0.5 flex">
@@ -153,7 +153,7 @@ export function AppShell({ area, user, unread, allowed, children }: {
   const createButton = (onNavigate?: () => void) => (
     <Link href="/app/creer" onClick={onNavigate} aria-current={creating ? "page" : undefined}
       className="flex h-12 items-center justify-center gap-2 rounded-full bg-marigold text-sm font-semibold text-forest shadow-glow transition-[background-color,transform] hover:bg-marigold-600 active:scale-[0.98]">
-      <Plus className="size-[18px]" strokeWidth={2.4} />Créer une publicité
+      <Plus className="size-[1.125rem]" strokeWidth={2.4} />Créer une publicité
     </Link>
   );
 
@@ -171,16 +171,16 @@ export function AppShell({ area, user, unread, allowed, children }: {
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="no-print sticky top-0 z-30 flex h-16 items-center justify-between gap-3 bg-canvas/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="no-print sticky top-0 z-30 flex h-14 items-center sm:h-16 justify-between gap-3 bg-canvas/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-2">
             {!client && (
               <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger className="flex size-10 items-center justify-center rounded-full bg-surface text-ink-soft shadow-card lg:hidden" aria-label="Ouvrir le menu"><Menu className="size-5" /></DialogTrigger>
+                <DialogTrigger className="flex size-9 items-center justify-center rounded-full bg-surface text-ink-soft shadow-card sm:size-10 lg:hidden" aria-label="Ouvrir le menu"><Menu className="size-5" /></DialogTrigger>
                 <DialogContent title="Menu" side="left"><NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} /></DialogContent>
               </Dialog>
             )}
             <Link href={home} className="lg:hidden"><Logo /></Link>
-            <p className="hidden min-w-0 items-center gap-2 text-[13.5px] text-muted lg:flex">
+            <p className="hidden min-w-0 items-center gap-2 text-[0.84375rem] text-muted lg:flex">
               <span>{client ? "Espace annonceur" : "Espace de gestion"}</span>
               <span aria-hidden className="text-line-strong">/</span>
               <span className="truncate font-medium text-ink">{title}</span>
@@ -192,21 +192,21 @@ export function AppShell({ area, user, unread, allowed, children }: {
           </div>
         </header>
 
-        <main className={cn("mx-auto w-full flex-1 px-4 pb-8 pt-2 sm:px-6 lg:px-8 lg:pb-10 lg:pt-4", client ? "max-w-4xl" : "max-w-6xl", client && !immersive && "pb-32 lg:pb-10")}>{children}</main>
+        <main className={cn("mx-auto w-full flex-1 px-4 pb-8 pt-2 sm:px-6 lg:px-8 lg:pb-10 lg:pt-4", client ? "max-w-4xl" : "max-w-6xl", client && !immersive && "pb-28 lg:pb-10")}>{children}</main>
 
         {client && !immersive && <PullToRefresh />}
 
         {client && !immersive && (
           <nav className="no-print pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden" aria-label="Navigation principale">
-            <div className="pointer-events-auto mx-auto grid max-w-md grid-cols-5 items-center rounded-[28px] border border-line/70 bg-surface/95 px-1.5 py-1.5 shadow-pop backdrop-blur-xl">
+            <div className="pointer-events-auto mx-auto grid max-w-md grid-cols-5 items-center rounded-[24px] border border-line/70 bg-surface/95 px-1.5 py-1 shadow-pop backdrop-blur-xl">
               {[CLIENT_NAV[0]!, CLIENT_NAV[1]!].map((item) => <BottomLink key={item.id} item={item} active={isActive(pathname, item)} />)}
-              <Link href="/app/creer" aria-current={creating ? "page" : undefined} aria-label="Créer une publicité" className="-mt-8 flex flex-col items-center">
-                <span className="flex size-[3.75rem] items-center justify-center rounded-full bg-marigold text-forest shadow-glow ring-[5px] ring-canvas transition-transform active:scale-95"><Plus className="size-7" strokeWidth={2.4} /></span>
+              <Link href="/app/creer" aria-current={creating ? "page" : undefined} aria-label="Créer une publicité" className="-mt-6 flex flex-col items-center">
+                <span className="flex size-[3.25rem] items-center justify-center rounded-full bg-marigold text-forest shadow-glow ring-4 ring-canvas transition-transform active:scale-95"><Plus className="size-6" strokeWidth={2.4} /></span>
               </Link>
               <BottomLink item={CLIENT_NAV[2]!} active={isActive(pathname, CLIENT_NAV[2]!)} />
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger className="flex flex-col items-center gap-0.5 py-1 text-[10.5px] font-medium text-muted">
-                  <span className="flex h-8 w-12 items-center justify-center rounded-full"><Ellipsis className="size-[22px]" /></span>Plus
+                  <span className="flex h-7 w-11 items-center justify-center rounded-full"><Ellipsis className="size-5" /></span>Plus
                 </DialogTrigger>
                 <DialogContent title="Menu" side="bottom">
                   <div className="mb-3">{createButton(() => setOpen(false))}</div>
@@ -224,7 +224,7 @@ export function AppShell({ area, user, unread, allowed, children }: {
 function BottomLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link href={item.href} aria-current={active ? "page" : undefined} className={cn("flex flex-col items-center gap-0.5 py-1 text-[10.5px]", active ? "font-semibold text-forest" : "font-medium text-muted")}>
-      <span className={cn("flex h-8 w-12 items-center justify-center rounded-full transition-colors", active && "bg-forest text-marigold")}><item.icon className="size-[22px]" strokeWidth={active ? 2.2 : 1.9} /></span>
+      <span className={cn("flex h-7 w-11 items-center justify-center rounded-full transition-colors", active && "bg-forest text-marigold")}><item.icon className="size-5" strokeWidth={active ? 2.2 : 1.9} /></span>
       {item.short ?? item.label}
     </Link>
   );

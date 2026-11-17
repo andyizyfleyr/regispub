@@ -43,7 +43,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
               {rows.map((o) => (
                 <tr key={o.id}>
                   <td>
-                    <span className="block font-mono text-[13px] text-ink">{o.reference}</span>
+                    <span className="block font-mono text-[0.8125rem] text-ink">{o.reference}</span>
                     <span className="block text-xs text-muted">{formatDateTime(o.createdAt)}{o.invoiceNumber ? ` · ${o.invoiceNumber}` : ""}</span>
                     {o.campaign ? <Link href={`/gestion/campagnes/${o.campaign.id}`} className="block max-w-56 truncate text-xs text-green hover:underline">{o.campaign.name}</Link> : <span className="block text-xs text-muted">{o.serviceLabel}</span>}
                   </td>

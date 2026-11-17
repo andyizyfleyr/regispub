@@ -95,7 +95,7 @@ export function MetricsView({ report, kpis, adBudget, staff }: { report: Campaig
                 <PlatformBadge platform={p.platform as PlatformCode} size="sm" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-ink">{PLATFORMS[p.platform as PlatformCode]?.label ?? p.platform}</span>
-                  <span className="tnum block text-[13px] text-muted">{formatNumber(p.impressions)} affichages · {formatNumber(p.clicks)} clics</span>
+                  <span className="tnum block text-[0.8125rem] text-muted">{formatNumber(p.impressions)} affichages · {formatNumber(p.clicks)} clics</span>
                 </span>
                 <span className="tnum shrink-0 text-sm font-medium">{formatFcfa(p.spend)}</span>
               </li>

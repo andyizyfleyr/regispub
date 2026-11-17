@@ -45,7 +45,7 @@ export default async function HomePage() {
   const expertFee = expertFees.length ? Math.min(...expertFees) : null;
 
   const wrap = "mx-auto max-w-6xl px-5";
-  const title = "mt-2 max-w-2xl text-[28px] font-semibold leading-tight sm:text-[38px]";
+  const title = "mt-2 max-w-2xl text-[1.75rem] font-semibold leading-tight sm:text-[2.375rem]";
 
   return (
     <>
@@ -55,13 +55,13 @@ export default async function HomePage() {
           <div className="animate-rise">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-line bg-surface py-1.5 pl-2 pr-3.5 shadow-card">
               <PlatformBadge platform="FACEBOOK" size="sm" /><PlatformBadge platform="INSTAGRAM" size="sm" /><PlatformBadge platform="TIKTOK" size="sm" />
-              <span className="ml-1 text-[13px] font-medium text-ink-soft">Sans carte bancaire</span>
+              <span className="ml-1 text-[0.8125rem] font-medium text-ink-soft">Sans carte bancaire</span>
             </div>
-            <h1 className="text-[36px] font-semibold leading-[1.08] sm:text-[54px] lg:text-[60px]">
+            <h1 className="text-[2.25rem] font-semibold leading-[1.08] sm:text-[3.375rem] lg:text-[3.75rem]">
               Votre publicité,{" "}
               <span className="box-decoration-clone bg-[linear-gradient(transparent_64%,rgb(248_168_31/0.7)_64%,rgb(248_168_31/0.7)_94%,transparent_94%)] px-0.5">payée par Mobile Money.</span>
             </h1>
-            <p className="mt-5 max-w-xl text-[19px] leading-relaxed text-ink-soft">Vous décrivez. Nous lançons.</p>
+            <p className="mt-5 max-w-xl text-[1.1875rem] leading-relaxed text-ink-soft">Vous décrivez. Nous lançons.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Button asChild size="lg" variant="accent"><Link href="/app/creer">Créer ma publicité <ArrowRight /></Link></Button>
               <Button asChild size="lg" variant="outline"><Link href="/app/expert"><Headset /> Un expert s&apos;en charge</Link></Button>
@@ -85,13 +85,13 @@ export default async function HomePage() {
                 <Image src="/img/vitrine-wax.jpg" alt="Robes en wax suspendues dans une boutique" width={720} height={720} priority sizes="350px" className="aspect-[5/4] w-full object-cover" />
                 <figcaption className="flex items-center justify-between gap-3 bg-paper px-4 py-3">
                   <span className="min-w-0"><span className="block truncate text-sm font-semibold text-ink">Robes en wax</span><span className="block text-xs text-muted">Cotonou</span></span>
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#25d366] px-3.5 py-2 text-[13px] font-semibold text-white"><WhatsappIcon className="size-4" />WhatsApp</span>
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#25d366] px-3.5 py-2 text-[0.8125rem] font-semibold text-white"><WhatsappIcon className="size-4" />WhatsApp</span>
                 </figcaption>
               </figure>
               {example && (
                 <div className="absolute -left-3 top-[46%] flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 shadow-lift sm:-left-14">
                   <span className="flex size-8 items-center justify-center rounded-full bg-green-soft text-green"><Check className="size-4" strokeWidth={3} /></span>
-                  <span><span className="block text-[11.5px] leading-tight text-muted">Payé</span><span className="tnum block font-display text-[15px] font-semibold leading-tight text-ink">{formatFcfa(example.total)}</span></span>
+                  <span><span className="block text-[11.5px] leading-tight text-muted">Payé</span><span className="tnum block font-display text-[0.9375rem] font-semibold leading-tight text-ink">{formatFcfa(example.total)}</span></span>
                 </div>
               )}
             </div>
@@ -149,7 +149,7 @@ export default async function HomePage() {
               {PROMISES.map((p, i) => (
                 <li key={p.text} className="flex items-center gap-3.5 rounded-xl border border-line bg-surface p-3.5 shadow-card">
                   <span aria-hidden className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5", TILE_TONES[toneAt(i)])}>{p.icon}</span>
-                  <span className="text-[15px] font-medium text-ink">{p.text}</span>
+                  <span className="text-[0.9375rem] font-medium text-ink">{p.text}</span>
                 </li>
               ))}
             </ul>
@@ -164,7 +164,7 @@ export default async function HomePage() {
               <div className="relative rounded-2xl border border-line-strong bg-surface p-6 shadow-pop">
                 <div className="flex items-center justify-between"><p className="eyebrow">Exemple</p><PlatformBadge platform="FACEBOOK" size="sm" /></div>
                 <p className="mt-3 font-display text-lg font-semibold">Page plus connue</p>
-                <p className="text-[13px] text-muted">10 jours · Cotonou</p>
+                <p className="text-[0.8125rem] text-muted">10 jours · Cotonou</p>
                 <dl className="mt-5 space-y-3 text-sm">
                   {example.lines.map((l) => (
                     <div key={l.kind} className="flex items-baseline justify-between gap-4">
@@ -194,8 +194,8 @@ export default async function HomePage() {
           <div className="mt-8 space-y-2.5">
             {FAQ.map((f) => (
               <details key={f.q} className="group rounded-xl border border-line bg-surface px-5 py-4 shadow-card open:border-line-strong">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[16px] font-medium text-ink [&::-webkit-details-marker]:hidden">
-                  <span className="flex items-center gap-3"><span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-green-soft text-green [&_svg]:size-[18px]">{f.icon}</span>{f.q}</span>
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[1rem] font-medium text-ink [&::-webkit-details-marker]:hidden">
+                  <span className="flex items-center gap-3"><span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-green-soft text-green [&_svg]:size-[1.125rem]">{f.icon}</span>{f.q}</span>
                   <ChevronDown className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
                 </summary>
                 <p className="mt-3 pl-12 text-sm leading-relaxed text-muted">{f.a}</p>
@@ -210,7 +210,7 @@ export default async function HomePage() {
         <div className="bg-brand relative overflow-hidden rounded-[28px] px-6 py-12 text-center text-white shadow-lift sm:px-12 sm:py-16">
           <div aria-hidden className="bg-grid absolute inset-0 opacity-70" />
           <div className="relative">
-            <h2 className="mx-auto max-w-xl text-[30px] font-semibold leading-tight text-white sm:text-[42px]">Prêt à vous lancer ?</h2>
+            <h2 className="mx-auto max-w-xl text-[1.875rem] font-semibold leading-tight text-white sm:text-[2.625rem]">Prêt à vous lancer ?</h2>
             <p className="mx-auto mt-3 max-w-md text-white/75">Compte gratuit. Vous payez à la commande.</p>
             <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button asChild size="lg" variant="accent"><Link href="/app/creer">Créer ma publicité <ArrowRight /></Link></Button>

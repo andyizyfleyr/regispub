@@ -28,8 +28,8 @@ export default async function ServicesPage() {
   const [services, settings] = await Promise.all([db.service.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }), getSettings()]);
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
-      <h1 className="max-w-3xl text-[34px] font-semibold leading-[1.08] sm:text-[46px]">Tarifs</h1>
-      <p className="tnum mt-3 max-w-2xl text-[17px] text-ink-soft">Hors budget publicitaire, dès {formatFcfa(settings.minAdBudget)}.</p>
+      <h1 className="max-w-3xl text-[2.125rem] font-semibold leading-[1.08] sm:text-[2.875rem]">Tarifs</h1>
+      <p className="tnum mt-3 max-w-2xl text-[1.0625rem] text-ink-soft">Hors budget publicitaire, dès {formatFcfa(settings.minAdBudget)}.</p>
 
       {(Object.keys(KIND_INFO) as (keyof typeof KIND_INFO)[]).map((kind) => {
         const list = services.filter((s) => s.kind === kind);
@@ -41,9 +41,9 @@ export default async function ServicesPage() {
               {list.map((s, i) => (
                 <article key={s.id} className="flex w-full flex-col rounded-2xl border border-line bg-surface p-6 shadow-card">
                   <span aria-hidden className={cn("h-1.5 w-10 rounded-full", ["bg-green", "bg-marigold", "bg-sky", "bg-violet", "bg-rose"][i % 5])} />
-                  <h3 className="mt-4 text-[17px] font-semibold tracking-normal [font-family:var(--font-sans)]">{s.name}</h3>
+                  <h3 className="mt-4 text-[1.0625rem] font-semibold tracking-normal [font-family:var(--font-sans)]">{s.name}</h3>
                   <p className="mt-2">
-                    <span className="tnum font-display text-[30px] font-semibold leading-none">{formatFcfa(s.fee)}</span>
+                    <span className="tnum font-display text-[1.875rem] font-semibold leading-none">{formatFcfa(s.fee)}</span>
                     <span className="ml-1.5 text-sm text-muted">{kind === "SUBSCRIPTION" ? "/ mois" : "/ campagne"}</span>
                   </p>
                   <ul className="mt-4 space-y-2 text-sm text-ink-soft">

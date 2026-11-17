@@ -9,9 +9,9 @@ export const metadata: Metadata = { title: "Mot de passe oublié" };
 export default function ForgotPage() {
   return (
     <>
-      <h1 className="text-[28px] font-semibold">Mot de passe oublié</h1>
+      <h1 className="text-[1.375rem] font-semibold sm:text-[1.75rem]">Mot de passe oublié</h1>
       <p className="mt-1.5 text-muted">Nous vous envoyons un lien valable une heure.</p>
-      <ActionForm action={requestPasswordResetAction} className="mt-7 space-y-4" refresh={false} resetOnSuccess>
+      <ActionForm action={requestPasswordResetAction} className="mt-5 space-y-3.5 sm:mt-7 sm:space-y-4" refresh={false} resetOnSuccess>
         <Field label="Adresse e-mail" htmlFor="email"><Input id="email" name="email" type="email" required autoComplete="email" /></Field>
         <SubmitButton size="lg" className="w-full">Recevoir le lien</SubmitButton>
       </ActionForm>

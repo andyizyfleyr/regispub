@@ -23,7 +23,7 @@ export function DialogContent({ title, description, children, className, side }:
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
           <div>
             <D.Title className="text-base font-semibold tracking-normal [font-family:var(--font-sans)]">{title}</D.Title>
-            {description ? <D.Description className="mt-0.5 text-[13px] text-muted">{description}</D.Description> : <D.Description className="sr-only">{title}</D.Description>}
+            {description ? <D.Description className="mt-0.5 text-[0.8125rem] text-muted">{description}</D.Description> : <D.Description className="sr-only">{title}</D.Description>}
           </div>
           <D.Close className="-mr-1.5 -mt-1 rounded-full p-2 text-muted hover:bg-sand hover:text-ink" aria-label="Fermer"><X className="size-4" /></D.Close>
         </div>

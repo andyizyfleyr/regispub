@@ -24,15 +24,15 @@ export function campaignHref(c: { id: string; status: string; mode: string }, ba
 export function CampaignRow({ c, base = "/app", extra }: { c: CampaignRowData; base?: string; extra?: React.ReactNode }) {
   const objective = getObjective(c.objective);
   return (
-    <Link href={campaignHref(c, base)} className="group flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-paper sm:px-5">
+    <Link href={campaignHref(c, base)} className="group flex items-center gap-3 px-3.5 py-3 transition-colors hover:bg-paper sm:gap-3.5 sm:px-5 sm:py-3.5">
       <PlatformAvatar platforms={c.platforms as PlatformCode[]} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-3">
-          <p className="min-w-0 flex-1 truncate font-semibold leading-snug text-ink">{c.name}</p>
-          {c.adBudget > 0 && <span className="tnum shrink-0 text-sm font-semibold text-ink">{formatFcfa(c.adBudget)}</span>}
+          <p className="min-w-0 flex-1 truncate text-[0.875rem] font-semibold leading-snug text-ink sm:text-[0.9375rem]">{c.name}</p>
+          {c.adBudget > 0 && <span className="tnum shrink-0 text-[0.8125rem] font-semibold text-ink sm:text-sm">{formatFcfa(c.adBudget)}</span>}
         </div>
-        <div className="mt-1 flex items-center gap-3">
-          <p className="min-w-0 flex-1 truncate text-[13.5px] leading-snug text-muted">
+        <div className="mt-0.5 flex items-center gap-3 sm:mt-1">
+          <p className="min-w-0 flex-1 truncate text-[0.8125rem] leading-snug text-muted sm:text-[0.84375rem]">
             {objective ? objectiveShort(objective) : c.mode === "EXPERT" ? "Confiée à un expert" : "Objectif à définir"}
             {c.startDate && <span className="hidden sm:inline"> · {formatPureDate(c.startDate)}{c.endDate ? ` → ${formatPureDate(c.endDate)}` : ""}</span>}
           </p>

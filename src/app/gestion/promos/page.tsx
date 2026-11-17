@@ -31,10 +31,10 @@ export default async function PromosPage({ searchParams }: { searchParams: Promi
                 const expired = Boolean(p.endsAt && p.endsAt < now); const exhausted = p.maxUses !== null && p.usedCount >= p.maxUses;
                 return (
                   <tr key={p.id}>
-                    <td><span className="block font-mono text-[13px] font-medium text-ink">{p.code}</span><span className="block max-w-56 truncate text-xs text-muted">{p.owner ? `Bon de ${p.owner.name}` : p.description ?? ""}</span></td>
+                    <td><span className="block font-mono text-[0.8125rem] font-medium text-ink">{p.code}</span><span className="block max-w-56 truncate text-xs text-muted">{p.owner ? `Bon de ${p.owner.name}` : p.description ?? ""}</span></td>
                     <td className="tnum whitespace-nowrap">{p.type === "PERCENT" ? `${p.value} %` : formatFcfa(p.value)}{p.minServiceFee ? <span className="block text-xs text-muted">dès {formatFcfa(p.minServiceFee)}</span> : null}</td>
                     <td className="tnum">{p.usedCount}{p.maxUses !== null ? ` / ${p.maxUses}` : ""}</td>
-                    <td className="whitespace-nowrap text-[13px] text-muted">{p.startsAt ? `du ${formatDate(p.startsAt)} ` : ""}{p.endsAt ? `au ${formatDate(p.endsAt)}` : "Sans limite"}</td>
+                    <td className="whitespace-nowrap text-[0.8125rem] text-muted">{p.startsAt ? `du ${formatDate(p.startsAt)} ` : ""}{p.endsAt ? `au ${formatDate(p.endsAt)}` : "Sans limite"}</td>
                     <td><Badge tone={!p.active ? "neutral" : expired || exhausted ? "warn" : "ok"}>{!p.active ? "Désactivé" : expired ? "Expiré" : exhausted ? "Épuisé" : "Actif"}</Badge></td>
                     <td className="text-right"><ActionButton variant="ghost" size="sm" action={togglePromoAction.bind(null, p.id)} successMessage={p.active ? "Code désactivé." : "Code réactivé."}>{p.active ? "Désactiver" : "Réactiver"}</ActionButton></td>
                   </tr>

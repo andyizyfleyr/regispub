@@ -34,10 +34,10 @@ export default async function CreatePage() {
       <ObjectiveBrowser />
 
       <Banner decoration={<Headset />} className="sm:py-7">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-white">Vous préférez déléguer ?</h2>
-            {managementFee ? <p className="tnum mt-1 text-[15px] text-white/75">Dès {formatFcfa(managementFee)}</p> : null}
+            <h2 className="text-[1rem] font-semibold text-white sm:text-xl">Vous préférez déléguer ?</h2>
+            {managementFee ? <p className="tnum mt-0.5 text-[0.8125rem] text-white/75 sm:mt-1 sm:text-[0.9375rem]">Dès {formatFcfa(managementFee)}</p> : null}
           </div>
           <Button asChild variant="accent"><Link href="/app/expert"><Headset />Un expert<ArrowRight /></Link></Button>
         </div>

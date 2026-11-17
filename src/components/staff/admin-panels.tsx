@@ -43,7 +43,7 @@ export function RefundDialog({ paymentId, max, label }: { paymentId: string; max
             <Input id="rf-amount" type="number" inputMode="numeric" min={1} max={max} step={1} className="tnum" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </Field>
           <Field label="Motif" htmlFor="rf-reason"><Textarea id="rf-reason" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Annulation avant lancement, budget non dépensé, paiement en double…" /></Field>
-          <p className="rounded-md bg-sand px-3 py-2.5 text-[13px] text-ink-soft">Le remboursement est enregistré comme « à traiter ». Le transfert Mobile Money vers le client se fait depuis le compte du prestataire de paiement, puis sa référence est saisie ici pour le clôturer.</p>
+          <p className="rounded-md bg-sand px-3 py-2.5 text-[0.8125rem] text-ink-soft">Le remboursement est enregistré comme « à traiter ». Le transfert Mobile Money vers le client se fait depuis le compte du prestataire de paiement, puis sa référence est saisie ici pour le clôturer.</p>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setOpen(false)}>Fermer</Button>
             <Button disabled={busy} onClick={async () => { if (await run(() => requestRefundAction(paymentId, Number(amount), reason), "Remboursement créé.")) setOpen(false); }}>Créer le remboursement</Button>
@@ -60,7 +60,7 @@ export function ResolveRefund({ refundId }: { refundId: string }) {
   const [note, setNote] = React.useState("");
   return (
     <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
-      <Field label="Référence du transfert" htmlFor={`rr-${refundId}`}><Input id={`rr-${refundId}`} className="font-mono text-[13px]" maxLength={80} value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Réf. Mobile Money" /></Field>
+      <Field label="Référence du transfert" htmlFor={`rr-${refundId}`}><Input id={`rr-${refundId}`} className="font-mono text-[0.8125rem]" maxLength={80} value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Réf. Mobile Money" /></Field>
       <Field label="Note ou motif de refus" htmlFor={`rn-${refundId}`} optional><Input id={`rn-${refundId}`} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
       <Button size="sm" className="sm:mb-0.5" disabled={busy} onClick={() => run(() => resolveRefundAction(refundId, "PROCESSED", reference, note), "Remboursement clôturé, client notifié.")}>Marquer effectué</Button>
       <Button size="sm" variant="danger-outline" className="sm:mb-0.5" disabled={busy} onClick={() => run(() => resolveRefundAction(refundId, "REJECTED", reference, note), "Remboursement refusé, client notifié.")}>Refuser</Button>
@@ -71,7 +71,7 @@ export function ResolveRefund({ refundId }: { refundId: string }) {
 export function TicketPanel({ ticketId, status, resolution }: { ticketId: string; status: string; resolution: string | null }) {
   const { busy, run } = useRun();
   const [text, setText] = React.useState(resolution ?? "");
-  if (status === "CLOSED") return resolution ? <p className="rounded-md bg-green-soft px-3 py-2 text-[13px] text-forest">Réponse : {resolution}</p> : null;
+  if (status === "CLOSED") return resolution ? <p className="rounded-md bg-green-soft px-3 py-2 text-[0.8125rem] text-forest">Réponse : {resolution}</p> : null;
   return (
     <div className="space-y-2">
       <Textarea rows={3} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} placeholder="Réponse envoyée au client" aria-label="Réponse au client" />
@@ -88,7 +88,7 @@ export function RoleSelect({ userId, role, roles }: { userId: string; role: stri
   const { busy, run } = useRun();
   if (!roles.some((r) => r.id === role)) return <span className="text-sm text-ink-soft">{roles.find((r) => r.id === role)?.label ?? role}</span>;
   return (
-    <Select aria-label="Rôle" className="h-9 w-56 text-[13px]" value={role} disabled={busy} onChange={(e) => { const next = e.target.value; if (window.confirm("Changer le rôle de ce collaborateur ? Il devra se reconnecter.")) void run(() => changeRoleAction(userId, next), "Rôle modifié."); }}>
+    <Select aria-label="Rôle" className="h-9 w-56 text-[0.8125rem]" value={role} disabled={busy} onChange={(e) => { const next = e.target.value; if (window.confirm("Changer le rôle de ce collaborateur ? Il devra se reconnecter.")) void run(() => changeRoleAction(userId, next), "Rôle modifié."); }}>
       {roles.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
     </Select>
   );

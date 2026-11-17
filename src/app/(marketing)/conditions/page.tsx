@@ -17,7 +17,7 @@ const SECTIONS = [
 export default function TermsPage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-14 sm:py-20">
-      <h1 className="text-[36px] font-semibold leading-tight">Conditions d&apos;utilisation</h1>
+      <h1 className="text-[2.25rem] font-semibold leading-tight">Conditions d&apos;utilisation</h1>
       <Notice tone="warn" className="mt-6" title="Modèle à faire valider">Ce texte est un modèle de départ. Il doit être relu et adapté par un juriste avant l&apos;ouverture commerciale du service.</Notice>
       <div className="mt-10 space-y-8">
         {SECTIONS.map(([title, body], i) => (

@@ -24,7 +24,7 @@ export function Logo({ className, light }: { className?: string; light?: boolean
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <LogoMark />
-      <span className={cn("font-display text-[19px] font-semibold tracking-tight", light ? "text-white" : "text-ink")}>
+      <span className={cn("font-display text-[1.1875rem] font-semibold tracking-tight", light ? "text-white" : "text-ink")}>
         Regis<span className={light ? "text-marigold" : "text-green"}>Pub</span>
       </span>
     </span>
@@ -94,9 +94,9 @@ export function PlatformStack({ platforms, size = "sm", compact }: { platforms: 
 /** Vignette carrée de taille fixe avec les réseaux d'une campagne : sert de repère en tête de ligne. */
 export function PlatformAvatar({ platforms, className }: { platforms: PlatformCode[]; className?: string }) {
   const list = platforms.slice(0, 3);
-  const dims = list.length <= 1 ? "[&>span]:size-7 [&>span]:rounded-[9px] [&_svg]:size-4" : list.length === 2 ? "[&>span]:size-[18px] [&>span]:rounded-[6px] [&_svg]:size-[11px]" : "[&>span]:size-[17px] [&>span]:rounded-[6px] [&_svg]:size-2.5";
+  const dims = list.length <= 1 ? "[&>span]:size-6 [&>span]:rounded-[8px] [&_svg]:size-3.5 sm:[&>span]:size-7 sm:[&_svg]:size-4" : list.length === 2 ? "[&>span]:size-[1.125rem] [&>span]:rounded-[6px] [&_svg]:size-[11px]" : "[&>span]:size-[1.0625rem] [&>span]:rounded-[6px] [&_svg]:size-2.5";
   return (
-    <span className={cn("flex size-11 shrink-0 flex-wrap content-center items-center justify-center gap-[3px] rounded-[14px] bg-sand", dims, className)} role="img" aria-label={list.map((p) => PLATFORM_NAMES[p]).join(", ") || "Réseaux à choisir"}>
+    <span className={cn("flex size-10 shrink-0 flex-wrap content-center items-center justify-center gap-[3px] rounded-xl bg-sand sm:size-11 sm:rounded-[14px]", dims, className)} role="img" aria-label={list.map((p) => PLATFORM_NAMES[p]).join(", ") || "Réseaux à choisir"}>
       {list.length ? list.map((p) => <PlatformBadge key={p} platform={p} size="sm" />) : <Megaphone className="size-5 text-muted" />}
     </span>
   );

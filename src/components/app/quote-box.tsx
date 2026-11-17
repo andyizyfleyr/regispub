@@ -19,7 +19,7 @@ export function QuoteLines({ lines, total, className, totalLabel = "Total à pay
       ))}
       <div className="mt-1 flex items-baseline justify-between gap-4 border-t border-dashed border-line-strong pt-3">
         <dt className="font-semibold text-ink">{totalLabel}</dt>
-        <dd className="tnum font-display text-[26px] font-semibold leading-none">{formatFcfa(total)}</dd>
+        <dd className="tnum font-display text-[1.625rem] font-semibold leading-none">{formatFcfa(total)}</dd>
       </div>
     </dl>
   );

@@ -68,13 +68,13 @@ async function Transactions({ sp, canRefund, canVerify, showFullPhone }: { sp: {
                 return (
                   <tr key={p.id}>
                     <td>
-                      <span className="block font-mono text-[13px] text-ink">{p.order.reference}</span>
+                      <span className="block font-mono text-[0.8125rem] text-ink">{p.order.reference}</span>
                       <span className="block text-xs text-muted">{formatDateTime(p.createdAt)} · {p.provider}{p.providerRef ? ` · ${p.providerRef}` : ""}</span>
                       {p.duplicate && <span className="block text-xs font-medium text-clay">Doublon : à rembourser</span>}
                       {p.failureReason && <span className="block max-w-64 truncate text-xs text-clay" title={p.failureReason}>{p.failureReason}</span>}
                     </td>
                     <td>{p.user.name}</td>
-                    <td><span className="flex items-center gap-2"><OperatorChip operator={p.operator as OperatorCode} /><span className="tnum whitespace-nowrap text-[13px]">{showFullPhone ? formatPhone(p.phone) : maskPhone(p.phone)}</span></span></td>
+                    <td><span className="flex items-center gap-2"><OperatorChip operator={p.operator as OperatorCode} /><span className="tnum whitespace-nowrap text-[0.8125rem]">{showFullPhone ? formatPhone(p.phone) : maskPhone(p.phone)}</span></span></td>
                     <td className="tnum whitespace-nowrap font-medium">{formatFcfa(p.amount)}</td>
                     <td><StateBadge kind="payment" value={p.status} /></td>
                     <td className="text-right">
@@ -109,8 +109,8 @@ async function Refunds({ canRefund }: { canRefund: boolean }) {
               <li key={r.id} className="px-4 sm:px-5 py-4 text-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-ink"><span className="tnum font-medium">{formatFcfa(r.amount)}</span> · {r.order.user.name} · <span className="font-mono text-[13px]">{r.order.reference}</span></p>
-                    <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[13px] text-ink-soft"><OperatorChip operator={r.payment.operator as OperatorCode} /><span className="tnum">{canRefund ? formatPhone(r.payment.phone) : maskPhone(r.payment.phone)}</span>{r.payment.duplicate && <span className="font-medium text-clay">paiement en double</span>}</p>
+                    <p className="text-ink"><span className="tnum font-medium">{formatFcfa(r.amount)}</span> · {r.order.user.name} · <span className="font-mono text-[0.8125rem]">{r.order.reference}</span></p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[0.8125rem] text-ink-soft"><OperatorChip operator={r.payment.operator as OperatorCode} /><span className="tnum">{canRefund ? formatPhone(r.payment.phone) : maskPhone(r.payment.phone)}</span>{r.payment.duplicate && <span className="font-medium text-clay">paiement en double</span>}</p>
                     <p className="mt-1 text-ink-soft">{r.reason}</p>
                     <p className="mt-1 text-xs text-muted">Créé le {formatDateTime(r.createdAt)} par {names.get(r.requestedById) ?? "le système"}{r.processedAt ? ` · traité le ${formatDateTime(r.processedAt)}${r.processedById ? ` par ${names.get(r.processedById) ?? "—"}` : ""}` : ""}{r.reference ? ` · réf. ${r.reference}` : ""}{r.note ? ` · ${r.note}` : ""}</p>
                   </div>

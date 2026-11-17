@@ -27,7 +27,7 @@ export function SearchForm({ action, q, placeholder, hidden }: { action: string;
         <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" />
         <Input name="q" defaultValue={q} placeholder={placeholder} aria-label={placeholder} className="rounded-full pl-10" maxLength={80} />
       </div>
-      <Button type="submit" variant="outline" className="h-12">Chercher</Button>
+      <Button type="submit" variant="outline" className="h-11 sm:h-12">Chercher</Button>
     </form>
   );
 }
@@ -37,7 +37,7 @@ export function FilterChips({ items, current }: { items: { id: string; label: st
     <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 py-1 sm:mx-0 sm:flex-wrap sm:px-0">
       {items.map((it) => (
         <Link key={it.id} href={it.href} aria-current={it.id === current ? "true" : undefined}
-          className={cn("shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-colors", it.id === current ? "bg-forest text-white shadow-[0_8px_18px_-10px_rgb(11_42_31/0.7)]" : "bg-surface text-ink-soft shadow-card hover:text-ink")}>
+          className={cn("shrink-0 rounded-full px-4 py-2 text-[0.8125rem] font-medium transition-colors", it.id === current ? "bg-forest text-white shadow-[0_8px_18px_-10px_rgb(11_42_31/0.7)]" : "bg-surface text-ink-soft shadow-card hover:text-ink")}>
           {it.label}{typeof it.count === "number" ? <span className={cn("tnum ml-1.5", it.id === current ? "text-white/70" : "text-muted")}>{it.count}</span> : null}
         </Link>
       ))}
@@ -49,7 +49,7 @@ export function Pagination({ page, total, base, params }: { page: number; total:
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   if (pages <= 1) return <p className="px-4 sm:px-5 py-3 text-xs text-muted">{total} résultat{total > 1 ? "s" : ""}</p>;
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-line px-4 sm:px-5 py-3 text-[13px] text-muted">
+    <div className="flex items-center justify-between gap-3 border-t border-line px-4 sm:px-5 py-3 text-[0.8125rem] text-muted">
       <span className="tnum">{total} résultats · page {page} / {pages}</span>
       <span className="flex gap-1.5">
         {page > 1 ? <Button asChild variant="outline" size="sm"><Link href={hrefWith(base, params, { page: page > 2 ? String(page - 1) : undefined })}><ChevronLeft />Précédent</Link></Button> : null}

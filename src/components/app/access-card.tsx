@@ -39,8 +39,8 @@ export function AccessCard({ campaignId, items, agency }: { campaignId: string; 
       <header className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
         <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", todo ? "bg-marigold-soft text-[#8a5a00]" : "bg-green-soft text-green")}>{todo ? <KeyRound className="size-4" /> : <Check className="size-4" />}</span>
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold text-ink">{todo ? "Donnez-nous l'accès" : "Accès reçu"}</h2>
-          <p className="text-[13px] text-muted">{todo ? "Sans accès, nous ne pouvons pas lancer." : "Nous vérifions, puis nous lançons."}</p>
+          <h2 className="text-[0.9375rem] font-semibold text-ink">{todo ? "Donnez-nous l'accès" : "Accès reçu"}</h2>
+          <p className="text-[0.8125rem] text-muted">{todo ? "Sans accès, nous ne pouvons pas lancer." : "Nous vérifions, puis nous lançons."}</p>
         </div>
       </header>
       <ul className="divide-y divide-line border-t border-line">
@@ -53,7 +53,7 @@ export function AccessCard({ campaignId, items, agency }: { campaignId: string; 
                 <PlatformBadge platform={it.platform} />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 text-sm font-medium text-ink"><span className="w-[4.5rem] shrink-0">{PLATFORMS[it.platform].label}</span><Badge tone={meta.tone}>{meta.label}</Badge></p>
-                  {it.account && <p className="mt-0.5 truncate text-[13px] text-muted">{it.account}</p>}
+                  {it.account && <p className="mt-0.5 truncate text-[0.8125rem] text-muted">{it.account}</p>}
                 </div>
                 {act ? (
                   <Button size="sm" variant={it.state === "PROBLEM" ? "outline" : "accent"} onClick={() => setOpen(it.platform)}>{it.state === "PROBLEM" ? "Refaire" : "Donner l'accès"}<ArrowRight /></Button>
@@ -62,7 +62,7 @@ export function AccessCard({ campaignId, items, agency }: { campaignId: string; 
                     className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-clay-soft hover:text-clay">{busy === it.platform ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}</button>
                 ) : null}
               </div>
-              {it.state === "PROBLEM" && it.note && <p className="mt-2 rounded-lg bg-clay-soft px-3 py-2 text-[13px] text-ink">{it.note}</p>}
+              {it.state === "PROBLEM" && it.note && <p className="mt-2 rounded-lg bg-clay-soft px-3 py-2 text-[0.8125rem] text-ink">{it.note}</p>}
             </li>
           );
         })}
@@ -111,7 +111,7 @@ function AccessForm({ campaignId, platform, agency, onDone }: { campaignId: stri
               className={cn("relative rounded-xl border px-3.5 py-3 text-left transition-colors", active ? "border-green bg-green-soft/60 ring-1 ring-green" : "border-line bg-surface hover:border-line-strong")}>
               <span className={cn("flex size-8 items-center justify-center rounded-full [&_svg]:size-4", active ? "bg-green text-white" : "bg-sand text-ink-soft")}>{o.icon}</span>
               <span className="mt-2 block text-sm font-semibold leading-snug text-ink">{o.id === "INVITE" ? inviteTitle(platform) : METHOD_LABELS[o.id].title}</span>
-              <span className="mt-0.5 block text-[12.5px] leading-snug text-muted">{METHOD_LABELS[o.id].hint}</span>
+              <span className="mt-0.5 block text-[0.78125rem] leading-snug text-muted">{METHOD_LABELS[o.id].hint}</span>
               {o.badge && <span className="absolute right-2.5 top-2.5 rounded-full bg-green px-2 py-0.5 text-[11px] font-medium text-white">{o.badge}</span>}
             </button>
           );
@@ -122,12 +122,12 @@ function AccessForm({ campaignId, platform, agency, onDone }: { campaignId: stri
         <>
           <ol className="space-y-3">
             {steps.map((s, i) => (
-              <li key={i} className="flex gap-3 text-[14px] leading-relaxed text-ink">
+              <li key={i} className="flex gap-3 text-[0.875rem] leading-relaxed text-ink">
                 <span className="tnum mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-forest text-xs font-semibold text-white">{i + 1}</span>
                 <span className="min-w-0">
                   {s.text}
                   {s.link && (
-                    <a href={s.link.href} target="_blank" rel="noopener noreferrer" className="mt-2 flex h-10 w-fit items-center gap-2 rounded-full bg-green-soft px-4 text-[13.5px] font-medium text-green transition-colors hover:bg-green-soft/70">
+                    <a href={s.link.href} target="_blank" rel="noopener noreferrer" className="mt-2 flex h-10 w-fit items-center gap-2 rounded-full bg-green-soft px-4 text-[0.84375rem] font-medium text-green transition-colors hover:bg-green-soft/70">
                       {s.link.label}<ExternalLink className="size-4" />
                     </a>
                   )}
@@ -146,11 +146,11 @@ function AccessForm({ campaignId, platform, agency, onDone }: { campaignId: stri
               <button type="button" onClick={() => setShow((v) => !v)} aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"} className="absolute right-1.5 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:text-ink">{show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button>
             </div>
           </Field>
-          <p className="flex items-start gap-2 rounded-lg bg-paper px-3 py-2.5 text-[13px] leading-relaxed text-ink-soft"><Lock className="mt-0.5 size-4 shrink-0 text-green" /><span>Chiffrés, effacés à la fin de la campagne. {PLATFORMS[platform].label} peut vous envoyer un code : restez joignable.</span></p>
+          <p className="flex items-start gap-2 rounded-lg bg-paper px-3 py-2.5 text-[0.8125rem] leading-relaxed text-ink-soft"><Lock className="mt-0.5 size-4 shrink-0 text-green" /><span>Chiffrés, effacés à la fin de la campagne. {PLATFORMS[platform].label} peut vous envoyer un code : restez joignable.</span></p>
         </>
       )}
 
-      {error && <p role="alert" className="rounded-lg bg-clay-soft px-3 py-2 text-[13.5px] text-clay">{error}</p>}
+      {error && <p role="alert" className="rounded-lg bg-clay-soft px-3 py-2 text-[0.84375rem] text-clay">{error}</p>}
       <Button type="button" size="lg" variant="accent" className="w-full" disabled={busy || !ready} onClick={submit}>{busy && <LoaderCircle className="animate-spin" />}{method === "INVITE" ? "C'est fait" : "Envoyer"}</Button>
     </div>
   );

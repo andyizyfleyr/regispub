@@ -11,16 +11,16 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   return (
     <>
-      <h1 className="text-[28px] font-semibold">Créer un compte</h1>
+      <h1 className="text-[1.375rem] font-semibold sm:text-[1.75rem]">Créer un compte</h1>
       <p className="mt-1.5 text-muted">Gratuit. Vous payez à la commande.</p>
-      <ActionForm action={registerAction} className="mt-7 space-y-4" refresh={false}>
+      <ActionForm action={registerAction} className="mt-5 space-y-3.5 sm:mt-7 sm:space-y-4" refresh={false}>
         <input type="hidden" name="next" value={sp.next ?? ""} />
         <Field label="Nom complet" htmlFor="name"><Input id="name" name="name" autoComplete="name" required placeholder="Afi Dossou" /></Field>
         <Field label="Adresse e-mail" htmlFor="email"><Input id="email" name="email" type="email" autoComplete="email" required placeholder="vous@exemple.com" /></Field>
         <Field label="Téléphone (WhatsApp)" htmlFor="phone" ><Input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" required placeholder="01 97 00 00 00" /></Field>
         <Field label="Mot de passe" htmlFor="password" hint="8 caractères, une lettre et un chiffre."><Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} /></Field>
         {sp.parrain && <input type="hidden" name="referral" value={sp.parrain} />}
-        <label className="flex items-start gap-3 text-[13px] text-ink-soft">
+        <label className="flex items-start gap-3 text-[0.8125rem] text-ink-soft">
           <Checkbox name="terms" required aria-label="Accepter les conditions" />
           <span className="pt-0.5">J&apos;accepte les <Link href="/conditions" className="underline" target="_blank">conditions</Link>. Les résultats ne sont pas garantis.</span>
         </label>

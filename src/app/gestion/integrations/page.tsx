@@ -29,8 +29,8 @@ export default async function IntegrationsPage() {
                 <li key={i.name} className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 px-4 sm:px-5 py-4">
                   <div className="min-w-0 flex-1 basis-80">
                     <p className="text-sm font-medium text-ink">{i.name}</p>
-                    <p className="mt-0.5 text-[13px] text-ink-soft">{i.detail}</p>
-                    {i.action && <p className="mt-1.5 text-[13px] text-muted"><span className="font-medium text-ink-soft">Pour l&apos;activer :</span> {i.action}</p>}
+                    <p className="mt-0.5 text-[0.8125rem] text-ink-soft">{i.detail}</p>
+                    {i.action && <p className="mt-1.5 text-[0.8125rem] text-muted"><span className="font-medium text-ink-soft">Pour l&apos;activer :</span> {i.action}</p>}
                   </div>
                   <Badge tone={TONES[i.state]} dot>{STATE_LABELS[i.state]}</Badge>
                 </li>
@@ -47,7 +47,7 @@ export default async function IntegrationsPage() {
               ["Vérification des paiements en attente", `${env.appUrl}/api/cron/paiements`],
               ["État du service", `${env.appUrl}/api/health`],
             ].map(([label, url]) => (
-              <div key={label} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 sm:px-5 py-3"><dt className="text-ink-soft">{label}</dt><dd className="break-all font-mono text-[13px] text-ink">{url}</dd></div>
+              <div key={label} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 sm:px-5 py-3"><dt className="text-ink-soft">{label}</dt><dd className="break-all font-mono text-[0.8125rem] text-ink">{url}</dd></div>
             ))}
           </dl>
           <p className="border-t border-line px-4 sm:px-5 py-3 text-xs text-muted">Les tâches planifiées exigent l&apos;en-tête <span className="font-mono">Authorization: Bearer CRON_SECRET</span>.</p>

@@ -4,20 +4,20 @@ import Link from "next/link";
 import { ArrowLeft, CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function PageHeader({ title, description, actions, eyebrow, back }: { title: React.ReactNode; description?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode; back?: { href: string; label: string } }) {
+export function PageHeader({ title, description, actions, actionsFrom, eyebrow, back }: { title: React.ReactNode; description?: React.ReactNode; actions?: React.ReactNode; /** `lg` : les actions ne s'affichent que sur ordinateur. */ actionsFrom?: "lg"; eyebrow?: React.ReactNode; back?: { href: string; label: string } }) {
   return (
-    <header className="mb-5 flex animate-rise flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-4 flex animate-rise flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div className="min-w-0">
         {back && (
-          <Link href={back.href} className="mb-3 inline-flex h-9 items-center gap-1.5 rounded-full bg-surface pl-2.5 pr-3.5 text-[13px] font-medium text-ink-soft shadow-card transition-colors hover:text-ink">
+          <Link href={back.href} className="mb-2.5 inline-flex h-8 items-center gap-1.5 rounded-full bg-surface pl-2.5 pr-3.5 text-[0.8125rem] font-medium text-ink-soft shadow-card transition-colors hover:text-ink">
             <ArrowLeft className="size-4" />{back.label}
           </Link>
         )}
         {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
-        <h1 className="text-[28px] font-semibold leading-[1.1] sm:text-[34px]">{title}</h1>
-        {description && <p className="mt-1.5 max-w-2xl text-muted">{description}</p>}
+        <h1 className="text-[1.375rem] font-semibold leading-[1.15] sm:text-[2.125rem] sm:leading-[1.1]">{title}</h1>
+        {description && <p className="mt-1 max-w-2xl text-[0.875rem] text-muted sm:mt-1.5 sm:text-[0.9375rem]">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className={cn("flex shrink-0 flex-wrap items-center gap-2", actionsFrom === "lg" && "max-lg:hidden")}>{actions}</div>}
     </header>
   );
 }
@@ -50,7 +50,7 @@ const NOTICE = {
 export function Notice({ tone = "info", title, children, className }: { tone?: keyof typeof NOTICE; title?: string; children?: React.ReactNode; className?: string }) {
   const { cls, icon, Icon } = NOTICE[tone];
   return (
-    <div className={cn("flex gap-3 rounded-lg px-4 py-3.5 text-[13.5px] leading-relaxed", cls, className)}>
+    <div className={cn("flex gap-3 rounded-lg px-4 py-3.5 text-[0.84375rem] leading-relaxed", cls, className)}>
       <span className={cn("mt-px flex size-7 shrink-0 items-center justify-center rounded-full", icon)}><Icon className="size-3.5" /></span>
       <div className="min-w-0 text-ink-soft">
         {title && <p className="font-medium text-ink">{title}</p>}
@@ -71,10 +71,10 @@ export function Stat({ label, value, hint, icon, tone = "neutral", className }: 
   return (
     <div className={cn("min-w-0 rounded-lg border border-line/70 bg-surface p-4 shadow-card", className)}>
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-[13px] leading-5 text-muted">{label}</p>
+        <p className="truncate text-[0.8125rem] leading-5 text-muted">{label}</p>
         {icon && <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-[10px] [&_svg]:size-4", STAT_TONES[tone])}>{icon}</span>}
       </div>
-      <p className="tnum mt-2 truncate font-display text-[22px] font-semibold leading-none text-ink sm:text-[26px]">{value}</p>
+      <p className="tnum mt-2 truncate font-display text-[1.375rem] font-semibold leading-none text-ink sm:text-[1.625rem]">{value}</p>
       <p className="mt-1.5 truncate text-xs leading-4 text-muted sm:mt-2" title={typeof hint === "string" ? hint : undefined}>{hint || "\u00a0"}</p>
     </div>
   );
@@ -115,7 +115,7 @@ export function Table({ head, children, className, mobile = "stack", mobileHide,
       data-corner={stack && mobileCorner ? mobileCorner : undefined} data-plain={stack && plain.length ? plain.join(" ") : undefined}>
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-line bg-paper text-[12px] uppercase tracking-wider text-muted">
+          <tr className="border-b border-line bg-paper text-[0.75rem] uppercase tracking-wider text-muted">
             {head.map((h, i) => <th key={i} className="whitespace-nowrap px-4 py-3 font-medium first:pl-5 last:pr-5">{h}</th>)}
           </tr>
         </thead>
@@ -131,7 +131,7 @@ export function DefinitionList({ items, className }: { items: { label: string; v
     <dl className={cn("divide-y divide-line", className)}>
       {items.map((it) => (
         <div key={it.label} className="flex flex-col gap-0.5 py-2.5 first:pt-0 last:pb-0 sm:flex-row sm:gap-6">
-          <dt className="shrink-0 text-[13px] text-muted sm:w-44 sm:pt-px">{it.label}</dt>
+          <dt className="shrink-0 text-[0.8125rem] text-muted sm:w-44 sm:pt-px">{it.label}</dt>
           <dd className="min-w-0 flex-1 break-words text-sm text-ink">{it.value || "—"}</dd>
         </div>
       ))}

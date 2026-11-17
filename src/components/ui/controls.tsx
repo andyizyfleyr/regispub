@@ -12,7 +12,7 @@ export function Switch({ className, ...props }: React.ComponentProps<typeof S.Ro
       className={cn("relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full bg-line-strong transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green/20 disabled:cursor-not-allowed disabled:opacity-60 data-[state=checked]:bg-green", className)}
       {...props}
     >
-      <S.Thumb className="block size-[22px] translate-x-[3px] rounded-full bg-white shadow-[0_1px_3px_rgb(0_0_0/0.25)] transition-transform duration-200 data-[state=checked]:translate-x-[23px]" />
+      <S.Thumb className="block size-[1.375rem] translate-x-[3px] rounded-full bg-white shadow-[0_1px_3px_rgb(0_0_0/0.25)] transition-transform duration-200 data-[state=checked]:translate-x-[23px]" />
     </S.Root>
   );
 }
@@ -21,7 +21,7 @@ export function Switch({ className, ...props }: React.ComponentProps<typeof S.Ro
 export function Checkbox({ className, ...props }: React.ComponentProps<typeof C.Root>) {
   return (
     <C.Root
-      className={cn("flex size-[22px] shrink-0 cursor-pointer items-center justify-center rounded-[7px] border-[1.5px] border-line-strong bg-surface text-white transition-colors hover:border-green focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green/20 disabled:cursor-not-allowed disabled:opacity-60 data-[state=checked]:border-green data-[state=checked]:bg-green", className)}
+      className={cn("flex size-[1.375rem] shrink-0 cursor-pointer items-center justify-center rounded-[7px] border-[1.5px] border-line-strong bg-surface text-white transition-colors hover:border-green focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green/20 disabled:cursor-not-allowed disabled:opacity-60 data-[state=checked]:border-green data-[state=checked]:bg-green", className)}
       {...props}
     >
       <C.Indicator className="animate-pop"><Check className="size-3.5" strokeWidth={3.2} /></C.Indicator>
@@ -33,7 +33,7 @@ export function Checkbox({ className, ...props }: React.ComponentProps<typeof C.
 export function ToggleRow({ icon, label, hint, htmlFor, children, className }: { icon?: React.ReactNode; label: React.ReactNode; hint?: React.ReactNode; htmlFor?: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={cn("flex items-center gap-3 rounded-xl border border-line bg-surface px-3.5 py-3", className)}>
-      {icon && <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-green-soft text-green [&_svg]:size-[18px]">{icon}</span>}
+      {icon && <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-green-soft text-green [&_svg]:size-[1.125rem]">{icon}</span>}
       <label htmlFor={htmlFor} className="min-w-0 flex-1 cursor-pointer text-sm font-medium text-ink">
         {label}
         {hint && <span className="block text-xs font-normal text-muted">{hint}</span>}
@@ -58,7 +58,7 @@ export function Slider({ value, min, max, step = 1, onChange, label, className }
 }
 
 /* ── Infobulle ── */
-const tipClass = "z-[70] max-w-[15rem] animate-pop rounded-lg bg-forest px-3 py-2 text-[12.5px] leading-snug text-white shadow-pop";
+const tipClass = "z-[70] max-w-[15rem] animate-pop rounded-lg bg-forest px-3 py-2 text-[0.78125rem] leading-snug text-white shadow-pop";
 
 export function Tip({ label, children, side = "top" }: { label: React.ReactNode; children: React.ReactNode; side?: "top" | "bottom" | "left" | "right" }) {
   return (
@@ -121,8 +121,8 @@ export function DatePicker({ id, name, value, defaultValue, min, max, onChange, 
     <P.Root open={open} onOpenChange={(o) => { setOpen(o); if (o && sel) setView({ y: sel.y, m: sel.m }); }}>
       {name && <input type="hidden" name={name} value={current} />}
       <P.Trigger id={id} type="button"
-        className={cn("flex h-12 w-full items-center gap-2.5 rounded-md border border-[var(--field-line)] bg-[var(--field-bg)] px-4 text-left text-[15px] text-ink transition-[border-color,box-shadow] hover:border-ink/30 focus:border-green focus:outline-none focus:ring-4 focus:ring-green/12 data-[state=open]:border-green data-[state=open]:ring-4 data-[state=open]:ring-green/12", className)}>
-        <CalendarDays className="size-[18px] shrink-0 text-green" />
+        className={cn("flex h-11 w-full items-center gap-2.5 rounded-md border border-[var(--field-line)] bg-[var(--field-bg)] px-3.5 sm:h-12 sm:px-4 text-left text-[0.9375rem] text-ink transition-[border-color,box-shadow] hover:border-ink/30 focus:border-green focus:outline-none focus:ring-4 focus:ring-green/12 data-[state=open]:border-green data-[state=open]:ring-4 data-[state=open]:ring-green/12", className)}>
+        <CalendarDays className="size-[1.125rem] shrink-0 text-green" />
         <span className={cn("tnum min-w-0 flex-1 truncate", !sel && "text-muted/70")}>{sel ? `${sel.d} ${SHORT[sel.m]} ${sel.y}` : placeholder}</span>
       </P.Trigger>
       <P.Portal>
@@ -141,7 +141,7 @@ export function DatePicker({ id, name, value, defaultValue, min, max, onChange, 
               const on = v === current;
               return (
                 <button key={i} type="button" disabled={off} onClick={() => pick(d)} aria-pressed={on} aria-label={`${d} ${MONTHS[view.m]} ${view.y}`}
-                  className={cn("tnum mx-auto flex size-9 items-center justify-center rounded-full text-[13.5px] transition-colors", on ? "bg-forest font-semibold text-white" : off ? "text-muted/40" : "text-ink hover:bg-green-soft", !on && v === todayIso && "ring-1 ring-inset ring-green")}>
+                  className={cn("tnum mx-auto flex size-9 items-center justify-center rounded-full text-[0.84375rem] transition-colors", on ? "bg-forest font-semibold text-white" : off ? "text-muted/40" : "text-ink hover:bg-green-soft", !on && v === todayIso && "ring-1 ring-inset ring-green")}>
                   {d}
                 </button>
               );
