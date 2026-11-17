@@ -45,17 +45,17 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     const rows = [...TABS.map((id) => ({ href: `${base}?onglet=${id}`, ...MENU[id] })), { href: "/app/notifications", label: "Notifications", icon: Bell, hint: "Vos messages", tone: "neutral" as const }];
     return (
       <>
-        <section className="mb-6 flex animate-rise items-center gap-4 rounded-xl border border-line/70 bg-surface p-4 shadow-card sm:p-5">
-          <span className="flex size-16 shrink-0 items-center justify-center rounded-[22px] bg-[linear-gradient(135deg,#0b2a1f,#0b7a53)] font-display text-[22px] font-semibold text-white">{initials(user.name)}</span>
+        <section className="mb-4 flex animate-rise items-center gap-3 rounded-xl border border-line/70 bg-surface p-3.5 shadow-card sm:mb-6 sm:gap-4 sm:p-5">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0b2a1f,#0b7a53)] font-display text-[1rem] font-semibold text-white sm:size-16 sm:rounded-[22px] sm:text-[1.375rem]">{initials(user.name)}</span>
           <div className="min-w-0">
-            <h1 className="truncate text-[22px] font-semibold leading-tight">{user.name}</h1>
-            <p className="mt-0.5 truncate text-sm text-muted">{user.email}</p>
+            <h1 className="truncate text-[1.125rem] font-semibold leading-tight sm:text-[1.375rem]">{user.name}</h1>
+            <p className="mt-0.5 truncate text-[0.8125rem] text-muted sm:text-sm">{user.email}</p>
           </div>
         </section>
         <List>
           {rows.map((r) => <ListRow key={r.href} href={r.href} icon={<r.icon />} tone={r.tone} title={r.label} subtitle={r.hint} />)}
         </List>
-        <form action={logoutAction} className="mt-6"><Button type="submit" variant="outline" size="lg" className="w-full text-clay"><LogOut />Se déconnecter</Button></form>
+        <form action={logoutAction} className="mt-6"><Button type="submit" variant="outline" className="w-full text-clay"><LogOut />Se déconnecter</Button></form>
       </>
     );
   }
@@ -73,7 +73,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 <Field label="Nom complet" htmlFor="p-name"><Input id="p-name" name="name" required maxLength={80} defaultValue={user.name} autoComplete="name" /><FieldError name="name" /></Field>
                 <Field label="Téléphone" htmlFor="p-phone"><Input id="p-phone" name="phone" type="tel" inputMode="tel" required defaultValue={user.phone ? formatPhone(user.phone) : ""} autoComplete="tel" /><FieldError name="phone" /></Field>
                 <fieldset className="space-y-2">
-                  <legend className="mb-1.5 text-[13px] font-medium text-ink">Notifications</legend>
+                  <legend className="mb-1.5 text-[0.8125rem] font-medium text-ink">Notifications</legend>
                   <ToggleRow icon={<Mail />} label="E-mail" htmlFor="p-nmail"><Switch id="p-nmail" name="notifyEmail" defaultChecked={user.notifyEmail} /></ToggleRow>
                   <ToggleRow icon={<WhatsappIcon />} label="WhatsApp" htmlFor="p-nwa"><Switch id="p-nwa" name="notifyWhatsapp" defaultChecked={user.notifyWhatsapp} /></ToggleRow>
                 </fieldset>
@@ -114,7 +114,7 @@ async function Businesses({ userId }: { userId: string }) {
               <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-sand text-ink-soft"><Building2 className="size-5" /></span>
               <div className="min-w-[11rem] flex-1">
                 <p className="truncate font-medium text-ink">{b.name}</p>
-                <p className="truncate text-[13px] text-muted">{b.sector}{b.city ? ` · ${b.city}` : ""} · {b._count.campaigns} campagne{b._count.campaigns > 1 ? "s" : ""}</p>
+                <p className="truncate text-[0.8125rem] text-muted">{b.sector}{b.city ? ` · ${b.city}` : ""} · {b._count.campaigns} campagne{b._count.campaigns > 1 ? "s" : ""}</p>
               </div>
               <div className="flex gap-1 max-sm:-my-1 max-sm:w-full max-sm:justify-end">
                 <BusinessDialog business={{ id: b.id, name: b.name, sector: b.sector, description: b.description, country: b.country, city: b.city, whatsapp: b.whatsapp, facebookUrl: b.facebookUrl, instagramUrl: b.instagramUrl, tiktokUrl: b.tiktokUrl, website: b.website }} />
@@ -225,7 +225,7 @@ async function SubscriptionTab({ userId, error }: { userId: string; error?: stri
           <ul className="divide-y divide-line">
             {subs.map((s) => (
               <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-sm">
-                <span><span className="font-medium text-ink">{names.get(s.serviceCode) ?? s.serviceCode}</span><span className="block text-[13px] text-muted">{s.business?.name ?? "Toutes mes activités"}{s.periodEnd ? ` · jusqu'au ${formatDate(s.periodEnd)}` : ""}</span></span>
+                <span><span className="font-medium text-ink">{names.get(s.serviceCode) ?? s.serviceCode}</span><span className="block text-[0.8125rem] text-muted">{s.business?.name ?? "Toutes mes activités"}{s.periodEnd ? ` · jusqu'au ${formatDate(s.periodEnd)}` : ""}</span></span>
                 <span className="flex items-center gap-3"><StateBadge kind="subscription" value={s.status} />{s.status === "PENDING" && s.orders[0]?.status === "PENDING" && <Button asChild size="sm" variant="outline"><a href={`/app/paiements/${s.orders[0].id}`}>Payer</a></Button>}</span>
               </li>
             ))}
@@ -252,7 +252,7 @@ async function Support({ userId, whatsapp, email }: { userId: string; whatsapp: 
                 </div>
                 <p className="mt-0.5 text-xs text-muted"><span className="font-mono">{t.reference}</span> · {t.category} · {formatDateTime(t.createdAt)}</p>
                 <p className="mt-2 whitespace-pre-wrap text-ink-soft">{t.body}</p>
-                {t.resolution && <p className="mt-2 rounded-md bg-green-soft px-3 py-2 text-[13px] text-forest">Réponse : {t.resolution}</p>}
+                {t.resolution && <p className="mt-2 rounded-md bg-green-soft px-3 py-2 text-[0.8125rem] text-forest">Réponse : {t.resolution}</p>}
               </li>
             ))}
           </ul>

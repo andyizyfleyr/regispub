@@ -146,16 +146,16 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
   return (
     <div ref={top} className="mx-auto max-w-3xl scroll-mt-24">
       <div className="mb-6 flex items-center justify-between gap-3">
-        <button type="button" onClick={quit} disabled={busy} title="Enregistrer et quitter" className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2.5 pr-3.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60">
+        <button type="button" onClick={quit} disabled={busy} title="Enregistrer et quitter" className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2.5 pr-3.5 text-[0.8125rem] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60">
           <X className="size-3.5" />Quitter
         </button>
-        <span className={cn("flex items-center gap-1.5 text-[13px] text-green transition-opacity duration-300", saved ? "opacity-100" : "opacity-0")} aria-live="polite"><CircleCheck className="size-4" />Enregistré</span>
+        <span className={cn("flex items-center gap-1.5 text-[0.8125rem] text-green transition-opacity duration-300", saved ? "opacity-100" : "opacity-0")} aria-live="polite"><CircleCheck className="size-4" />Enregistré</span>
       </div>
 
       <div className="mb-7"><Stepper steps={WIZARD_STEPS} current={step} reached={reached} onSelect={go} disabled={busy} /></div>
 
       <header key={step} className="mb-6 animate-rise">
-        <h1 className="text-[24px] font-semibold leading-tight sm:text-[28px]">{meta.heading}</h1>
+        <h1 className="text-[1.5rem] font-semibold leading-tight sm:text-[1.75rem]">{meta.heading}</h1>
       </header>
 
       <div key={`step-${step}`} className="animate-rise">
@@ -248,7 +248,7 @@ function PhonePreview({ s, links }: { s: State; links: LinkedAsset[] }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-[13.5px] font-semibold text-ink">Aperçu</p>
+        <p className="text-[0.84375rem] font-semibold text-ink">Aperçu</p>
         {s.platforms.length > 1 && (
           <div className="inline-flex gap-1 rounded-full bg-sand p-1">
             {s.platforms.map((p) => (
@@ -318,10 +318,10 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
             <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3.5 sm:px-5">
               <span className="min-w-0">
                 <span className="block truncate font-medium text-ink">{s.business.name}</span>
-                <span className="block truncate text-[13.5px] text-muted">{[s.business.sector, s.business.city].filter(Boolean).join(" · ")}</span>
-                {!askAccounts && knownAccounts.length > 0 && <span className="mt-0.5 block truncate text-[13px] text-green">{knownAccounts.join(" · ")}</span>}
+                <span className="block truncate text-[0.84375rem] text-muted">{[s.business.sector, s.business.city].filter(Boolean).join(" · ")}</span>
+                {!askAccounts && knownAccounts.length > 0 && <span className="mt-0.5 block truncate text-[0.8125rem] text-green">{knownAccounts.join(" · ")}</span>}
               </span>
-              <button type="button" onClick={() => setEditBusiness(true)} className="shrink-0 rounded-full px-2.5 py-1 text-[13.5px] font-medium text-green hover:bg-green-soft">Modifier</button>
+              <button type="button" onClick={() => setEditBusiness(true)} className="shrink-0 rounded-full px-2.5 py-1 text-[0.84375rem] font-medium text-green hover:bg-green-soft">Modifier</button>
             </div>
           ) : (
             <>
@@ -364,7 +364,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
 
       <Section icon={<ImageIcon />} tone="sky" title="Photo ou vidéo" description={needs.includes("video") ? "Vidéo recommandée." : undefined}>
         <MediaGrid campaignId={s.id} role="CREATIVE" items={media} setLinks={setLinks} library={data.library} />
-        {media.length === 0 && pack && <p className="mt-3 text-[13.5px] text-muted">Pas de visuel ? Choisissez « {pack.name} » à l&apos;étape 4.</p>}
+        {media.length === 0 && pack && <p className="mt-3 text-[0.84375rem] text-muted">Pas de visuel ? Choisissez « {pack.name} » à l&apos;étape 4.</p>}
       </Section>
 
       <Section icon={<Type />} tone="violet" title="Texte"
@@ -379,7 +379,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
               <Field label="Titre" htmlFor="copy-h"><Input id="copy-h" value={copy.headline} maxLength={90} onChange={(e) => setCopy({ headline: e.target.value })} placeholder="Votre robe sur mesure en 48 h" /></Field>
             </>
           ) : (
-            <p className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-paper px-4 py-3 text-[13.5px] text-muted">
+            <p className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-paper px-4 py-3 text-[0.84375rem] text-muted">
               Notre équipe peut l&apos;écrire pour vous.
               <button type="button" onClick={() => setShowText(true)} className="font-medium text-green hover:underline">Écrire moi-même</button>
             </p>
@@ -392,8 +392,8 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
                 {alternatives.map((t, i) => (
                   <button key={i} type="button" onClick={() => set({ adCopy: { headline: t.headline, body: t.body, cta: t.cta } })} className="block w-full px-4 py-3.5 text-left transition-colors hover:bg-paper sm:px-5">
                     <span className="block text-sm font-medium leading-snug text-ink">{t.headline}</span>
-                    <span className="mt-0.5 line-clamp-2 block text-[13.5px] leading-snug text-muted">{t.body}</span>
-                    <span className="mt-1.5 block text-[13px] font-medium text-green">Utiliser</span>
+                    <span className="mt-0.5 line-clamp-2 block text-[0.84375rem] leading-snug text-muted">{t.body}</span>
+                    <span className="mt-1.5 block text-[0.8125rem] font-medium text-green">Utiliser</span>
                   </button>
                 ))}
               </div>
@@ -403,7 +403,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
           {st && (st.hooks.length > 0 || st.visualConcepts.length > 0) && (
             <details className="group">
               <summary className={summary}><span className="flex items-center gap-2.5"><Lightbulb className="size-4 text-[#9a6400]" />Idées</span><ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
-              <div className="mt-2 space-y-4 rounded-lg border border-line bg-surface px-4 py-4 text-[13.5px] sm:px-5">
+              <div className="mt-2 space-y-4 rounded-lg border border-line bg-surface px-4 py-4 text-[0.84375rem] sm:px-5">
                 {st.hooks.length > 0 && (
                   <div>
                     <p className="mb-1.5 font-medium text-ink">Accroches</p>
@@ -413,7 +413,7 @@ function AdStep({ s, set, data, links, setLinks, save }: StepProps & { data: Edi
                 {st.visualConcepts.length > 0 && (
                   <div>
                     <p className="mb-1.5 font-medium text-ink">Visuels</p>
-                    <ul className="space-y-1.5 text-ink-soft">{st.visualConcepts.slice(0, 3).map((v, i) => <li key={i}><span className="text-ink">{v.title}</span><span className="block text-[13px] text-muted">{v.description}</span></li>)}</ul>
+                    <ul className="space-y-1.5 text-ink-soft">{st.visualConcepts.slice(0, 3).map((v, i) => <li key={i}><span className="text-ink">{v.title}</span><span className="block text-[0.8125rem] text-muted">{v.description}</span></li>)}</ul>
                   </div>
                 )}
               </div>
@@ -478,8 +478,8 @@ function AudienceStep({ s, set }: StepProps) {
     <div className="space-y-6">
       <section aria-labelledby="audience">
         <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <h2 id="audience" className="text-[15px] font-semibold tracking-normal [font-family:var(--font-sans)]">{loading ? "Analyse…" : "Audience proposée"}</h2>
-          <button type="button" disabled={loading} onClick={() => suggest()} className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-green hover:underline disabled:opacity-60">
+          <h2 id="audience" className="text-[0.9375rem] font-semibold tracking-normal [font-family:var(--font-sans)]">{loading ? "Analyse…" : "Audience proposée"}</h2>
+          <button type="button" disabled={loading} onClick={() => suggest()} className="inline-flex items-center gap-1.5 text-[0.84375rem] font-medium text-green hover:underline disabled:opacity-60">
             {loading ? <LoaderCircle className="size-4 animate-spin" /> : <WandSparkles className="size-4" />}Reproposer
           </button>
         </div>
@@ -491,12 +491,12 @@ function AudienceStep({ s, set }: StepProps) {
           ].map((x) => (
             <li key={x.label} className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3.5 shadow-card sm:flex-col sm:items-start sm:p-4">
               <span aria-hidden className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5", x.tone)}>{x.icon}</span>
-              <span className="min-w-0"><span className="block text-[12.5px] text-muted">{x.label}</span><span className="block text-[15px] font-semibold leading-snug text-ink">{x.value}</span></span>
+              <span className="min-w-0"><span className="block text-[0.78125rem] text-muted">{x.label}</span><span className="block text-[0.9375rem] font-semibold leading-snug text-ink">{x.value}</span></span>
             </li>
           ))}
         </ul>
         {rationale && (
-          <details className="group mt-2.5 text-[13.5px] text-muted">
+          <details className="group mt-2.5 text-[0.84375rem] text-muted">
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-medium text-ink-soft [&::-webkit-details-marker]:hidden"><Lightbulb className="size-4 text-[#9a6400]" />Pourquoi ?<ChevronDown className="size-3.5 transition-transform group-open:rotate-180" /></summary>
             <p className="mt-1.5 leading-relaxed">{rationale.text}</p>
           </details>
@@ -512,25 +512,25 @@ function AudienceStep({ s, set }: StepProps) {
         {open && (
           <div className="animate-rise space-y-7 border-t border-line px-4 py-5 sm:px-5">
             <div className="space-y-4">
-              <h3 className="flex items-center gap-2 text-[15px] font-semibold [font-family:var(--font-sans)]"><MapPin className="size-4 text-green" />Zone</h3>
+              <h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold [font-family:var(--font-sans)]"><MapPin className="size-4 text-green" />Zone</h3>
               <div>
-                <p className="mb-2 text-[13px] font-medium text-ink-soft">Pays</p>
+                <p className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Pays</p>
                 <div className="flex flex-wrap gap-1.5">{TARGET_COUNTRIES.map((c) => <Chip key={c.code} active={t.countries.includes(c.code)} onClick={() => { const countries = toggle(t.countries, c.code); const ok = new Set(countries.flatMap((x) => CITIES_BY_COUNTRY[x] ?? [])); setT({ countries: countries.length ? countries : t.countries, cities: t.cities.filter((x) => ok.has(x)) }); }}>{c.name}</Chip>)}</div>
               </div>
               {cities.length > 0 && (
                 <div>
-                  <p className="mb-2 text-[13px] font-medium text-ink-soft">Villes <span className="font-normal text-muted">— aucune = tout le pays</span></p>
+                  <p className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Villes <span className="font-normal text-muted">— aucune = tout le pays</span></p>
                   <div className="flex flex-wrap gap-1.5">{cities.map(({ city }) => <Chip key={city} active={t.cities.includes(city)} onClick={() => setT({ cities: toggle(t.cities, city) })}>{city}</Chip>)}</div>
                 </div>
               )}
             </div>
 
             <div className="space-y-4 border-t border-line pt-6">
-              <h3 className="flex items-center gap-2 text-[15px] font-semibold [font-family:var(--font-sans)]"><Users className="size-4 text-sky" />Profil</h3>
+              <h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold [font-family:var(--font-sans)]"><Users className="size-4 text-sky" />Profil</h3>
               <div>
-                <p className="mb-2 text-[13px] font-medium text-ink-soft">Genre</p>
+                <p className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Genre</p>
                 <div className="inline-flex gap-1 rounded-full bg-sand p-1">
-                  {GENDERS.map((g) => <button key={g.id} type="button" aria-pressed={t.gender === g.id} onClick={() => setT({ gender: g.id as Targeting["gender"] })} className={cn("rounded-full px-4 py-2 text-[13.5px] font-medium transition-colors", t.gender === g.id ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>{g.label}</button>)}
+                  {GENDERS.map((g) => <button key={g.id} type="button" aria-pressed={t.gender === g.id} onClick={() => setT({ gender: g.id as Targeting["gender"] })} className={cn("rounded-full px-4 py-2 text-[0.84375rem] font-medium transition-colors", t.gender === g.id ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>{g.label}</button>)}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -541,12 +541,12 @@ function AudienceStep({ s, set }: StepProps) {
             </div>
 
             <div className="space-y-3 border-t border-line pt-6">
-              <div className="flex items-baseline justify-between"><h3 className="flex items-center gap-2 text-[15px] font-semibold [font-family:var(--font-sans)]"><Heart className="size-4 text-rose" />Centres d&apos;intérêt</h3><span className="tnum text-xs text-muted">{t.interests.length} sélectionné{t.interests.length > 1 ? "s" : ""}</span></div>
+              <div className="flex items-baseline justify-between"><h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold [font-family:var(--font-sans)]"><Heart className="size-4 text-rose" />Centres d&apos;intérêt</h3><span className="tnum text-xs text-muted">{t.interests.length} sélectionné{t.interests.length > 1 ? "s" : ""}</span></div>
               {INTEREST_GROUPS.map((g) => {
                 const picked = g.items.filter((i) => t.interests.includes(i)).length;
                 return (
                   <details key={g.group} className="group rounded-md bg-paper" open={picked > 0 || undefined}>
-                    <summary className="flex items-center justify-between gap-3 px-4 py-3 text-[13.5px] font-medium text-ink">
+                    <summary className="flex items-center justify-between gap-3 px-4 py-3 text-[0.84375rem] font-medium text-ink">
                       {g.group}
                       <span className="flex items-center gap-2">{picked > 0 && <span className="tnum rounded-full bg-forest px-2 py-px text-[11px] font-semibold text-white">{picked}</span>}<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></span>
                     </summary>
@@ -610,7 +610,7 @@ function BudgetStep({ s, set, data, links, promo, setPromo, onTotal, onEdit }: S
 
         <section data-quote className="space-y-2.5">
           <QuotePanel state={quote} promo={promo} onPromo={setPromo} />
-          <p className="text-[13px] leading-relaxed text-muted">Les résultats ne sont pas garantis.</p>
+          <p className="text-[0.8125rem] leading-relaxed text-muted">Les résultats ne sont pas garantis.</p>
         </section>
     </div>
   );

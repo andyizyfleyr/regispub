@@ -29,8 +29,8 @@ export async function NotificationList({ userId, fallbackHref, embedded }: { use
                     {!n.readAt && <span aria-hidden className="absolute -right-0.5 -top-0.5 size-3 rounded-full bg-clay ring-2 ring-surface" />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className={`block text-[14.5px] leading-snug ${n.readAt ? "font-medium text-ink-soft" : "font-semibold text-ink"}`}>{n.title}</span>
-                    <span className="mt-0.5 block whitespace-pre-line text-[13.5px] text-muted">{n.body}</span>
+                    <span className={`block text-[0.90625rem] leading-snug ${n.readAt ? "font-medium text-ink-soft" : "font-semibold text-ink"}`}>{n.title}</span>
+                    <span className="mt-0.5 block whitespace-pre-line text-[0.84375rem] text-muted">{n.body}</span>
                     <span className="mt-1 block text-xs text-muted">{formatDateTime(n.createdAt)}</span>
                   </span>
                 </Link>

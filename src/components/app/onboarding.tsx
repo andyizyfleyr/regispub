@@ -53,8 +53,8 @@ export function Onboarding({ userId, auto, force }: { userId: string; auto: bool
                 <div className={cn("mx-auto flex aspect-[4/3] w-full items-center justify-center rounded-3xl", s.bg)}>
                   <Image src={`/img/3d/${s.img}.webp`} alt="" width={280} height={280} unoptimized priority={i === 0} className="h-[82%] w-auto mix-blend-multiply" />
                 </div>
-                <p className="mt-5 font-display text-[24px] font-semibold leading-tight text-ink">{s.title}</p>
-                <p className="mt-1.5 text-[15px] text-muted">{s.text}</p>
+                <p className="mt-5 font-display text-[1.5rem] font-semibold leading-tight text-ink">{s.title}</p>
+                <p className="mt-1.5 text-[0.9375rem] text-muted">{s.text}</p>
               </div>
             ))}
           </div>

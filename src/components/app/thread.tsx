@@ -66,12 +66,12 @@ export function Thread({ campaignId, messages, canPost, allowInternal, disabledR
             onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) void send(e); }} className={internal ? "border-marigold bg-marigold-soft" : ""} />
           <div className="mt-2 flex items-center justify-between gap-3">
             {allowInternal ? (
-              <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink-soft"><Switch checked={internal} onCheckedChange={setInternal} aria-label="Note interne" />Note interne</label>
+              <label className="flex cursor-pointer items-center gap-2.5 text-[0.8125rem] text-ink-soft"><Switch checked={internal} onCheckedChange={setInternal} aria-label="Note interne" />Note interne</label>
             ) : <span className="text-xs text-muted">Réponse sous 24 h ouvrées.</span>}
             <Button type="submit" size="sm" disabled={busy || !body.trim()}><Send />{busy ? "Envoi…" : "Envoyer"}</Button>
           </div>
         </form>
-      ) : <p className="border-t border-line px-4 sm:px-5 py-4 text-[13px] text-muted">{disabledReason ?? "La messagerie est fermée pour cette campagne."}</p>}
+      ) : <p className="border-t border-line px-4 sm:px-5 py-4 text-[0.8125rem] text-muted">{disabledReason ?? "La messagerie est fermée pour cette campagne."}</p>}
     </div>
   );
 }

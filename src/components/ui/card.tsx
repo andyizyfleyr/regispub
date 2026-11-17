@@ -9,10 +9,10 @@ export function CardHeader({ title, description, action, icon, className }: { ti
   return (
     <div className={cn("flex items-center justify-between gap-4 border-b border-line px-4 sm:px-5 py-4", className)}>
       <div className="flex min-w-0 items-center gap-3">
-        {icon && <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-green-soft text-green [&_svg]:size-[18px]">{icon}</span>}
+        {icon && <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-green-soft text-green [&_svg]:size-[1.125rem]">{icon}</span>}
         <div className="min-w-0">
           <h2 className="text-base font-semibold tracking-normal text-ink [font-family:var(--font-sans)]">{title}</h2>
-          {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
+          {description && <p className="mt-0.5 text-[0.8125rem] text-muted">{description}</p>}
         </div>
       </div>
       {action && <div className="shrink-0">{action}</div>}

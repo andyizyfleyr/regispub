@@ -82,7 +82,7 @@ export function ExternalRefsPanel({ campaignId, platforms, refs, canEdit }: { ca
     <div className="space-y-3">
       {platforms.map((p) => (
         <Field key={p} label={`Identifiant de campagne ${PLATFORMS[p].label}`} htmlFor={`ref-${p}`} optional>
-          <Input id={`ref-${p}`} className="font-mono text-[13px]" value={values[p] ?? ""} disabled={!canEdit} onChange={(e) => setValues((s) => ({ ...s, [p]: e.target.value.trim() }))} placeholder={p === "TIKTOK" ? "ID TikTok Ads Manager" : "ID Gestionnaire de publicités Meta"} />
+          <Input id={`ref-${p}`} className="font-mono text-[0.8125rem]" value={values[p] ?? ""} disabled={!canEdit} onChange={(e) => setValues((s) => ({ ...s, [p]: e.target.value.trim() }))} placeholder={p === "TIKTOK" ? "ID TikTok Ads Manager" : "ID Gestionnaire de publicités Meta"} />
         </Field>
       ))}
       <p className="text-xs text-muted">La campagne est créée manuellement dans le gestionnaire de publicités de la plateforme. Son identifiant sert à relier les statistiques. Une campagne Meta diffusée sur Facebook et Instagram porte le même identifiant.</p>
@@ -101,7 +101,7 @@ export function CreativesPanel({ campaignId, items, canManage }: { campaignId: s
       {canManage && (
         <div className="space-y-2">
           <Uploader compact label="Ajouter une création" hint="Image ou vidéo aux dimensions de la plateforme" onUploaded={async (asset) => { await run(() => staffAttachCreativeAction(campaignId, asset.id, submit), submit ? "Création soumise au client." : "Création ajoutée."); }} />
-          <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink-soft"><Switch checked={submit} onCheckedChange={setSubmit} aria-label="Soumettre au client" />Soumettre au client dès l&apos;ajout</label>
+          <label className="flex cursor-pointer items-center gap-2.5 text-[0.8125rem] text-ink-soft"><Switch checked={submit} onCheckedChange={setSubmit} aria-label="Soumettre au client" />Soumettre au client dès l&apos;ajout</label>
         </div>
       )}
       {items.length === 0 ? <p className="py-6 text-center text-sm text-muted">Aucun fichier pour cette campagne.</p> : (
@@ -115,7 +115,7 @@ export function CreativesPanel({ campaignId, items, canManage }: { campaignId: s
                   {it.role === "CREATIVE" ? <StateBadge kind="approval" value={it.approval} /> : <span className="shrink-0 text-xs text-muted">{it.role === "BRIEF_FILE" ? "Brief" : "Média produit"}</span>}
                 </div>
                 <p className="text-xs text-muted">{it.byClient ? "Fourni par le client" : "Ajouté par l'équipe"} · <a className="text-green hover:underline" href={`/api/files/${it.assetId}?telecharger`}>Télécharger</a></p>
-                {it.feedback && <p className="rounded-md bg-marigold-soft px-3 py-2 text-[13px] text-ink">Retour du client : {it.feedback}</p>}
+                {it.feedback && <p className="rounded-md bg-marigold-soft px-3 py-2 text-[0.8125rem] text-ink">Retour du client : {it.feedback}</p>}
                 {canManage && it.role === "CREATIVE" && (
                   <div className="flex gap-2">
                     {it.approval !== "PENDING" && it.approval !== "APPROVED" && <Button size="sm" variant="outline" className="flex-1" disabled={busy} onClick={() => run(() => staffSubmitCreativeAction(it.linkId), "Soumise au client.")}><Send />Soumettre</Button>}
@@ -150,7 +150,7 @@ export function RevisionItem({ id, description, status, response, requester, cre
             <Button size="sm" variant="danger-outline" disabled={busy} onClick={() => run(() => handleRevisionAction(id, "REJECTED", text), "Demande refusée, client notifié.")}><X />Refuser</Button>
           </div>
         </div>
-      ) : response ? <p className="rounded-md bg-sand px-3 py-2 text-[13px] text-ink-soft">Réponse : {response}</p> : null}
+      ) : response ? <p className="rounded-md bg-sand px-3 py-2 text-[0.8125rem] text-ink-soft">Réponse : {response}</p> : null}
     </li>
   );
 }
@@ -201,7 +201,7 @@ export function MetricsPanel({ campaignId, platforms, pending, canImport, canVal
             <input ref={file} type="file" accept=".csv,text/csv,text/plain" className="sr-only" id="imp-file" onChange={(e) => void onFile(e.target.files?.[0])} />
             <div className="flex flex-wrap items-center gap-3">
               <Button variant="outline" disabled={busy} onClick={() => file.current?.click()}><FileUp />Choisir un fichier</Button>
-              <a className="text-[13px] font-medium text-green hover:underline" download="modele-statistiques.csv" href={`data:text/csv;charset=utf-8,${encodeURIComponent(template)}`}>Télécharger le modèle</a>
+              <a className="text-[0.8125rem] font-medium text-green hover:underline" download="modele-statistiques.csv" href={`data:text/csv;charset=utf-8,${encodeURIComponent(template)}`}>Télécharger le modèle</a>
             </div>
             {issues.length > 0 && <ul className="list-disc space-y-0.5 pl-5 text-xs text-clay">{issues.map((i, k) => <li key={k}>{i}</li>)}</ul>}
             <div className="border-t border-line pt-3">
@@ -268,11 +268,11 @@ export function AccessPanel({ campaignId, items, canReveal, canReview }: { campa
               <Badge tone={meta.tone}>{meta.staffLabel}</Badge>
             </div>
             {it.method && it.state !== "TODO" && (
-              <p className="text-[13px] text-ink-soft">{METHOD_LABELS[it.method].staff}{it.method === "INVITE" && it.hasSecret ? " (code de vidéo)" : ""}{it.updatedAt ? ` · ${formatDateTime(it.updatedAt)}` : ""}</p>
+              <p className="text-[0.8125rem] text-ink-soft">{METHOD_LABELS[it.method].staff}{it.method === "INVITE" && it.hasSecret ? " (code de vidéo)" : ""}{it.updatedAt ? ` · ${formatDateTime(it.updatedAt)}` : ""}</p>
             )}
-            {it.state === "PROBLEM" && it.note && <p className="rounded-md bg-clay-soft px-3 py-2 text-[13px] text-ink">Dit au client : {it.note}</p>}
+            {it.state === "PROBLEM" && it.note && <p className="rounded-md bg-clay-soft px-3 py-2 text-[0.8125rem] text-ink">Dit au client : {it.note}</p>}
             {secret && (
-              <dl className="space-y-1.5 rounded-lg border border-line bg-paper p-3 text-[13px]">
+              <dl className="space-y-1.5 rounded-lg border border-line bg-paper p-3 text-[0.8125rem]">
                 {([[it.method === "LOGIN" ? "Identifiant" : "Code", secret.login], ...(secret.password !== null ? [["Mot de passe", secret.password]] : [])] as [string, string][]).map(([label, value]) => (
                   <div key={label} className="flex items-center gap-2">
                     <dt className="w-24 shrink-0 text-muted">{label}</dt>

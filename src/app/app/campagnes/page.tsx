@@ -32,7 +32,7 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Pr
   const tabs = Object.entries(FILTERS).filter(([id, f]) => id === "toutes" || id === current || countFor(f.statuses) > 0).map(([id, f]) => ({ id, label: f.label, href: `/app/campagnes?etat=${id}` }));
   return (
     <>
-      <PageHeader title="Mes campagnes" actions={<Button asChild variant="accent" className="max-lg:hidden"><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer</Link></Button>} />
+      <PageHeader title="Mes campagnes" actionsFrom="lg" actions={<Button asChild variant="accent"><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer</Link></Button>} />
       {sp.limite && <Notice tone="warn" className="mb-4">Trop de brouillons. Terminez-en un ou supprimez-le.</Notice>}
       {tabs.length > 2 && <TabsNav current={current} tabs={tabs} className="mb-4" />}
       {campaigns.length ? (

@@ -35,7 +35,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <Logo />
             <p className="mt-2 text-xs text-muted">{settings.companyName}{settings.supportEmail ? ` · ${settings.supportEmail}` : ""}</p>
           </div>
-          <div className="text-right text-[13px] text-muted">
+          <div className="text-right text-[0.8125rem] text-muted">
             <p className="font-mono text-ink">{c.reference}</p>
             <p>Édité le {formatDateTime(new Date())}</p>
           </div>

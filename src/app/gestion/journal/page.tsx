@@ -30,8 +30,8 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 <tr key={r.id}>
                   <td className="whitespace-nowrap text-muted">{formatDateTime(r.createdAt)}</td>
                   <td className="whitespace-nowrap">{r.actorId ? names.get(r.actorId) ?? "Compte supprimé" : "Système"}</td>
-                  <td className="font-mono text-[13px] text-ink">{r.action}</td>
-                  <td className="text-[13px] text-ink-soft">{r.entity}{r.entityId ? <span className="block font-mono text-xs text-muted">{r.entityId}</span> : null}</td>
+                  <td className="font-mono text-[0.8125rem] text-ink">{r.action}</td>
+                  <td className="text-[0.8125rem] text-ink-soft">{r.entity}{r.entityId ? <span className="block font-mono text-xs text-muted">{r.entityId}</span> : null}</td>
                   <td className="max-w-80 break-words font-mono text-xs text-muted" data-empty={r.meta ? undefined : ""}>{r.meta ? JSON.stringify(r.meta).slice(0, 220) : "—"}</td>
                 </tr>
               ))}

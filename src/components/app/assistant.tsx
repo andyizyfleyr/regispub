@@ -68,7 +68,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 const Bullets = ({ title, items }: { title: string; items: string[] }) => items.length ? (
-  <div><h4 className="text-[13px] font-semibold text-ink">{title}</h4><ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm text-ink-soft">{items.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+  <div><h4 className="text-[0.8125rem] font-semibold text-ink">{title}</h4><ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm text-ink-soft">{items.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
 ) : null;
 
 export function Assistant({ businesses, hasModel, entries, today }: { businesses: { id: string; name: string }[]; hasModel: boolean; entries: Entry[]; today: string }) {
@@ -107,8 +107,8 @@ export function Assistant({ businesses, hasModel, entries, today }: { businesses
             return (
               <button key={t.kind} type="button" role="tab" aria-selected={on} title={t.description} onClick={() => setKind(t.kind)}
                 className={cn("flex flex-col items-center gap-1.5 rounded-xl border bg-surface px-1 py-3 text-center transition-[border-color,box-shadow,background-color]", on ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card hover:border-line-strong")}>
-                <span aria-hidden className={cn("flex size-9 items-center justify-center rounded-xl", TILE_TONES[toneAt(i)])}><Icon className="size-[18px]" /></span>
-                <span className="text-[12px] font-medium leading-tight text-ink">{t.label}</span>
+                <span aria-hidden className={cn("flex size-9 items-center justify-center rounded-xl", TILE_TONES[toneAt(i)])}><Icon className="size-[1.125rem]" /></span>
+                <span className="text-[0.75rem] font-medium leading-tight text-ink">{t.label}</span>
               </button>
             );
           })}
@@ -167,8 +167,8 @@ function ResultView({ result, onSave, startDate, setStartDate, today }: { result
       <>
         <p className="text-sm text-ink-soft">{d.summary}</p>
         <div className="space-y-5"><Bullets title="Points forts" items={d.strengths} /><Bullets title="Points à améliorer" items={d.weaknesses} /></div>
-        {d.priorities.length > 0 && <div><h4 className="text-[13px] font-semibold">Priorités</h4><ol className="mt-2 space-y-2">{d.priorities.map((p, i) => <li key={i} className="flex gap-3 rounded-md bg-paper px-3 py-2.5 text-sm"><span className="tnum font-semibold text-green">{i + 1}</span><span><span className="font-medium text-ink">{p.title}</span><span className="block text-ink-soft">{p.action}</span></span></li>)}</ol></div>}
-        {d.campaignSuggestions.length > 0 && <div><h4 className="text-[13px] font-semibold">Campagnes conseillées</h4><ul className="mt-2 space-y-2 text-sm">{d.campaignSuggestions.map((s, i) => <li key={i}><span className="font-medium">{s.objective}</span> — <span className="text-ink-soft">{s.why}</span></li>)}</ul><Button asChild size="sm" className="mt-3"><Link href="/app/creer">Créer une publicité</Link></Button></div>}
+        {d.priorities.length > 0 && <div><h4 className="text-[0.8125rem] font-semibold">Priorités</h4><ol className="mt-2 space-y-2">{d.priorities.map((p, i) => <li key={i} className="flex gap-3 rounded-md bg-paper px-3 py-2.5 text-sm"><span className="tnum font-semibold text-green">{i + 1}</span><span><span className="font-medium text-ink">{p.title}</span><span className="block text-ink-soft">{p.action}</span></span></li>)}</ol></div>}
+        {d.campaignSuggestions.length > 0 && <div><h4 className="text-[0.8125rem] font-semibold">Campagnes conseillées</h4><ul className="mt-2 space-y-2 text-sm">{d.campaignSuggestions.map((s, i) => <li key={i}><span className="font-medium">{s.objective}</span> — <span className="text-ink-soft">{s.why}</span></li>)}</ul><Button asChild size="sm" className="mt-3"><Link href="/app/creer">Créer une publicité</Link></Button></div>}
       </>
     ); }
     case "calendar": { const d = result.data as CalendarPlan; return (
@@ -178,7 +178,7 @@ function ResultView({ result, onSave, startDate, setStartDate, today }: { result
             <li key={i} className="flex gap-3 px-3.5 py-3 text-sm">
               <span className="tnum w-10 shrink-0 text-xs font-medium text-muted">J+{e.dayOffset}</span>
               <PlatformBadge platform={e.platform as PlatformCode} size="sm" />
-              <span className="min-w-0 flex-1"><span className="font-medium text-ink">{e.title}</span><span className="block whitespace-pre-wrap text-[13px] text-ink-soft">{e.caption}</span>{e.hashtags.length > 0 && <span className="mt-1 block text-xs text-green">{e.hashtags.join(" ")}</span>}</span>
+              <span className="min-w-0 flex-1"><span className="font-medium text-ink">{e.title}</span><span className="block whitespace-pre-wrap text-[0.8125rem] text-ink-soft">{e.caption}</span>{e.hashtags.length > 0 && <span className="mt-1 block text-xs text-green">{e.hashtags.join(" ")}</span>}</span>
             </li>
           ))}
         </ul>
@@ -192,8 +192,8 @@ function ResultView({ result, onSave, startDate, setStartDate, today }: { result
     case "captions": { const d = result.data as Captions; return <ul className="space-y-3">{d.captions.map((c, i) => <li key={i} className="flex items-start gap-3 rounded-md border border-line p-3.5 text-sm"><p className="min-w-0 flex-1 whitespace-pre-wrap text-ink-soft">{c}</p><CopyButton text={c} /></li>)}</ul>; }
     case "hashtags": { const d = result.data as Hashtags; return (
       <>
-        <div className="flex flex-wrap gap-1.5">{d.hashtags.map((h) => <span key={h} className="rounded-full bg-green-soft px-2.5 py-1 text-[13px] text-forest">{h}</span>)}</div>
-        <div className="flex items-center justify-between gap-3">{d.note ? <p className="text-[13px] text-muted">{d.note}</p> : <span />}<CopyButton text={d.hashtags.join(" ")} /></div>
+        <div className="flex flex-wrap gap-1.5">{d.hashtags.map((h) => <span key={h} className="rounded-full bg-green-soft px-2.5 py-1 text-[0.8125rem] text-forest">{h}</span>)}</div>
+        <div className="flex items-center justify-between gap-3">{d.note ? <p className="text-[0.8125rem] text-muted">{d.note}</p> : <span />}<CopyButton text={d.hashtags.join(" ")} /></div>
       </>
     ); }
     case "competition": { const d = result.data as Competition; return <><p className="text-sm text-ink-soft">{d.summary}</p><Bullets title="Observations" items={d.observations} /><Bullets title="Opportunités" items={d.opportunities} />{d.limits && <Notice tone="warn" title="Limites de l'analyse">{d.limits}</Notice>}</>; }
@@ -214,7 +214,7 @@ function CalendarList({ entries }: { entries: Entry[] }) {
               onCheckedChange={async (v) => { await toggleCalendarEntryAction(e.id, v === true); router.refresh(); }} />
             <div className={cn("min-w-0 flex-1 text-sm", e.done && "opacity-55")}>
               <p className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className="text-xs font-medium capitalize text-muted">{formatDay(e.date)}</span><PlatformBadge platform={e.platform as PlatformCode} size="sm" /><span className={cn("font-medium text-ink", e.done && "line-through")}>{e.title}</span></p>
-              {e.caption && <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-[13px] text-ink-soft">{e.caption}</p>}
+              {e.caption && <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-[0.8125rem] text-ink-soft">{e.caption}</p>}
             </div>
             {e.caption && <CopyButton text={`${e.caption}${e.hashtags.length ? `\n\n${e.hashtags.join(" ")}` : ""}`} />}
             <button type="button" aria-label="Supprimer" className="rounded-md p-1.5 text-muted hover:bg-sand hover:text-clay" onClick={async () => { await deleteCalendarEntryAction(e.id); router.refresh(); }}><Trash2 className="size-4" /></button>

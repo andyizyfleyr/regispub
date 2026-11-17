@@ -17,7 +17,7 @@ export const buttonVariants = cva(
         "danger-outline": "border border-clay/40 bg-surface text-clay hover:bg-clay-soft",
         link: "h-auto! p-0! text-green underline-offset-4 hover:underline",
       },
-      size: { sm: "h-9 px-4 text-[13px]", md: "h-11 px-5 text-sm", lg: "h-[3.25rem] px-7 text-[15px]", icon: "size-10" },
+      size: { sm: "h-8 px-3.5 text-[0.8125rem] sm:h-9 sm:px-4", md: "h-10 px-4 text-sm sm:h-11 sm:px-5", lg: "h-11 px-5 text-[0.9375rem] sm:h-[3.25rem] sm:px-7", icon: "size-9 sm:size-10" },
     },
     defaultVariants: { variant: "primary", size: "md" },
   },

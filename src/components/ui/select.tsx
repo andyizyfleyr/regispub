@@ -41,7 +41,7 @@ export function Select({ id, name, value, defaultValue, required, disabled, clas
   return (
     <S.Root name={name} value={value === undefined ? undefined : String(value)} defaultValue={defaultValue === undefined || defaultValue === "" ? undefined : String(defaultValue)} required={required} disabled={disabled} onValueChange={(v) => onChange?.({ target: { value: v } })}>
       <S.Trigger id={id} aria-label={rest["aria-label"]}
-        className={cn("flex h-12 w-full items-center justify-between gap-2 rounded-md border border-[var(--field-line)] bg-[var(--field-bg)] px-4 text-left text-[15px] text-ink transition-[border-color,box-shadow,background-color] hover:border-line-strong focus:border-green focus:outline-none focus:ring-4 focus:ring-green/12 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:border-green data-[state=open]:ring-4 data-[state=open]:ring-green/12 data-[placeholder]:text-muted/70 [&>span]:min-w-0 [&>span]:truncate", className)}>
+        className={cn("flex h-11 w-full items-center justify-between gap-2 rounded-md border border-[var(--field-line)] bg-[var(--field-bg)] px-3.5 sm:h-12 sm:px-4 text-left text-[0.9375rem] text-ink transition-[border-color,box-shadow,background-color] hover:border-line-strong focus:border-green focus:outline-none focus:ring-4 focus:ring-green/12 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:border-green data-[state=open]:ring-4 data-[state=open]:ring-green/12 data-[placeholder]:text-muted/70 [&>span]:min-w-0 [&>span]:truncate", className)}>
         <S.Value placeholder={placeholder ?? empty?.label ?? "Choisir…"} />
         <S.Icon><ChevronDown className="size-4 shrink-0 text-muted" /></S.Icon>
       </S.Trigger>
@@ -51,7 +51,7 @@ export function Select({ id, name, value, defaultValue, required, disabled, clas
           <S.Viewport className="p-1.5">
             {options.map((o) => (
               <S.Item key={o.value} value={o.value} disabled={o.disabled}
-                className="relative flex min-h-10 cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-9 text-[14.5px] text-ink outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-soft data-[state=checked]:font-semibold data-[disabled]:opacity-45">
+                className="relative flex min-h-10 cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-9 text-[0.90625rem] text-ink outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-green-soft data-[state=checked]:font-semibold data-[disabled]:opacity-45">
                 <S.ItemText>{o.label}</S.ItemText>
                 <S.ItemIndicator className="absolute right-3 text-green"><Check className="size-4" strokeWidth={2.6} /></S.ItemIndicator>
               </S.Item>

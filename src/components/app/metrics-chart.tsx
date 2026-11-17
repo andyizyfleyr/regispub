@@ -20,7 +20,7 @@ export function MetricsChart({ data, series }: { data: ChartPoint[]; series: Cha
       <div className="scrollbar-none -mx-1 mb-4 flex gap-1.5 overflow-x-auto px-1" role="tablist" aria-label="Indicateur affiché">
         {series.map((s) => (
           <button key={s.key} type="button" role="tab" aria-selected={s.key === current.key} onClick={() => setActive(s.key)}
-            className={cn("shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors", s.key === current.key ? "border-forest bg-forest text-white" : "border-line bg-surface text-ink-soft hover:border-line-strong")}>
+            className={cn("shrink-0 rounded-full border px-3 py-1.5 text-[0.8125rem] font-medium transition-colors", s.key === current.key ? "border-forest bg-forest text-white" : "border-line bg-surface text-ink-soft hover:border-line-strong")}>
             {s.label}
           </button>
         ))}
@@ -38,7 +38,7 @@ export function MetricsChart({ data, series }: { data: ChartPoint[]; series: Cha
             <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 12, fill: "#7a786f" }} tickLine={false} axisLine={{ stroke: "#d6d1c4" }} minTickGap={24} />
             <YAxis tickFormatter={(v: number) => formatCompact(v)} tick={{ fontSize: 12, fill: "#7a786f" }} tickLine={false} axisLine={false} width={44} allowDecimals={false} />
             <Tooltip cursor={{ stroke: "#b9b3a3" }} content={({ active: on, payload, label }) => on && payload?.length ? (
-              <div className="rounded-md border border-line bg-surface px-3 py-2 text-[13px] shadow-sm">
+              <div className="rounded-md border border-line bg-surface px-3 py-2 text-[0.8125rem] shadow-sm">
                 <p className="text-muted">{shortDate(String(label))}</p>
                 <p className="tnum font-medium text-ink">{format(Number(payload[0]!.value ?? 0))} <span className="font-normal text-muted">{current.money ? "" : current.label.toLowerCase()}</span></p>
               </div>

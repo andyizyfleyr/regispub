@@ -42,7 +42,7 @@ export default async function StaffNotifications({ searchParams }: { searchParam
                 <Field label="Titre" htmlFor="nt-title"><Input id="nt-title" name="title" required minLength={4} maxLength={90} /><FieldError name="title" /></Field>
                 <Field label="Message" htmlFor="nt-body"><Textarea id="nt-body" name="body" rows={4} required minLength={10} maxLength={600} /><FieldError name="body" /></Field>
                 <fieldset className="space-y-2">
-                  <legend className="mb-1 text-[13px] font-medium text-ink-soft">Canaux supplémentaires</legend>
+                  <legend className="mb-1 text-[0.8125rem] font-medium text-ink-soft">Canaux supplémentaires</legend>
                   <ToggleRow label="E-mail" hint={!channels.email ? "Non configuré" : undefined} htmlFor="n-mail"><Switch id="n-mail" name="viaEmail" disabled={!channels.email} /></ToggleRow>
                   <ToggleRow label="WhatsApp" hint={!channels.whatsapp ? "Non configuré" : undefined} htmlFor="n-wa"><Switch id="n-wa" name="viaWhatsapp" disabled={!channels.whatsapp} /></ToggleRow>
                 </fieldset>
@@ -69,7 +69,7 @@ async function Deliveries() {
             <tr key={d.id}>
               <td className="whitespace-nowrap text-muted">{formatDateTime(d.createdAt)}</td>
               <td>{d.channel === "EMAIL" ? "E-mail" : "WhatsApp"}</td>
-              <td className="text-[13px]">{d.recipient.replace(/(?<=.{3}).(?=[^@]*.{2}(@|$))/g, "•")}</td>
+              <td className="text-[0.8125rem]">{d.recipient.replace(/(?<=.{3}).(?=[^@]*.{2}(@|$))/g, "•")}</td>
               <td className="max-w-64 truncate">{d.notification?.title ?? "—"}</td>
               <td><StateBadge kind="delivery" value={d.status} />{d.detail && <span className="mt-0.5 block max-w-64 truncate text-xs text-muted" title={d.detail}>{d.detail}</span>}</td>
             </tr>

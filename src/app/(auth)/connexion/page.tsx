@@ -11,9 +11,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   return (
     <>
-      <h1 className="text-[28px] font-semibold">Connexion</h1>
+      <h1 className="text-[1.375rem] font-semibold sm:text-[1.75rem]">Connexion</h1>
       {sp.reinitialise && <Notice tone="ok" className="mt-5">Mot de passe modifié.</Notice>}
-      <ActionForm action={loginAction} className="mt-7 space-y-4" refresh={false}>
+      <ActionForm action={loginAction} className="mt-5 space-y-3.5 sm:mt-7 sm:space-y-4" refresh={false}>
         <input type="hidden" name="next" value={sp.next ?? ""} />
         <Field label="Adresse e-mail" htmlFor="email"><Input id="email" name="email" type="email" autoComplete="email" required placeholder="vous@exemple.com" /></Field>
         <Field label="Mot de passe" htmlFor="password"><Input id="password" name="password" type="password" autoComplete="current-password" required /></Field>

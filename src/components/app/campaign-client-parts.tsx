@@ -76,9 +76,9 @@ export function CreativeReview({ items }: { items: ReviewItem[] }) {
           <div className="min-w-0 flex-1 space-y-2.5">
             <div>
               <p className="truncate text-sm font-medium" title={it.name}>{it.name}</p>
-              <div className="mt-1">{it.approval !== "NOT_REQUIRED" ? <StateBadge kind="approval" value={it.approval} /> : <span className="text-[13px] text-muted">{it.byTeam ? "Par notre équipe" : "Par vous"}</span>}</div>
+              <div className="mt-1">{it.approval !== "NOT_REQUIRED" ? <StateBadge kind="approval" value={it.approval} /> : <span className="text-[0.8125rem] text-muted">{it.byTeam ? "Par notre équipe" : "Par vous"}</span>}</div>
             </div>
-            {it.feedback && <p className="rounded-md bg-sand px-3 py-2 text-[13px] text-ink-soft"><MessageSquareWarning className="mr-1.5 inline size-3.5" />{it.feedback}</p>}
+            {it.feedback && <p className="rounded-md bg-sand px-3 py-2 text-[0.8125rem] text-ink-soft"><MessageSquareWarning className="mr-1.5 inline size-3.5" />{it.feedback}</p>}
             {it.approval === "PENDING" && (editing === it.linkId ? (
               <div className="space-y-2">
                 <Textarea rows={3} maxLength={1000} autoFocus value={note} onChange={(e) => setNote(e.target.value)} placeholder="Que faut-il changer ?" aria-label="Modifications souhaitées" />

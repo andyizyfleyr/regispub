@@ -64,14 +64,14 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
       {(error ?? lastFailure) && <Notice tone="danger" title="Le paiement n'a pas abouti">{error ?? lastFailure} Rien n&apos;a été encaissé. Réessayez.</Notice>}
 
       <fieldset>
-        <legend className="mb-2 text-[13px] font-medium text-ink-soft">Opérateur</legend>
+        <legend className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Opérateur</legend>
         <div className="grid grid-cols-3 gap-2.5">
           {operators.map((o) => (
             <button key={o.code} type="button" aria-pressed={operator === o.code} onClick={() => { setOperator(o.code); setTouched(true); }}
               className={cn("relative flex flex-col items-center gap-2 rounded-xl border bg-surface px-2 py-4 text-center transition-[border-color,box-shadow,background-color]", operator === o.code ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card hover:border-line-strong")}>
               <span aria-hidden className={cn("absolute right-2 top-2 flex size-5 items-center justify-center rounded-full border", operator === o.code ? "border-green bg-green" : "border-line-strong")}>{operator === o.code && <span className="size-2 rounded-full bg-white" />}</span>
               <OperatorChip operator={o.code} />
-              <span className="text-[13px] font-medium leading-tight text-ink">{o.label}</span>
+              <span className="text-[0.8125rem] font-medium leading-tight text-ink">{o.label}</span>
             </button>
           ))}
         </div>
@@ -92,7 +92,7 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
         </div>
       </details>
       {canCancel && (
-        <button type="button" className="text-[13px] text-muted underline-offset-4 hover:text-clay hover:underline" onClick={async () => { if (!window.confirm("Annuler cette commande ?")) return; const res = await cancelOrderAction(orderId); if (!res.ok) toast.error(res.error); else { toast.success("Commande annulée."); router.push("/app/paiements"); router.refresh(); } }}>
+        <button type="button" className="text-[0.8125rem] text-muted underline-offset-4 hover:text-clay hover:underline" onClick={async () => { if (!window.confirm("Annuler cette commande ?")) return; const res = await cancelOrderAction(orderId); if (!res.ok) toast.error(res.error); else { toast.success("Commande annulée."); router.push("/app/paiements"); router.refresh(); } }}>
           Annuler la commande
         </button>
       )}
@@ -104,7 +104,7 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
             <div className="flex items-center justify-between"><dt className="text-muted">Opérateur</dt><dd className="flex items-center gap-2 font-medium">{operator && <OperatorChip operator={operator} />}{operators.find((o) => o.code === operator)?.label}</dd></div>
             <div className="flex items-center justify-between"><dt className="text-muted">Numéro</dt><dd className="tnum font-medium">{normalized ? formatPhone(normalized.e164) : ""}</dd></div>
           </dl>
-          <p className="mt-4 rounded-md bg-sand px-3 py-2.5 text-[13px] text-ink-soft">Validez ensuite sur votre téléphone avec votre code secret.</p>
+          <p className="mt-4 rounded-md bg-sand px-3 py-2.5 text-[0.8125rem] text-ink-soft">Validez ensuite sur votre téléphone avec votre code secret.</p>
           <div className="mt-5 flex gap-2">
             <Button type="button" variant="outline" className="flex-1" disabled={busy} onClick={() => setConfirm(false)}>Modifier</Button>
             <Button type="button" variant="accent" className="flex-1" disabled={busy} onClick={pay}>{busy && <LoaderCircle className="animate-spin" />}{busy ? "Envoi…" : "Payer"}</Button>
@@ -150,11 +150,11 @@ function Waiting({ payment, operators, simulation, onDone }: { payment: OpenPaym
       <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-marigold-soft text-marigold-600"><Smartphone className="size-6" /></span>
       <h2 className="mt-4 text-xl font-semibold">Validez sur votre téléphone</h2>
       <p className="mx-auto mt-2 max-w-sm text-sm text-muted"><span className="tnum font-medium text-ink">{formatPhone(payment.phone)}</span>{op ? ` · ${op.label}` : ""}. {op?.ussdHint}</p>
-      <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-sand px-3 py-1.5 text-[13px] text-ink-soft">
+      <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-sand px-3 py-1.5 text-[0.8125rem] text-ink-soft">
         <LoaderCircle className="size-4 animate-spin" />En attente
         {left > 0 && <span className="tnum text-muted">· {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span>}
       </p>
-      {offline && <p className="mt-3 flex items-center justify-center gap-1.5 text-[13px] text-clay"><CircleAlert className="size-4" />Connexion instable. Nouvel essai automatique.</p>}
+      {offline && <p className="mt-3 flex items-center justify-center gap-1.5 text-[0.8125rem] text-clay"><CircleAlert className="size-4" />Connexion instable. Nouvel essai automatique.</p>}
       {simulation && <p className="mt-3 text-xs text-muted">Mode simulation.</p>}
       <div className="mt-5 flex flex-col items-center gap-2">
         {payment.redirectUrl && <Button asChild variant="accent"><a href={payment.redirectUrl}>Ouvrir la page de paiement</a></Button>}

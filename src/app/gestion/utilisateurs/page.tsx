@@ -47,8 +47,8 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
               {rows.map((u) => (
                 <tr key={u.id}>
                   <td><span className="block font-medium text-ink">{u.name}</span><span className="text-xs text-muted">{u.accountType === "PROFESSIONAL" ? "Professionnel" : "Particulier"}</span>{u.status === "SUSPENDED" && <span className="ml-2"><Badge tone="danger">Suspendu</Badge></span>}</td>
-                  <td><span className="block text-[13px]">{u.email}</span>{u.phone && <span className="tnum block text-xs text-muted">{formatPhone(u.phone)}</span>}</td>
-                  <td className="text-[13px] text-ink-soft">{u.businesses.length ? u.businesses.map((b) => <span key={b.name} className="block max-w-48 truncate">{b.name} <span className="text-muted">· {b.sector}</span></span>) : "—"}</td>
+                  <td><span className="block text-[0.8125rem]">{u.email}</span>{u.phone && <span className="tnum block text-xs text-muted">{formatPhone(u.phone)}</span>}</td>
+                  <td className="text-[0.8125rem] text-ink-soft">{u.businesses.length ? u.businesses.map((b) => <span key={b.name} className="block max-w-48 truncate">{b.name} <span className="text-muted">· {b.sector}</span></span>) : "—"}</td>
                   <td className="tnum">{u._count.campaigns}</td>
                   <td className="tnum whitespace-nowrap">{formatFcfa(spentOf.get(u.id) ?? 0)}</td>
                   <td className="whitespace-nowrap text-muted">{formatDate(u.createdAt)}</td>

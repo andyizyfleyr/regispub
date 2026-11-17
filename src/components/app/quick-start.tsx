@@ -53,7 +53,7 @@ export function ObjectiveBrowser() {
           </section>
         ))
       ) : (
-        <button type="button" onClick={() => setAll(true)} className="flex h-12 w-full items-center justify-center gap-1.5 rounded-full bg-surface text-sm font-semibold text-ink shadow-card ring-1 ring-line/70 transition-colors hover:bg-paper">
+        <button type="button" onClick={() => setAll(true)} className="flex h-10 w-full sm:h-12 items-center justify-center gap-1.5 rounded-full bg-surface text-sm font-semibold text-ink shadow-card ring-1 ring-line/70 transition-colors hover:bg-paper">
           Tous les objectifs<ChevronDown className="size-4" />
         </button>
       )}

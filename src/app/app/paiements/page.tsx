@@ -27,16 +27,16 @@ export default async function PaymentsPage() {
     <>
       <PageHeader title="Paiements" />
       {total > 0 && (
-        <section className="bg-brand relative mb-6 overflow-hidden rounded-[28px] px-5 py-5 text-white shadow-lift sm:px-7 sm:py-6">
+        <section className="bg-brand relative mb-4 overflow-hidden rounded-[22px] px-4 py-3.5 text-white shadow-lift sm:mb-6 sm:rounded-[28px] sm:px-7 sm:py-6">
           <div aria-hidden className="bg-grid absolute inset-0 opacity-60" />
-          <div className="relative flex items-end justify-between gap-4">
+          <div className="relative flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[13px] text-white/70">Total payé</p>
-              <p className="tnum mt-1 truncate font-display text-[32px] font-semibold leading-none sm:text-[38px]">{formatFcfa(total)}</p>
+              <p className="text-[0.8125rem] text-white/70">Total payé</p>
+              <p className="tnum mt-1 truncate font-display text-[1.5rem] font-semibold leading-none sm:text-[2.375rem]">{formatFcfa(total)}</p>
             </div>
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/12 text-marigold"><Wallet className="size-6" /></span>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/12 text-marigold sm:size-12 sm:rounded-2xl"><Wallet className="size-[1.125rem] sm:size-6" /></span>
           </div>
-          <p className="relative mt-4 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1.5 text-[13px] text-white/90"><Megaphone className="size-4 text-marigold" />dont <span className="tnum font-semibold">{formatFcfa(paid._sum.adBudget ?? 0)}</span> de publicité</p>
+          <p className="relative mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[0.75rem] text-white/90 sm:mt-4 sm:gap-2 sm:px-3 sm:py-1.5 sm:text-[0.8125rem]"><Megaphone className="size-3.5 text-marigold sm:size-4" />dont <span className="tnum font-semibold">{formatFcfa(paid._sum.adBudget ?? 0)}</span> de publicité</p>
         </section>
       )}
       {orders.length ? (

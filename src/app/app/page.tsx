@@ -50,33 +50,35 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   ];
 
   return (
-    <div className="animate-rise space-y-7">
+    <div className="animate-rise space-y-5 sm:space-y-7">
       <Onboarding userId={user.id} auto={!hasCampaigns} force={guide === "1"} />
-      <section className="bg-brand relative overflow-hidden rounded-[28px] px-5 pb-5 pt-6 text-white shadow-lift sm:px-8 sm:pb-7 sm:pt-8">
+      <section className="bg-brand relative overflow-hidden rounded-[22px] px-4 py-4 text-white shadow-lift sm:rounded-[28px] sm:px-8 sm:py-7">
         <div aria-hidden className="bg-grid absolute inset-0 opacity-60" />
-        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-44 rounded-full bg-mint/20 blur-2xl" />
+        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-36 rounded-full bg-mint/20 blur-2xl" />
         <div className="relative">
-          <p className="text-[13.5px] text-white/70">Bonjour,</p>
-          <h1 className="mt-0.5 text-[30px] font-semibold leading-[1.05] text-white sm:text-[36px]">{firstName}</h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="min-w-0 truncate text-[1.25rem] font-semibold leading-tight text-white sm:text-[1.875rem]"><span className="font-normal text-white/70">Bonjour,</span> {firstName}</h1>
+            <Button asChild variant="accent" size="sm" className="max-sm:hidden"><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer une publicité</Link></Button>
+          </div>
           {hasCampaigns ? (
-            <dl className="mt-5 grid grid-cols-3 gap-2.5">
+            <dl className="mt-3 grid grid-cols-3 gap-2 sm:mt-5 sm:gap-2.5">
               {stats.map((st) => (
-                <div key={st.label} className="rounded-2xl bg-white/10 px-3.5 py-3 ring-1 ring-inset ring-white/10 backdrop-blur-sm">
-                  <dd className="tnum font-display text-[26px] font-semibold leading-none">{st.value}</dd>
-                  <dt className="mt-1.5 truncate text-[12.5px] text-white/70">{st.label}</dt>
+                <div key={st.label} className="flex items-baseline gap-1.5 rounded-xl bg-white/10 px-2.5 py-2 ring-1 ring-inset ring-white/10 sm:block sm:rounded-2xl sm:px-3.5 sm:py-3">
+                  <dd className="tnum font-display text-[1.125rem] font-semibold leading-none sm:text-[1.625rem]">{st.value}</dd>
+                  <dt className="min-w-0 truncate text-[0.75rem] text-white/70 sm:mt-1.5 sm:text-[0.8125rem]">{st.label}</dt>
                 </div>
               ))}
             </dl>
-          ) : <p className="mt-2 text-[15px] text-white/75">{lead}</p>}
-          <Button asChild variant="accent" size="lg" className="mt-5 w-full sm:w-auto"><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer une publicité</Link></Button>
+          ) : <p className="mt-1.5 text-[0.875rem] text-white/75">{lead}</p>}
+          <Button asChild variant="accent" className="mt-3 w-full sm:hidden"><Link href="/app/creer"><Plus strokeWidth={2.4} />Créer une publicité</Link></Button>
         </div>
       </section>
 
       <nav aria-label="Raccourcis" className="grid grid-cols-4 gap-2 lg:hidden">
         {SHORTCUTS.map((sc) => (
-          <Link key={sc.href} href={sc.href} className="group flex flex-col items-center gap-2 text-center">
-            <span className={`flex size-14 items-center justify-center rounded-[20px] shadow-card ring-1 ring-line/70 transition-transform group-active:scale-95 ${sc.cls}`}><sc.icon className="size-6" /></span>
-            <span className="text-[12.5px] font-medium leading-tight text-ink-soft">{sc.label}</span>
+          <Link key={sc.href} href={sc.href} className="group flex flex-col items-center gap-1.5 text-center">
+            <span className={`flex size-11 items-center justify-center rounded-2xl shadow-card ring-1 ring-line/70 transition-transform group-active:scale-95 ${sc.cls}`}><sc.icon className="size-5" /></span>
+            <span className="text-[0.75rem] font-medium leading-tight text-ink-soft">{sc.label}</span>
           </Link>
         ))}
       </nav>
@@ -90,7 +92,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               const meta = TODO_META[status]!;
               const href = status === "PENDING_PAYMENT" && c.orders[0] ? `/app/paiements/${c.orders[0].id}` : status === "CLIENT_REVIEW" ? `/app/campagnes/${c.id}?onglet=creations` : `/app/campagnes/${c.id}?onglet=messages`;
               return <ListRow key={c.id} href={href} icon={<meta.icon />} tone="forest" title={c.name} subtitle={STATUS_META[status].label} className="hover:bg-marigold-soft"
-                trailing={<span className="flex h-9 w-[5.5rem] items-center justify-center rounded-full bg-marigold text-[13px] font-semibold text-forest shadow-glow">{meta.cta}</span>} chevron={false} />;
+                trailing={<span className="flex h-8 w-[5.25rem] items-center justify-center rounded-full bg-marigold text-[0.8125rem] font-semibold text-forest shadow-glow sm:h-9">{meta.cta}</span>} chevron={false} />;
             })}
           </List>
         </section>

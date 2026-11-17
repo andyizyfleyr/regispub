@@ -55,7 +55,7 @@ export function CopyField({ value, label }: { value: string; label: string }) {
   const [done, setDone] = React.useState(false);
   return (
     <div className="flex items-center gap-2 rounded-md border border-line bg-paper py-1.5 pl-3 pr-1.5">
-      <span className="min-w-0 flex-1 truncate font-mono text-[13px]" aria-label={label}>{value}</span>
+      <span className="min-w-0 flex-1 truncate font-mono text-[0.8125rem]" aria-label={label}>{value}</span>
       <Button type="button" variant="ghost" size="sm" onClick={async () => { try { await navigator.clipboard.writeText(value); setDone(true); setTimeout(() => setDone(false), 1500); } catch { toast.error("Copie impossible sur cet appareil."); } }}>
         {done ? <Check /> : <Copy />}{done ? "Copié" : "Copier"}
       </Button>
@@ -68,7 +68,7 @@ export function RedeemPoints({ balance, min, pointValue }: { balance: number; mi
   const [points, setPoints] = React.useState(String(Math.max(min, Math.min(balance, min))));
   const [busy, setBusy] = React.useState(false);
   const n = Math.floor(Number(points)) || 0;
-  if (balance < min) return <p className="text-[13px] text-muted">Conversion possible à partir de <span className="tnum">{min}</span> points ({formatFcfa(min * pointValue)}).</p>;
+  if (balance < min) return <p className="text-[0.8125rem] text-muted">Conversion possible à partir de <span className="tnum">{min}</span> points ({formatFcfa(min * pointValue)}).</p>;
   return (
     <div className="flex flex-wrap items-end gap-3">
       <Field label="Points à convertir" htmlFor="redeem" className="w-40" hint={n >= min ? `= bon de ${formatFcfa(n * pointValue)}` : `Minimum ${min}`}>

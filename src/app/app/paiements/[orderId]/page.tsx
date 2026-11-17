@@ -77,7 +77,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
               {order.invoiceNumber && <p className="mt-4 text-xs text-muted">Reçu n° <span className="font-mono">{order.invoiceNumber}</span></p>}
             </CardBody>
           </Card>
-          {order.status === "PENDING" && order.campaign && <p className="mt-2.5 text-[13px] text-muted"><Link href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}?etape=4`} className="font-medium text-green hover:underline">Modifier la campagne</Link></p>}
+          {order.status === "PENDING" && order.campaign && <p className="mt-2.5 text-[0.8125rem] text-muted"><Link href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}?etape=4`} className="font-medium text-green hover:underline">Modifier la campagne</Link></p>}
         </section>
 
           {order.status === "PENDING" && (
@@ -100,7 +100,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
               <ul className="divide-y divide-line">
                 {order.refunds.map((r) => (
                   <li key={r.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 text-sm">
-                    <span><span className="tnum font-medium">{formatFcfa(r.amount)}</span><span className="block text-[13px] text-muted">{r.reason}{r.reference ? ` · réf. ${r.reference}` : ""}</span></span>
+                    <span><span className="tnum font-medium">{formatFcfa(r.amount)}</span><span className="block text-[0.8125rem] text-muted">{r.reason}{r.reference ? ` · réf. ${r.reference}` : ""}</span></span>
                     <StateBadge kind="refund" value={r.status} />
                   </li>
                 ))}
@@ -111,7 +111,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
           {order.payments.length > 0 && (
             <details className="group rounded-lg border border-line bg-surface">
               <summary className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium text-ink sm:px-5">
-                Tentatives<span className="tnum text-[13px] font-normal text-muted">{order.payments.length}</span>
+                Tentatives<span className="tnum text-[0.8125rem] font-normal text-muted">{order.payments.length}</span>
               </summary>
               <ul className="divide-y divide-line border-t border-line">
                 {order.payments.map((p) => (

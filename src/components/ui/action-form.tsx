@@ -41,7 +41,7 @@ export function ActionForm({ action, children, className, successMessage, resetO
     <form ref={ref} action={formAction} className={className} noValidate={false}>
       <ErrorsContext.Provider value={state?.fieldErrors ?? {}}>{children}</ErrorsContext.Provider>
       {inlineError && state && !state.ok && state.error && (
-        <p role="alert" className="mt-3 rounded-md border border-clay/25 bg-clay-soft px-3 py-2 text-[13px] text-clay">{state.error}</p>
+        <p role="alert" className="mt-3 rounded-md border border-clay/25 bg-clay-soft px-3 py-2 text-[0.8125rem] text-clay">{state.error}</p>
       )}
     </form>
   );
@@ -86,5 +86,5 @@ export function ActionButton({ action, confirm, successMessage, children, onDone
 
 export function FieldError({ name, className }: { name: string; className?: string }) {
   const errors = useFieldErrors();
-  return errors[name] ? <p className={cn("text-[13px] text-clay", className)}>{errors[name]}</p> : null;
+  return errors[name] ? <p className={cn("text-[0.8125rem] text-clay", className)}>{errors[name]}</p> : null;
 }

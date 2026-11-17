@@ -52,3 +52,13 @@ Règles à garder pour que toutes les pages se ressemblent.
 - **Bandeau de marque.** Fond vert profond (`bg-brand` + `bg-grid`), un seul par page : accueil, total payé, « Un expert s'en charge », pages de connexion.
 - **Navigation client sur téléphone.** Barre flottante en pilule, bouton « + » orange au centre, onglet actif en pilule vert foncé. Le contenu garde `pb-32` pour ne pas passer dessous.
 - **Filtres et onglets.** `TabsNav` et `FilterChips` : pilules blanches, l'élément actif en vert foncé.
+
+
+## Échelle sur téléphone
+
+Sur téléphone (moins de 640 px de large), toute l'interface est réduite d'environ 10 % : `html { font-size: 14.5px }` dans `globals.css`. Les textes, pictogrammes, boutons, champs et marges suivent, car ils sont exprimés en `rem`.
+
+- **Ne pas écrire de taille de texte en px** (`text-[13px]`) : utiliser `text-[0.8125rem]` ou les classes Tailwind (`text-sm`). Seules les très petites tailles (moins de 12 px) restent en px pour rester lisibles.
+- Tailles de départ pensées pour le téléphone, agrandies avec `sm:` : boutons `sm` 32 px, `md` 40 px, `lg` 44 px ; champs 44 px ; vignette de ligne 40 px ; titre de page 22 px ; titre de section 16 px.
+- **Bandeau de marque** : compact sur téléphone (`px-4 py-4`, rayon 22 px). Le titre tient sur une ligne, les chiffres sont en ligne avec leur libellé. Pas de bouton `lg` dans un bandeau.
+- `PageHeader` : `actionsFrom="lg"` masque les actions sur téléphone sans laisser de vide (quand le « + » du menu fait déjà la même chose).

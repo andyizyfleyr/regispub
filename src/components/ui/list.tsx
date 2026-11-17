@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 /** Titre de section avec, au besoin, un lien discret à droite. */
 export function SectionTitle({ id, children, action, className }: { id?: string; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("mb-3 flex items-baseline justify-between gap-3 px-1", className)}>
-      <h2 id={id} className="font-display text-[18px] font-semibold text-ink">{children}</h2>
-      {action && <div className="shrink-0 text-[13.5px] font-medium text-green [&_a:hover]:underline">{action}</div>}
+    <div className={cn("mb-2 flex items-baseline justify-between gap-3 px-1 sm:mb-3", className)}>
+      <h2 id={id} className="font-display text-[1rem] font-semibold text-ink sm:text-[1.125rem]">{children}</h2>
+      {action && <div className="shrink-0 text-[0.84375rem] font-medium text-green [&_a:hover]:underline">{action}</div>}
     </div>
   );
 }
@@ -23,7 +23,7 @@ export function List({ className, ...props }: React.HTMLAttributes<HTMLUListElem
 }
 
 /** Classes d'une ligne cliquable : à réutiliser pour un bouton de formulaire. */
-export const rowClass = "group flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-paper focus-visible:bg-paper focus-visible:outline-none sm:px-5";
+export const rowClass = "group flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-paper sm:gap-3.5 sm:px-4 sm:py-3.5 focus-visible:bg-paper focus-visible:outline-none sm:px-5";
 
 const ICON_TONES = {
   green: "bg-green-soft text-green",
@@ -47,15 +47,15 @@ export function RowBody({ icon, tone = "neutral", title, subtitle, value, meta, 
 }) {
   return (
     <>
-      {icon && <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-[14px] [&_svg]:size-5", ICON_TONES[tone])}>{icon}</span>}
+      {icon && <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl sm:size-11 sm:rounded-[14px] [&_svg]:size-[1.125rem] sm:[&_svg]:size-5", ICON_TONES[tone])}>{icon}</span>}
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-3">
-          <span className="min-w-0 flex-1 truncate font-semibold leading-snug text-ink">{title}</span>
+          <span className="min-w-0 flex-1 truncate text-[0.875rem] font-semibold leading-snug text-ink sm:text-[0.9375rem]">{title}</span>
           {value && <span className="shrink-0 text-right text-sm">{value}</span>}
         </span>
         {(subtitle || meta) && (
           <span className="mt-0.5 flex items-center gap-3">
-            <span className="min-w-0 flex-1 truncate text-[13.5px] leading-snug text-muted">{subtitle}</span>
+            <span className="min-w-0 flex-1 truncate text-[0.8125rem] leading-snug text-muted sm:text-[0.84375rem]">{subtitle}</span>
             {meta && <span className="flex shrink-0 items-center">{meta}</span>}
           </span>
         )}
@@ -71,7 +71,7 @@ type RowProps = React.ComponentProps<typeof RowBody> & { href?: string; external
 
 /** Ligne de liste. Avec `href`, toute la ligne est un lien. */
 export function ListRow({ href, external, className, chevron, ...body }: RowProps) {
-  if (!href) return <li className={cn("flex items-center gap-3.5 px-4 py-3.5 sm:px-5", className)}><RowBody chevron={chevron ?? false} {...body} /></li>;
+  if (!href) return <li className={cn("flex items-center gap-3 px-3.5 py-3 sm:gap-3.5 sm:px-5 sm:py-3.5", className)}><RowBody chevron={chevron ?? false} {...body} /></li>;
   const inner = <RowBody chevron={chevron ?? true} {...body} />;
   return (
     <li>
@@ -90,7 +90,7 @@ export function Figures({ items, className, bare }: { items: { label: React.Reac
         <div key={i} className="flex items-baseline justify-between gap-4 px-4 py-3 sm:px-5">
           <dt className="min-w-0 text-sm text-ink-soft">
             {it.label}
-            {it.hint && <span className="block text-[12.5px] leading-snug text-muted">{it.hint}</span>}
+            {it.hint && <span className="block text-[0.78125rem] leading-snug text-muted">{it.hint}</span>}
           </dt>
           <dd className={cn("tnum shrink-0 text-right text-sm text-ink", it.strong ? "font-display text-lg font-semibold" : "font-medium")}>{it.value}</dd>
         </div>

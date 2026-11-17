@@ -45,7 +45,7 @@ export default async function TeamPage() {
           <Card>
             <CardHeader title="Droits par rôle" />
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-left text-[13px]">
+              <table className="w-full min-w-[720px] border-collapse text-left text-[0.8125rem]">
                 <thead><tr className="border-b border-line text-muted"><th className="px-4 sm:px-5 py-2.5 font-medium">Permission</th>{STAFF_ROLES.map((r) => <th key={r} className="px-2 py-2.5 text-center font-medium">{ROLE_LABELS[r]}</th>)}</tr></thead>
                 <tbody>
                   {(Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]).map((p) => (
@@ -66,7 +66,7 @@ export default async function TeamPage() {
               <Field label="Nom complet" htmlFor="st-name"><Input id="st-name" name="name" required maxLength={80} /><FieldError name="name" /></Field>
               <Field label="E-mail" htmlFor="st-email"><Input id="st-email" name="email" type="email" required autoComplete="off" /><FieldError name="email" /></Field>
               <Field label="Rôle" htmlFor="st-role"><Select id="st-role" name="role" defaultValue="AD_MANAGER">{roles.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</Select><FieldError name="role" /></Field>
-              <Field label="Mot de passe provisoire" htmlFor="st-pw" hint="10 caractères minimum, lettres et chiffres. À transmettre par un canal sûr."><Input id="st-pw" name="password" type="text" required minLength={10} autoComplete="off" className="font-mono text-[13px]" /><FieldError name="password" /></Field>
+              <Field label="Mot de passe provisoire" htmlFor="st-pw" hint="10 caractères minimum, lettres et chiffres. À transmettre par un canal sûr."><Input id="st-pw" name="password" type="text" required minLength={10} autoComplete="off" className="font-mono text-[0.8125rem]" /><FieldError name="password" /></Field>
               <SubmitButton pendingLabel="Création…">Créer le compte</SubmitButton>
             </ActionForm>
           </CardBody>

@@ -55,7 +55,7 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
                   <p className="font-medium text-ink">{selected.user.name}</p>
                   <p className="text-ink-soft"><a className="text-green hover:underline" href={`mailto:${selected.user.email}`}>{selected.user.email}</a>{selected.user.phone ? <span className="tnum"> · {formatPhone(selected.user.phone)}</span> : null}</p>
                   {selected.campaign && <p className="mt-1">Campagne : <Link className="text-green hover:underline" href={`/gestion/campagnes/${selected.campaign.id}`}>{selected.campaign.name}</Link></p>}
-                  {selected.order && <p className="mt-1">Commande : <Link className="font-mono text-[13px] text-green hover:underline" href={`/gestion/commandes?q=${selected.order.reference}`}>{selected.order.reference}</Link></p>}
+                  {selected.order && <p className="mt-1">Commande : <Link className="font-mono text-[0.8125rem] text-green hover:underline" href={`/gestion/commandes?q=${selected.order.reference}`}>{selected.order.reference}</Link></p>}
                 </div>
                 <TicketPanel key={selected.id} ticketId={selected.id} status={selected.status} resolution={selected.resolution} />
               </CardBody>

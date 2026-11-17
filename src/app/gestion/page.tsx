@@ -63,7 +63,7 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         <Card>
-          <CardHeader title="Campagnes à faire avancer" action={<Link href="/gestion/campagnes" className="flex items-center gap-1 text-[13px] font-medium text-green hover:underline">Tout voir <ArrowRight className="size-3.5" /></Link>} />
+          <CardHeader title="Campagnes à faire avancer" action={<Link href="/gestion/campagnes" className="flex items-center gap-1 text-[0.8125rem] font-medium text-green hover:underline">Tout voir <ArrowRight className="size-3.5" /></Link>} />
           {todo.length ? (
             <div className="divide-y divide-line">
               {todo.map((c) => <CampaignRow key={c.id} c={c} base="/gestion" extra={<span className="text-xs text-muted">{c.user.name} · {c.manager ? c.manager.name : "non attribuée"}</span>} />)}
@@ -72,7 +72,7 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
         </Card>
         {seeMoney && (
           <Card className="self-start">
-            <CardHeader title="Derniers paiements" action={<Link href="/gestion/paiements" className="text-[13px] font-medium text-green hover:underline">Tous</Link>} />
+            <CardHeader title="Derniers paiements" action={<Link href="/gestion/paiements" className="text-[0.8125rem] font-medium text-green hover:underline">Tous</Link>} />
             {lastPayments.length ? (
               <ul className="divide-y divide-line">
                 {lastPayments.map((p) => (
