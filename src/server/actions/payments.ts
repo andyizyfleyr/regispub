@@ -54,6 +54,7 @@ export async function cancelOrderAction(orderId: string) {
         if (res.count) await tx.campaignStatusEvent.create({ data: { campaignId: order.campaignId, fromStatus: "PENDING_PAYMENT", toStatus: "DRAFT", actorId: user.id, note: "Commande annulée par le client." } });
       }
       if (order.subscriptionId) await tx.subscription.updateMany({ where: { id: order.subscriptionId, status: "PENDING" }, data: { status: "CANCELLED" } });
+      await tx.boostOrder.updateMany({ where: { orderId, status: "AWAITING_PAYMENT" }, data: { status: "CANCELLED", cancelReason: "Annulée par le client avant paiement." } });
     });
     await audit({ actorId: user.id, action: "order.cancelled", entity: "Order", entityId: orderId });
   });

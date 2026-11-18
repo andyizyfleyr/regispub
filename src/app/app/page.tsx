@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ImageIcon, MessageSquareText, Plus, Wallet } from "lucide-react";
+import { ImageIcon, MessageSquareText, Plus, TrendingUp, Wallet } from "lucide-react";
 import { CampaignRow } from "@/components/app/campaign-row";
 import { Onboarding } from "@/components/app/onboarding";
 import { Button } from "@/components/ui/button";
@@ -81,6 +81,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </List>
         </section>
       )}
+
+      <List><ListRow href="/app/booster" icon={<TrendingUp />} tone="violet" title="Abonnés, J'aime, commentaires, vues" subtitle="Achat à la quantité, livré par notre équipe" /></List>
 
       {hasCampaigns && (
         <section aria-labelledby="campagnes">

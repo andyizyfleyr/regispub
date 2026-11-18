@@ -15,6 +15,7 @@ export const PERMISSIONS = {
   "metrics.import": "Saisir ou importer des statistiques",
   "metrics.validate": "Valider les statistiques publiées",
   "order.view": "Voir les commandes",
+  "boost.manage": "Livrer les commandes d'abonnés, de J'aime, de commentaires et de vues",
   "payment.view": "Voir les paiements",
   "payment.verify": "Relancer la vérification d'un paiement",
   "payment.refund": "Gérer les remboursements",
@@ -40,12 +41,12 @@ const ROLE_PERMISSIONS: Record<RoleName, Permission[]> = {
   ADMIN: ALL.filter((p) => p !== "staff.manage_admins"),
   AD_MANAGER: [
     "backoffice.access", "campaign.view_all", "campaign.assign", "campaign.update_status", "campaign.manage_creatives",
-    "campaign.message", "revision.manage", "metrics.import", "metrics.validate", "order.view", "payment.view", "report.view", "access.reveal",
+    "campaign.message", "revision.manage", "metrics.import", "metrics.validate", "order.view", "payment.view", "report.view", "access.reveal", "boost.manage",
   ],
   DESIGNER: ["backoffice.access", "campaign.view_assigned", "campaign.manage_creatives", "campaign.message", "revision.manage"],
   SUPPORT: [
     "backoffice.access", "campaign.view_all", "campaign.message", "order.view", "payment.view", "payment.verify",
-    "user.view", "ticket.manage", "notification.send",
+    "user.view", "ticket.manage", "notification.send", "boost.manage",
   ],
   CLIENT: [],
 };

@@ -19,8 +19,10 @@ export type OpenPayment = { id: string; operator: OperatorCode; phone: string; e
 const newKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`);
 
 /** Parcours de paiement : opérateur → numéro → confirmation → attente de la validation sur le téléphone. */
-export function Checkout({ orderId, total, operators, defaultPhone, simulation, open, lastFailure, promoCode, canCancel }: {
+export function Checkout({ orderId, total, operators, defaultPhone, simulation, open, lastFailure, promoCode, canCancel, allowPromo = true }: {
   orderId: string; total: number; operators: Operator[]; defaultPhone: string; simulation: boolean; open: OpenPayment | null; lastFailure: string | null; promoCode: string | null; canCancel: boolean;
+  /** Les codes promo portent sur les frais de prestation d'une publicité : ils ne s'appliquent pas aux achats d'abonnés ou de J'aime. */
+  allowPromo?: boolean;
 }) {
   const router = useRouter();
   const [operator, setOperator] = React.useState<OperatorCode | null>(null);
@@ -84,13 +86,15 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
       <Button type="button" size="lg" variant="accent" className="w-full" disabled={!operator || !normalized} onClick={() => setConfirm(true)}>Payer {formatFcfa(total)} <ArrowRight /></Button>
       <p className="flex items-start gap-2 text-xs text-muted"><ShieldCheck className="mt-px size-4 shrink-0 text-green" />Confirmé par l&apos;opérateur. Aucun code secret conservé.</p>
 
-      <details className="rounded-lg border border-line bg-surface px-4 py-3 text-sm">
+{allowPromo && (
+            <details className="rounded-lg border border-line bg-surface px-4 py-3 text-sm">
         <summary className="cursor-pointer font-medium text-ink-soft">Code promo</summary>
         <div className="mt-3 flex gap-2">
           <Input value={promo} onChange={(e) => setPromo(e.target.value.toUpperCase())} className="uppercase" placeholder="CODE" maxLength={30} aria-label="Code promotionnel" />
           <Button type="button" variant="outline" onClick={async () => { const res = await applyPromoAction(orderId, promo); if (!res.ok) toast.error(res.error); else { toast.success(promo ? "Code appliqué." : "Code retiré."); router.refresh(); } }}>Appliquer</Button>
         </div>
       </details>
+      )}
       {canCancel && (
         <button type="button" className="text-[0.8125rem] text-muted underline-offset-4 hover:text-clay hover:underline" onClick={async () => { if (!window.confirm("Annuler cette commande ?")) return; const res = await cancelOrderAction(orderId); if (!res.ok) toast.error(res.error); else { toast.success("Commande annulée."); router.push("/app/paiements"); router.refresh(); } }}>
           Annuler la commande

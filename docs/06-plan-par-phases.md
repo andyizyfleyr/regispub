@@ -39,6 +39,8 @@
 
 ## Ce qui a été exercé dans un navigateur, et ce qui ne l'a pas été
 
+Vente d'abonnés, de J'aime, de commentaires et de vues, exercée sur la base locale avec le simulateur de paiement : commande de commentaires TikTok sur téléphone (messages d'erreur de quantité et de lien, quantité libre, paiement, reçu), file « À traiter » de l'équipe sur ordinateur et sur téléphone, passages « En cours » puis « Livrée », annulation avec motif et ouverture du remboursement, modification d'un pack dans les tarifs et vérification côté client, refus d'accès pour un designer. Non exercé : un paiement réel, l'envoi des e-mails et des messages WhatsApp de livraison, et la livraison elle-même, qui dépend du fournisseur choisi par l'équipe.
+
 Exercé de bout en bout sur la base locale avec le simulateur de paiement : création d'une campagne sur téléphone, paiement et reçu, prise en charge, ajout d'une création, validation par le client, refus du lancement sans identifiant de campagne externe, lancement, import CSV, publication des statistiques, remboursement (refus sans référence de transfert, puis clôture), réclamation et réponse, création d'un code promotionnel (préfixes réservés refusés), création d'un collaborateur, enregistrement des paramètres (plancher de 10 000 F conservé), export d'une création du studio, restrictions d'accès par rôle.
 
 Écrit et compilé, mais pas exercé un à un : brief « expert » jusqu'au paiement, demande de modification après paiement, conversion des points de fidélité, souscription à l'accompagnement mensuel, édition d'un tarif et d'un modèle, envoi d'une notification groupée, suspension d'un compte, réinitialisation du mot de passe (l'e-mail n'est pas envoyé sans fournisseur configuré).

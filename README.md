@@ -13,6 +13,7 @@ L'application n'affiche jamais une intégration comme active si elle ne l'est pa
 | --- | --- | --- |
 | Comptes, rôles, commandes, devis, suivi, messagerie, validation des créations, réclamations, reçus, fidélité, parrainage, journal d'audit | **Opérationnel** | Rien |
 | Statistiques par import CSV ou saisie, validées avant publication | **Opérationnel** | Rien |
+| Vente d'abonnés, de J'aime, de commentaires et de vues (Facebook, Instagram, TikTok) | **Opérationnel, livraison manuelle** : la commande payée arrive dans `/gestion/boosts`, l'équipe la passe chez son fournisseur puis la marque « Livrée » | Rien. Aucun fournisseur n'est branché : les tarifs installés sont des exemples, à régler dans `/gestion/services` |
 | Paiement Mobile Money MTN / Moov / Celtiis via FedaPay | **Implémenté, non testé avec un vrai compte** | Compte marchand FedaPay, `PAYMENT_PROVIDER=fedapay`, `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET` |
 | Simulateur de paiement | **Simulation** (aucun argent ne circule) | Actif par défaut en développement, refusé en production |
 | Lecture des statistiques Meta et TikTok par API | **Implémenté, non testé** ; autorisation requise | Jetons `ads_read` (Meta) et Reporting API (TikTok) |
@@ -84,7 +85,7 @@ src/app/(marketing)   site public          src/app/(auth)   connexion, inscripti
 src/app/app           espace client        src/app/gestion  espace de gestion
 src/app/api           fichiers, webhooks de paiement, reçus, tâches planifiées
 src/server/actions    Server Actions (validation Zod, contrôle des droits)
-src/lib               logique métier : pricing, payments, campaigns, ads, ai, auth, notifications, storage
+src/lib               logique métier : pricing, payments, campaigns, boost, ads, auth, notifications, storage
 tests/                unit (tarification, statuts, droits, CSV, signatures) et integration (paiement, remboursement)
 docs/                 analyse, architecture, modèle de données, contraintes API, parcours, phases
 ```

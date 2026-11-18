@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Headset } from "lucide-react";
+import { ArrowRight, Headset, TrendingUp } from "lucide-react";
 import { CampaignRow } from "@/components/app/campaign-row";
 import { ObjectiveBrowser } from "@/components/app/quick-start";
 import { Button } from "@/components/ui/button";
-import { List, SectionTitle } from "@/components/ui/list";
+import { List, ListRow, SectionTitle } from "@/components/ui/list";
 import { Banner } from "@/components/ui/tile";
 import { PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
@@ -32,6 +32,11 @@ export default async function CreatePage() {
       )}
 
       <ObjectiveBrowser />
+
+      <section aria-labelledby="achat-direct">
+        <SectionTitle id="achat-direct">Sans publicité</SectionTitle>
+        <List><ListRow href="/app/booster" icon={<TrendingUp />} tone="violet" title="Abonnés, J'aime, commentaires, vues" subtitle="Achat à la quantité, livré par notre équipe" /></List>
+      </section>
 
       <Banner decoration={<Headset />} className="sm:py-7">
         <div className="flex items-center justify-between gap-3">

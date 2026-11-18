@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CircleCheck, Download } from "lucide-react";
+import { BoostDelivery } from "@/components/app/boost-delivery";
 import { Checkout } from "@/components/app/checkout";
 import { QuoteLines } from "@/components/app/quote-box";
 import { OperatorChip } from "@/components/icons";
@@ -21,7 +22,7 @@ export const metadata: Metadata = { title: "Paiement" };
 async function load(orderId: string, userId: string) {
   return db.order.findFirst({
     where: { id: orderId, userId },
-    include: { campaign: { select: { id: true, name: true, mode: true, status: true } }, subscription: true, promoCode: { select: { code: true } }, payments: { orderBy: { createdAt: "desc" } }, refunds: { orderBy: { createdAt: "desc" } } },
+    include: { campaign: { select: { id: true, name: true, mode: true, status: true } }, subscription: true, boost: true, promoCode: { select: { code: true } }, payments: { orderBy: { createdAt: "desc" } }, refunds: { orderBy: { createdAt: "desc" } } },
   });
 }
 
@@ -69,9 +70,11 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
             </div>
           )}
 
+        {order.boost && <BoostDelivery boost={order.boost} orderStatus={order.status} refundPending={order.refunds.some((r) => r.status === "REQUESTED")} />}
+
         <section aria-label="Détail de la commande">
           <Card>
-            <CardHeader title={title} description={order.serviceLabel} />
+            <CardHeader title={order.boost ? "Détail du prix" : title} description={order.boost || order.serviceLabel === title ? undefined : order.serviceLabel} />
             <CardBody>
               <QuoteLines lines={lines} total={order.total} totalLabel={isPaid ? "Total payé" : "Total à payer"} />
               {order.invoiceNumber && <p className="mt-4 text-xs text-muted">Reçu n° <span className="font-mono">{order.invoiceNumber}</span></p>}
@@ -83,14 +86,15 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
           {order.status === "PENDING" && (
             mode.available ? (
               <Checkout orderId={order.id} total={order.total} operators={mode.operators} defaultPhone={user.phone?.startsWith("+229") ? formatPhone(user.phone).replace(/^\+229\s?/, "") : ""}
-                simulation={mode.mode === "simulation"} promoCode={order.promoCode?.code ?? null} canCancel={!open} lastFailure={lastFailure}
+                simulation={mode.mode === "simulation"} promoCode={order.promoCode?.code ?? null} allowPromo={!order.boost} canCancel={!open} lastFailure={lastFailure}
                 open={open ? { id: open.id, operator: open.operator as OperatorCode, phone: open.phone, expiresAt: open.expiresAt.toISOString(), redirectUrl: open.redirectUrl } : null} />
             ) : <Notice tone="danger" title="Paiement indisponible">Votre commande est conservée. Contactez le support.</Notice>
           )}
 
           {(order.status === "CANCELLED" || order.status === "EXPIRED") && (
-            <Notice tone="info" title="Commande expirée">
-              {order.campaign && order.campaign.status === "DRAFT" ? <><Link className="font-medium underline" href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}`}>Reprendre la campagne</Link></> : "Créez une nouvelle campagne."}
+            <Notice tone="info" title={order.status === "CANCELLED" ? "Commande annulée" : "Commande expirée"}>
+              {order.boost ? <Link className="font-medium underline" href="/app/booster">Passer une nouvelle commande</Link>
+                : order.campaign && order.campaign.status === "DRAFT" ? <><Link className="font-medium underline" href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}`}>Reprendre la campagne</Link></> : "Créez une nouvelle campagne."}
             </Notice>
           )}
 

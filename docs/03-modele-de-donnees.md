@@ -43,6 +43,23 @@ Statuts : `DRAFT` → `PENDING_PAYMENT` → `PAID` → `AWAITING_INFO` / `IN_PRE
 | `Subscription` | Accompagnement mensuel, payé période par période |
 | `Counter` | Numérotation continue des reçus |
 
+## Abonnés, J'aime, commentaires, vues
+
+| Modèle | Contenu |
+| --- | --- |
+| `BoostProduct` | Un produit par réseau (`Platform`) et par type (`BoostKind` : `FOLLOWERS`, `LIKES`, `COMMENTS`, `VIEWS`) : prix pour 1 000, quantités minimale et maximale, packs à prix fixe (`packs`, JSON `[{ quantity, price }]`), délai annoncé, actif ou masqué |
+| `BoostOrder` | Détail d'une commande, rattaché à un `Order` qui porte le paiement : réseau, type, quantité, lien du compte ou de la publication, commentaires écrits par le client, état de livraison (`BoostStatus`), note interne, motif d'annulation, collaborateur qui a traité |
+
+États de livraison : `AWAITING_PAYMENT` → `TO_DELIVER` (au paiement, automatiquement) → `IN_PROGRESS` → `DELIVERED`, ou `CANCELLED`. Seuls les passages après paiement sont manuels (`BOOST_TRANSITIONS` dans `src/lib/boost/catalog.ts`).
+
+Règles de prix (`src/lib/boost/catalog.ts`, module pur partagé par le navigateur et le serveur ; le serveur recalcule toujours) :
+
+- une quantité égale à un pack coûte le prix du pack ; toute autre quantité coûte `quantité × prix pour 1 000 / 1 000`, arrondi aux 5 F supérieurs, entre le minimum et le maximum du produit ;
+- une commande coûte au moins 100 F ;
+- le plancher des prestations (10 000 F) ne s'applique pas : ce ne sont pas des frais de prestation ;
+- pas de code promo sur ces commandes, et pas de récompense de parrainage (elle reste due à la première publicité) ; les points de fidélité sont comptés comme pour toute commande ;
+- les frais Mobile Money suivent le réglage général.
+
 ## Résultats
 
 | Modèle | Contenu |

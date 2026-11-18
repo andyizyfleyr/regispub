@@ -19,6 +19,21 @@
 
 Un brief d'une page : objectif en clair, description, public visé, budget, durée, fichiers. Le reste est préparé par l'équipe.
 
+### J'achète des abonnés, des J'aime, des commentaires ou des vues
+
+Page `/app/booster` (menu « Abonnés et J'aime », aussi proposée depuis l'accueil et depuis « Créer une publicité »).
+
+1. Réseau : Facebook, Instagram ou TikTok.
+2. Produit : abonnés, J'aime, commentaires ou vues, avec le prix d'appel.
+3. Quantité : un pack à prix fixe, ou « Autre quantité » au tarif pour 1 000.
+4. Lien : le compte pour des abonnés (un simple `@nom` suffit sur Instagram et TikTok), la publication pour le reste. Le lien doit venir du réseau choisi.
+5. Commentaires : le client les écrit, un par ligne. Il peut en écrire moins que la quantité commandée ; ils sont alors repris plusieurs fois.
+6. Paiement Mobile Money, comme pour une publicité (sans code promo).
+
+Après le paiement, la commande passe « À livrer ». L'équipe la traite dans `/gestion/boosts` : elle copie le lien (et les commentaires) chez son fournisseur, peut la marquer « En cours », puis « Livrée ». Le client suit l'avancement sur la page de sa commande et reçoit une notification à la livraison. Si l'équipe annule (compte privé, lien introuvable…), elle saisit un motif envoyé au client et une demande de remboursement du montant payé s'ouvre dans `/gestion/paiements`.
+
+Aucun mot de passe n'est demandé au client. Le compte ou la publication doit rester public pendant la livraison.
+
 ## Payer
 
 1. Récapitulatif : budget publicitaire, prestation, frais Mobile Money, total.

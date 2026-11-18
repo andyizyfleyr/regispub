@@ -82,6 +82,7 @@ Un état ne s'écrit jamais en toutes lettres dans une liste, un tableau ou un e
 | --- | --- |
 | État d'une campagne | `<CampaignStatusIcon status={…} />` |
 | Commande, paiement, remboursement, validation, demande de modification, réclamation, abonnement, envoi, import | `<StateIcon kind="order" value={…} />` |
+| Livraison d'une commande d'abonnés, de J'aime, de commentaires ou de vues | `<StateIcon kind="boost" value={…} />` (jaune : à régler ; bleu : payée, à livrer ou en cours ; vert : livrée ; gris : annulée) |
 | Autre état (intégration, code promo, prestation, accès, compte suspendu) | `<ToneIcon tone="ok" label="Actif" />` : la couleur choisit le pictogramme, `icon` permet d'en fournir un autre |
 | En-tête de page | `PageHeader status={…}` pose la pastille à droite du titre |
 

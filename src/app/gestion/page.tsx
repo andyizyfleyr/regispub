@@ -22,7 +22,7 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
   const seeMoney = can(user.role, "payment.view");
   const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
 
-  const [toAssign, preparing, review, running, mine, todo, month, openTickets, refunds, pendingMetrics, lastPayments] = await Promise.all([
+  const [toAssign, preparing, review, running, mine, todo, month, openTickets, refunds, pendingMetrics, lastPayments, boostsToDeliver] = await Promise.all([
     db.campaign.count({ where: { ...scope, status: "PAID", managerId: null } }),
     db.campaign.count({ where: { ...scope, status: { in: ["PAID", "AWAITING_INFO", "IN_PREPARATION", "READY_TO_LAUNCH"] } } }),
     db.campaign.count({ where: { ...scope, status: "CLIENT_REVIEW" } }),
@@ -34,6 +34,7 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
     can(user.role, "payment.refund") ? db.refund.count({ where: { status: "REQUESTED" } }) : null,
     can(user.role, "metrics.validate") ? db.campaign.count({ where: { ...scope, metrics: { some: { validated: false } } } }) : null,
     seeMoney ? db.payment.findMany({ orderBy: { createdAt: "desc" }, take: 6, include: { order: { select: { reference: true, id: true } }, user: { select: { name: true } } } }) : [],
+    can(user.role, "boost.manage") ? db.boostOrder.count({ where: { status: "TO_DELIVER" } }) : 0,
   ]);
   const integrations = can(user.role, "integration.view") ? integrationsStatus() : [];
   const simulation = integrations.filter((i) => i.state === "simulation");
@@ -45,6 +46,12 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
       <PageHeader title={`Bonjour ${user.name.split(" ")[0]}`} />
       {refus && <Notice tone="danger" title="Accès refusé" className="mb-5">Votre rôle ne donne pas accès à cette page.</Notice>}
       {issues.map((i) => <Notice key={i.name} tone="warn" title={i.name} className="mb-5">{i.detail} <Link href="/gestion/integrations" className="font-medium underline">Voir les intégrations</Link></Notice>)}
+
+      {boostsToDeliver > 0 && (
+        <Notice tone="warn" className="mb-5" title={`${formatNumber(boostsToDeliver)} commande${boostsToDeliver > 1 ? "s" : ""} d'abonnés ou de J'aime à livrer`}>
+          Payée{boostsToDeliver > 1 ? "s" : ""}, en attente de livraison. <Link href="/gestion/boosts" className="font-medium underline">Voir les commandes</Link>
+        </Notice>
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="À attribuer" value={formatNumber(toAssign)} hint="Payées, sans gestionnaire" />
