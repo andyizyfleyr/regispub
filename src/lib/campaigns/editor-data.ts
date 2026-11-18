@@ -1,7 +1,7 @@
 import { accountsOf, type Accounts } from "@/lib/catalog/accounts";
 import "server-only";
 import { normalizeSplit, type PlatformCode } from "@/lib/catalog/platforms";
-import { DEFAULT_TARGETING, type Targeting } from "@/lib/catalog/targeting";
+import { DEFAULT_TARGETING, EMPTY_TARGETING, type Targeting } from "@/lib/catalog/targeting";
 import { db } from "@/lib/db";
 import { loadSettings } from "@/lib/settings";
 import { isRecord, toIsoDate } from "@/lib/utils";
@@ -60,7 +60,9 @@ export async function loadEditorData(campaignId: string, userId: string): Promis
     campaign: {
       id: c.id, reference: c.reference, mode: c.mode, status: c.status, name: c.name, platforms, objective: c.objective, serviceCode: c.serviceCode, businessId: c.businessId,
       productName: c.productName ?? "", productDescription: c.productDescription ?? "", productPrice: c.productPrice, audienceNote: c.audienceNote ?? "",
-      destinationWhatsapp: c.destinationWhatsapp ?? "", destinationUrl: c.destinationUrl ?? "", brief: c.brief ?? "", targeting: readTargeting(c.targeting),
+      destinationWhatsapp: c.destinationWhatsapp ?? "", destinationUrl: c.destinationUrl ?? "", brief: c.brief ?? "",
+      // Audience jamais réglée : rien n'est choisi à la place du client.
+      targeting: c.targeting === null ? EMPTY_TARGETING : readTargeting(c.targeting),
       adCopy: readAdCopy(c.adCopy),
       adBudget: c.adBudget, budgetSplit: normalizeSplit(platforms, c.budgetSplit), durationDays: c.durationDays, startDate: c.startDate ? toIsoDate(c.startDate) : null, wizardStep: c.wizardStep,
     },

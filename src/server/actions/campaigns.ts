@@ -7,6 +7,7 @@ import { policyWarnings } from "@/lib/campaigns/policy";
 import { audit } from "@/lib/audit";
 import { can, canViewCampaign } from "@/lib/auth/permissions";
 import { assertUser } from "@/lib/auth/session";
+import { ONE_NETWORK } from "@/lib/campaigns/missing";
 import { campaignMissing, quoteCampaign, upsertCampaignOrder } from "@/lib/campaigns/service";
 import { clientCanCancel, clientCanEdit, type CampaignStatusName } from "@/lib/campaigns/status";
 import { getObjective, unsupportedPlatforms } from "@/lib/catalog/objectives";
@@ -41,11 +42,9 @@ export async function createCampaignAction(mode: "SELF_SERVICE" | "EXPERT", obje
   const campaign = await db.campaign.create({
     data: {
       reference: makeReference("CMP"), userId: user.id, mode: mode === "EXPERT" ? "EXPERT" : "SELF_SERVICE", name: mode === "EXPERT" ? "Campagne confiée à un expert" : "Nouvelle campagne",
-      businessId: business?.id ?? null, // Le numéro donné à l'inscription sert de numéro WhatsApp par défaut : le client le corrige s'il en utilise un autre.
-      destinationWhatsapp: business?.whatsapp ?? user.phone ?? null, objective: obj?.code ?? null,
-      // Présélection : les plateformes de l'objectif, sinon Facebook et Instagram (une seule famille, sans supplément).
-      platforms: mode === "EXPERT" ? [] : obj && obj.platforms.length < 3 ? obj.platforms : ["FACEBOOK", "INSTAGRAM"],
-      serviceCode: mode === "EXPERT" ? "full_management" : null, startDate: addDays(todayUtc(), 2),
+      // Rien n'est choisi à la place du client : ni réseau, ni date, ni budget. Seule son activité déjà enregistrée est reprise.
+      businessId: business?.id ?? null, destinationWhatsapp: business?.whatsapp ?? null, objective: obj?.code ?? null, platforms: [],
+      serviceCode: mode === "EXPERT" ? "full_management" : null, startDate: mode === "EXPERT" ? addDays(todayUtc(), 2) : null,
     },
   });
   redirect(mode === "EXPERT" ? `/app/expert/${campaign.id}` : `/app/creer/${campaign.id}`);
@@ -67,12 +66,13 @@ const targetingSchema = z.object({
 const patchSchema = z.object({
   wizardStep: z.number().int().min(1).max(7),
   name: text(80).min(2, "Donnez un nom à votre campagne."),
-  platforms: z.array(platformEnum).min(1, "Choisissez au moins une plateforme.").max(3),
+  platforms: z.array(platformEnum).min(1, "Choisissez le réseau de votre publicité.").max(1, ONE_NETWORK),
   objective: z.string().max(40),
   business: z.object({ id: z.string().nullable(), name: text(80).min(2, "Indiquez le nom de votre entreprise."), sector: z.string().refine((s) => SECTORS.includes(s), "Choisissez un secteur."), city: text(60),
     accounts: z.object({ FACEBOOK: text(300).optional(), INSTAGRAM: text(300).optional(), TIKTOK: text(300).optional() }).optional() }),
   productName: text(120),
-  productDescription: text(1500).min(20, "Décrivez votre produit ou service en quelques phrases (20 caractères minimum)."),
+  // Le champ « Que vendez-vous ? » n'existe plus dans le parcours : l'annonce se décrit par son titre et son texte.
+  productDescription: text(1500),
   productPrice: z.number().int().min(0).max(1_000_000_000).nullable(),
   audienceNote: text(600),
   destinationWhatsapp: text(40),
@@ -112,7 +112,6 @@ export async function saveCampaignAction(campaignId: string, input: CampaignPatc
       const bad = unsupportedPlatforms(objective, platforms);
       if (platforms.length && bad.length === platforms.length) throw new UserError(`« ${objective.label} » n'est pas disponible sur ${platformLabel(bad)}.`);
       data.objective = objective.code;
-      if (objective.code !== campaign.objective) data.adCopy = null;
       if (campaign.name === "Nouvelle campagne" || campaign.name === "Campagne confiée à un expert") data.name = truncate(objective.label, 80);
     }
     if (p.business) {
@@ -178,7 +177,8 @@ export async function saveCampaignAction(campaignId: string, input: CampaignPatc
 
     await db.campaign.update({ where: { id: campaign.id }, data });
     const warnings = policyWarnings([p.productDescription, p.productName, p.brief, p.adCopy?.headline, p.adCopy?.body].filter(Boolean).join(" "));
-    return { warnings };
+    // L'entreprise créée à cet enregistrement est renvoyée : le navigateur la réutilise au lieu d'en créer une autre.
+    return { warnings, businessId: (data.businessId as string | undefined) ?? campaign.businessId };
   });
 }
 

@@ -6,19 +6,23 @@
 2. **Inscription** : nom, e-mail, téléphone, mot de passe. Un lien de parrainage est reconnu.
 3. **Choix du parcours** sur `/app/creer` : créer soi-même ou confier à un expert.
 
-### Je crée ma publicité (une seule page)
+### Je crée ma publicité (quatre étapes)
 
-Le client touche un objectif sur `/app/creer` : la page de création s'ouvre, déjà remplie. Il lui reste trois blocs numérotés, puis un seul bouton « Payer ».
+Le client touche un objectif sur `/app/creer` : la page de création `/app/creer/<id>` s'ouvre à l'étape 1. Rien n'est rempli ni coché d'avance : le client choisit et écrit tout lui-même. « Continuer » vérifie l'étape, l'enregistre et passe à la suivante ; « Retour » revient en arrière ; « Quitter » enregistre le brouillon. Le brouillon se rouvre à la première étape encore incomplète (`?etape=2` ouvre une étape déjà atteinte).
 
-| Bloc | Ce que le client fait | Ce qui est déjà fait pour lui |
-| --- | --- | --- |
-| 1. Où la montrer ? | Garde ou change les réseaux | Facebook et Instagram cochés ; ses comptes ne sont demandés qu'une fois, ensuite ils sont repris ; le numéro WhatsApp vient de son inscription |
-| 2. Que vendez-vous ? | Écrit une ou deux phrases ; photo ou vidéo facultative | Le nom et le secteur de l'activité ne sont demandés qu'à la première publicité |
-| 3. Votre budget | Touche un montant et une durée | Le montant et la durée conseillés pour l'objectif sont déjà choisis |
+| Étape | Ce que le client fait |
+| --- | --- |
+| 1. Réseau | Choisit **un seul** réseau (Facebook, Instagram ou TikTok), puis le nom, le secteur et le compte de son activité sur ce réseau. Le numéro WhatsApp est demandé si l'objectif en a besoin |
+| 2. Annonce | Dans un même bloc et dans cet ordre : photo ou vidéo, titre (3 caractères au moins), texte (20 caractères au moins) |
+| 3. Audience | Choisit au moins un pays ; villes, genre, âges et centres d'intérêt s'il veut les restreindre |
+| 4. Budget | Choisit le montant, la durée, la date de début et la formule ; le total s'affiche, puis « Payer » crée la commande et ouvre le paiement |
 
-Sous ces blocs, la liste « Déjà réglé pour vous » montre l'audience (remplie selon le secteur et la ville, table fixe `lib/catalog/audience-defaults`, sans IA), le texte de l'annonce (écrit par l'équipe si le client ne l'écrit pas), la date de début, la formule, l'activité et l'aperçu. Chaque ligne s'ouvre pour être changée ; aucune n'est obligatoire.
+Règles :
 
-Le bouton « Payer » vérifie la page, enregistre tout, crée la commande et ouvre le paiement. Une erreur s'affiche dans le bloc concerné, vers lequel l'écran défile. La flèche de retour enregistre le brouillon.
+- **Un réseau par publicité.** Le serveur refuse tout enregistrement avec deux réseaux (`ONE_NETWORK` dans `lib/campaigns/missing.ts`), y compris pour une campagne confiée à un expert. Un ancien brouillon à plusieurs réseaux s'ouvre sans réseau coché.
+- **Aucun préremplissage.** À la création : pas de réseau, pas de budget, pas de durée, pas de date, pas d'audience, pas de numéro WhatsApp repris de l'inscription. Seules les informations que le client a déjà enregistrées lui-même (son activité et ses comptes) sont reprises. Le montant et la durée conseillés pour l'objectif sont signalés par la mention « conseillé », sans être sélectionnés.
+- **Plus de champ « Que vendez-vous ? ».** L'annonce se décrit par son titre et son texte ; la colonne `productDescription` reste en base pour les anciennes campagnes.
+- **Aperçu en direct.** Sur ordinateur et tablette, l'aperçu de l'annonce reste affiché à droite pendant les quatre étapes et suit chaque frappe, le visuel importé et le réseau choisi. Sur téléphone, où il n'y a pas de place à droite, il s'affiche sous les champs de l'étape « Annonce ».
 
 ### Paiement
 

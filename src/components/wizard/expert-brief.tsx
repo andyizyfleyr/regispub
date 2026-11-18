@@ -22,7 +22,8 @@ export function ExpertBrief({ data }: { data: EditorData }) {
   const b0 = data.businesses.find((b) => b.id === c.businessId) ?? data.businesses[0] ?? null;
   const [s, setS] = React.useState({
     ...c, business: (b0 ? { ...b0 } : { id: null, name: "", sector: "", city: "Cotonou" }) as { id: string | null; name: string; sector: string; city: string; accounts?: Accounts },
-    platforms: c.platforms.length ? c.platforms : (["FACEBOOK", "INSTAGRAM"] as PlatformCode[]), adBudget: c.adBudget || 30_000, durationDays: c.durationDays ?? 10,
+    // Une publicité se lance sur un seul réseau : un ancien brouillon à plusieurs réseaux est à choisir de nouveau.
+    platforms: (c.platforms.length === 1 ? c.platforms : []) as PlatformCode[], adBudget: c.adBudget || 30_000, durationDays: c.durationDays ?? 10,
     serviceCode: (c.serviceCode ?? data.levels.find((l) => l.kind === "MANAGEMENT")?.code ?? data.levels[0]?.code ?? null) as string | null,
   });
   const [links, setLinks] = React.useState<LinkedAsset[]>(data.links);
@@ -32,8 +33,8 @@ export function ExpertBrief({ data }: { data: EditorData }) {
   const set = (patch: Partial<typeof s>) => setS((prev) => ({ ...prev, ...patch }));
   const objective = getObjective(s.objective);
   const quote = useQuote(c.id, { adBudget: s.adBudget, durationDays: s.durationDays ?? 0, serviceCode: s.serviceCode, platforms: s.platforms, promoCode: promo });
-  const choice = PLATFORM_CHOICES.find((p) => p.platforms.length === s.platforms.length && p.platforms.every((x) => s.platforms.includes(x)))?.id ?? "meta";
-  const available = OBJECTIVES.filter((o) => o.platforms.some((p) => s.platforms.includes(p)));
+  const choice = PLATFORM_CHOICES.find((p) => p.platforms[0] === s.platforms[0])?.id ?? "";
+  const available = OBJECTIVES.filter((o) => !s.platforms.length || o.platforms.some((p) => s.platforms.includes(p)));
 
   // Le nom n'est plus demandé : objectif — entreprise.
   function autoName() {
@@ -45,6 +46,7 @@ export function ExpertBrief({ data }: { data: EditorData }) {
 
   async function save(thenOrder: boolean) {
     setError(null);
+    if (!s.platforms.length) { setError("Choisissez le réseau de votre publicité."); return; }
     if (!s.objective) { setError("Choisissez un objectif."); return; }
     const noAccount = missingAccounts(s.platforms, s.business.accounts);
     if (thenOrder && noAccount.length) { setError(missingAccountMessage(noAccount[0]!)); return; }
@@ -66,8 +68,9 @@ export function ExpertBrief({ data }: { data: EditorData }) {
         <Section icon={<ClipboardList />} title="Votre besoin">
           <div className="space-y-4">
           <div className="space-y-4">
-            <Field label="Plateformes" htmlFor="eb-platforms">
-              <Select id="eb-platforms" value={choice} onChange={(e) => { const p = PLATFORM_CHOICES.find((x) => x.id === e.target.value)!.platforms; const o = getObjective(s.objective); set({ platforms: p, objective: o && o.platforms.some((x) => p.includes(x)) ? s.objective : null, budgetSplit: Object.fromEntries(p.map((x, i) => [x, Math.floor(100 / p.length) + (i === 0 ? 100 - Math.floor(100 / p.length) * p.length : 0)])) }); }}>
+            <Field label="Réseau" htmlFor="eb-platforms" hint="Une publicité se lance sur un seul réseau à la fois.">
+              <Select id="eb-platforms" value={choice} onChange={(e) => { const p = PLATFORM_CHOICES.find((x) => x.id === e.target.value)!.platforms; const o = getObjective(s.objective); set({ platforms: p, objective: o && o.platforms.some((x) => p.includes(x)) ? s.objective : null, budgetSplit: { [p[0]!]: 100 } }); }}>
+                <option value="" disabled>Choisir…</option>
                 {PLATFORM_CHOICES.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
               </Select>
             </Field>
