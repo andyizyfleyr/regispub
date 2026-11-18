@@ -6,14 +6,23 @@
 2. **Inscription** : nom, e-mail, téléphone, mot de passe. Un lien de parrainage est reconnu.
 3. **Choix du parcours** sur `/app/creer` : créer soi-même ou confier à un expert.
 
-### Je crée ma publicité (4 étapes)
+### Je crée ma publicité (une seule page)
 
-| Étape | Contenu | Aide apportée |
+Le client touche un objectif sur `/app/creer` : la page de création s'ouvre, déjà remplie. Il lui reste trois blocs numérotés, puis un seul bouton « Payer ».
+
+| Bloc | Ce que le client fait | Ce qui est déjà fait pour lui |
 | --- | --- | --- |
-| 1. Objectif | Plateformes (Facebook et Instagram présélectionnés) et résultat attendu | Objectifs classés par famille, tarif de la prestation affiché, conseil et repère de budget |
-| 2. Votre annonce | Entreprise, offre, photo ou vidéo, texte de l'annonce | Aperçu en direct sur chaque plateforme ; le client écrit son texte ou le laisse à notre équipe |
-| 3. Audience | Zone, profil, centres d'intérêt | Audience de départ remplie selon le secteur et la ville (table fixe `lib/catalog/audience-defaults`, sans IA) ; réglages détaillés repliés |
-| 4. Budget | Budget, durée, date de début, niveau d'accompagnement, code promotionnel, récapitulatif | Montants et durées prédéfinis ; devis recalculé par le serveur à chaque changement |
+| 1. Où la montrer ? | Garde ou change les réseaux | Facebook et Instagram cochés ; ses comptes ne sont demandés qu'une fois, ensuite ils sont repris ; le numéro WhatsApp vient de son inscription |
+| 2. Que vendez-vous ? | Écrit une ou deux phrases ; photo ou vidéo facultative | Le nom et le secteur de l'activité ne sont demandés qu'à la première publicité |
+| 3. Votre budget | Touche un montant et une durée | Le montant et la durée conseillés pour l'objectif sont déjà choisis |
+
+Sous ces blocs, la liste « Déjà réglé pour vous » montre l'audience (remplie selon le secteur et la ville, table fixe `lib/catalog/audience-defaults`, sans IA), le texte de l'annonce (écrit par l'équipe si le client ne l'écrit pas), la date de début, la formule, l'activité et l'aperçu. Chaque ligne s'ouvre pour être changée ; aucune n'est obligatoire.
+
+Le bouton « Payer » vérifie la page, enregistre tout, crée la commande et ouvre le paiement. Une erreur s'affiche dans le bloc concerné, vers lequel l'écran défile. La flèche de retour enregistre le brouillon.
+
+### Paiement
+
+Le numéro du client est déjà rempli et l'opérateur reconnu d'après ce numéro : il touche « Payer », puis valide sur son téléphone. Il n'y a pas de seconde confirmation à l'écran. Le détail du prix et le code promo sont repliés sous le bouton.
 
 ### Je confie ma publicité à un expert
 

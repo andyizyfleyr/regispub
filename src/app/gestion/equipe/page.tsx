@@ -11,7 +11,7 @@ import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/utils";
 import { createStaffAction, setUserStatusAction } from "@/server/actions/staff-admin";
 
-export const metadata: Metadata = { title: "Collaborateurs" };
+export const metadata: Metadata = { title: "Équipe" };
 
 export default async function TeamPage() {
   const actor = await requirePermission("staff.manage");
@@ -19,7 +19,7 @@ export default async function TeamPage() {
   const roles = assignableRoles(actor.role).filter((r) => r !== "CLIENT");
   return (
     <>
-      <PageHeader title="Collaborateurs" />
+      <PageHeader title="Équipe" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-6">
           <Card>

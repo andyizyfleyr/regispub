@@ -7,7 +7,7 @@ import { requirePermission } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Journal d'audit" };
+export const metadata: Metadata = { title: "Journal" };
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   await requirePermission("audit.view");
@@ -20,7 +20,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   const names = new Map(actors.map((a) => [a.id, a.name]));
   return (
     <>
-      <PageHeader title="Journal d'audit" />
+      <PageHeader title="Journal" />
       <div className="mb-4"><SearchForm action="/gestion/journal" q={q} placeholder="Action (ex. payment, refund) ou identifiant…" /></div>
       <Card>
         {rows.length ? (

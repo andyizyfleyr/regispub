@@ -72,24 +72,33 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
 
         {order.boost && <BoostDelivery boost={order.boost} orderStatus={order.status} refundPending={order.refunds.some((r) => r.status === "REQUESTED")} />}
 
-        <section aria-label="Détail de la commande">
-          <Card>
-            <CardHeader title={order.boost ? "Détail du prix" : title} description={order.boost || order.serviceLabel === title ? undefined : order.serviceLabel} />
-            <CardBody>
-              <QuoteLines lines={lines} total={order.total} totalLabel={isPaid ? "Total payé" : "Total à payer"} />
-              {order.invoiceNumber && <p className="mt-4 text-xs text-muted">Reçu n° <span className="font-mono">{order.invoiceNumber}</span></p>}
-            </CardBody>
-          </Card>
-          {order.status === "PENDING" && order.campaign && <p className="mt-2.5 text-[0.8125rem] text-muted"><Link href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}?etape=4`} className="font-medium text-green hover:underline">Modifier la campagne</Link></p>}
-        </section>
+        {order.status === "PENDING" && mode.available ? (
+          <Checkout orderId={order.id} total={order.total} operators={mode.operators} defaultPhone={user.phone?.startsWith("+229") ? formatPhone(user.phone).replace(/^\+229\s?/, "") : ""}
+            simulation={mode.mode === "simulation"} promoCode={order.promoCode?.code ?? null} allowPromo={!order.boost} canCancel={!open} lastFailure={lastFailure}
+            open={open ? { id: open.id, operator: open.operator as OperatorCode, phone: open.phone, expiresAt: open.expiresAt.toISOString(), redirectUrl: open.redirectUrl } : null}>
+            <details className="group rounded-lg border border-line bg-surface">
+              <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink-soft">
+                <span className="min-w-0 truncate">Détail : {title}</span><span className="shrink-0 text-[0.8125rem] font-normal text-green group-open:hidden">Voir</span>
+              </summary>
+              <div className="border-t border-line px-4 py-3">
+                <QuoteLines lines={lines} total={order.total} />
+                {order.campaign && <p className="mt-3 text-[0.8125rem]"><Link href={order.campaign.mode === "EXPERT" ? `/app/expert/${order.campaign.id}` : `/app/creer/${order.campaign.id}`} className="font-medium text-green hover:underline">Modifier la campagne</Link></p>}
+              </div>
+            </details>
+          </Checkout>
+        ) : (
+          <section aria-label="Détail de la commande">
+            <Card>
+              <CardHeader title={order.boost ? "Détail du prix" : title} description={order.boost || order.serviceLabel === title ? undefined : order.serviceLabel} />
+              <CardBody>
+                <QuoteLines lines={lines} total={order.total} totalLabel={isPaid ? "Total payé" : "Total à payer"} />
+                {order.invoiceNumber && <p className="mt-4 text-xs text-muted">Reçu n° <span className="font-mono">{order.invoiceNumber}</span></p>}
+              </CardBody>
+            </Card>
+          </section>
+        )}
 
-          {order.status === "PENDING" && (
-            mode.available ? (
-              <Checkout orderId={order.id} total={order.total} operators={mode.operators} defaultPhone={user.phone?.startsWith("+229") ? formatPhone(user.phone).replace(/^\+229\s?/, "") : ""}
-                simulation={mode.mode === "simulation"} promoCode={order.promoCode?.code ?? null} allowPromo={!order.boost} canCancel={!open} lastFailure={lastFailure}
-                open={open ? { id: open.id, operator: open.operator as OperatorCode, phone: open.phone, expiresAt: open.expiresAt.toISOString(), redirectUrl: open.redirectUrl } : null} />
-            ) : <Notice tone="danger" title="Paiement indisponible">Votre commande est conservée. Contactez le support.</Notice>
-          )}
+        {order.status === "PENDING" && !mode.available && <Notice tone="danger" title="Paiement indisponible">Votre commande est conservée. Contactez le support.</Notice>}
 
           {(order.status === "CANCELLED" || order.status === "EXPIRED") && (
             <Notice tone="info" title={order.status === "CANCELLED" ? "Commande annulée" : "Commande expirée"}>

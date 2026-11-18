@@ -2,64 +2,127 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, ChevronDown, CircleCheck, Eye, Heart, ImageIcon, ImagePlus, ListChecks, LoaderCircle, MapPin, Megaphone, Pencil, Share2, SlidersHorizontal, Sparkles, Store, Tag, Target, Trash2, Type, Users, Wallet, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown, Eye, Heart, ImagePlus, LoaderCircle, MapPin, Sparkles, Store, Trash2, Type, Users, Wallet, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdPreview } from "@/components/app/ad-preview";
 import { AssetThumb, Uploader } from "@/components/app/uploader";
-import { PlatformIcon } from "@/components/icons";
+import { ObjectiveIcon, PlatformIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Switch, Tip, ToggleRow } from "@/components/ui/controls";
+import { Switch, ToggleRow } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import type { AdCopy, EditorData, LinkedAsset } from "@/lib/campaigns/editor-data";
+import { policyWarnings } from "@/lib/campaigns/policy";
 import { getObjective, objectiveShort } from "@/lib/catalog/objectives";
-import { defaultSplit, PLATFORMS, platformLabel, type PlatformCode } from "@/lib/catalog/platforms";
+import { defaultSplit, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import { defaultAudience } from "@/lib/catalog/audience-defaults";
 import { AGE_BOUNDS, CITIES_BY_COUNTRY, CUSTOMER_CATEGORIES, GENDERS, INTEREST_GROUPS, SECTORS, TARGET_COUNTRIES, type Targeting } from "@/lib/catalog/targeting";
-import { cn, formatFcfa } from "@/lib/utils";
-import {
-  attachAssetAction, detachAssetAction, placeOrderAction, saveCampaignAction, type CampaignPatch,
-} from "@/server/actions/campaigns";
-import { AccountFields, BudgetFields, Chip, LevelPicker, ObjectivePicker, PlatformPicker, QuotePanel, Section, Stepper, useQuote } from "./parts";
-import { accountDisplay, missingAccountMessage, missingAccounts, type Accounts } from "@/lib/catalog/accounts";
+import { cn, formatDate, formatFcfa } from "@/lib/utils";
+import { attachAssetAction, detachAssetAction, placeOrderAction, saveCampaignAction, type CampaignPatch } from "@/server/actions/campaigns";
+import { AccountFields, BudgetQuick, Chip, LevelPicker, ObjectivePicker, PlatformPicker, QuotePanel, ScheduleFields, useQuote } from "./parts";
+import { missingAccountMessage, missingAccounts, type Accounts } from "@/lib/catalog/accounts";
 
-export const WIZARD_STEPS = [
-  { title: "Objectif", heading: "Que voulez-vous obtenir ?", icon: <Target /> },
-  { title: "Annonce", heading: "Votre annonce", icon: <ImageIcon /> },
-  { title: "Audience", heading: "À qui la montrer ?", icon: <Users /> },
-  { title: "Budget", heading: "Votre budget", icon: <Wallet /> },
-];
-const LAST = WIZARD_STEPS.length;
 const DEFAULT_NAMES = ["Nouvelle campagne", "Campagne confiée à un expert"];
 
 type State = EditorData["campaign"] & { business: { id: string | null; name: string; sector: string; city: string; accounts?: Accounts } };
 type SetLinks = React.Dispatch<React.SetStateAction<LinkedAsset[]>>;
+/** Bloc de la page concerné par une erreur : on y fait défiler l'écran et le message s'y affiche. */
+type BlockId = "objectif" | "reseaux" | "annonce" | "budget" | "fin";
+type Issue = { block: BlockId; message: string };
 
 const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 const emptyCopy: AdCopy = { headline: "", body: "", cta: "" };
+const snapAge = (v: number) => AGE_BOUNDS.reduce((best, b) => (Math.abs(b - v) < Math.abs(best - v) ? b : best), AGE_BOUNDS[0] as number);
 
-export function Wizard({ data, initialStep }: { data: EditorData; initialStep: number }) {
+/** Bloc numéroté : la page se lit de haut en bas, un bloc après l'autre. */
+function Block({ id, n, title, hint, issue, children }: { id: BlockId; n: number; title: string; hint?: React.ReactNode; issue: Issue | null; children: React.ReactNode }) {
+  return (
+    <section id={`bloc-${id}`} aria-labelledby={`titre-${id}`} className="scroll-mt-20 rounded-[22px] border border-line/70 bg-surface p-4 shadow-card sm:rounded-[28px] sm:p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <span aria-hidden className="tnum flex size-8 shrink-0 items-center justify-center rounded-full bg-forest text-[0.875rem] font-semibold text-white">{n}</span>
+        <div className="min-w-0">
+          <h2 id={`titre-${id}`} className="text-[1.0625rem] font-semibold leading-snug">{title}</h2>
+          {hint && <p className="text-[0.8125rem] text-muted">{hint}</p>}
+        </div>
+      </div>
+      {children}
+      {issue?.block === id && <Notice tone="danger" className="mt-4">{issue.message}</Notice>}
+    </section>
+  );
+}
+
+/** Réglage déjà fait pour le client : une ligne avec sa valeur, qui s'ouvre pour la changer. */
+function Setting({ icon, title, value, children }: { icon: React.ReactNode; title: string; value: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <details className="group border-t border-line first:border-0">
+      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 sm:px-5 [&::-webkit-details-marker]:hidden">
+        <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sand text-ink-soft [&_svg]:size-4">{icon}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[0.78125rem] text-muted">{title}</span>
+          <span className="block truncate text-[0.90625rem] font-medium text-ink">{value}</span>
+        </span>
+        <span className="shrink-0 text-[0.8125rem] font-medium text-green group-open:hidden">Changer</span>
+        <ChevronDown className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="animate-rise px-4 pb-5 pt-1 sm:px-5">{children}</div>
+    </details>
+  );
+}
+
+/**
+ * Création d'une publicité sur une seule page : où, quoi, combien, puis payer.
+ * Tout le reste (audience, texte, date, formule) est déjà réglé et reste modifiable en bas de page.
+ */
+export function Wizard({ data }: { data: EditorData }) {
   const router = useRouter();
   const c0 = data.campaign;
   const b0 = data.businesses.find((b) => b.id === c0.businessId) ?? data.businesses[0] ?? null;
   const objective0 = getObjective(c0.objective);
   const [s, setS] = React.useState<State>({
     ...c0, business: b0 ? { ...b0 } : { id: null, name: "", sector: "", city: "Cotonou" },
-    adBudget: c0.adBudget || (objective0 ? objective0.config.recommendedDailyBudget * objective0.config.recommendedDays : 0),
+    adBudget: c0.adBudget || (objective0 ? Math.max(data.limits.minAdBudget, objective0.config.recommendedDailyBudget * objective0.config.recommendedDays) : 0),
     durationDays: c0.durationDays ?? objective0?.config.recommendedDays ?? 7,
   });
-  const [step, setStep] = React.useState(Math.min(LAST, Math.max(1, initialStep)));
   const [links, setLinks] = React.useState<LinkedAsset[]>(data.links);
   const [busy, setBusy] = React.useState(false);
-  const [saved, setSaved] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [warnings, setWarnings] = React.useState<string[]>([]);
+  const [issue, setIssue] = React.useState<Issue | null>(null);
   const [promo, setPromo] = React.useState(data.promoCode ?? "");
-  const [total, setTotal] = React.useState<number | null>(null);
-  const top = React.useRef<HTMLDivElement>(null);
-  const set = React.useCallback((patch: Partial<State>) => setS((prev) => ({ ...prev, ...patch })), []);
+  const [pickObjective, setPickObjective] = React.useState(false);
+  const set = React.useCallback((patch: Partial<State>) => { setS((prev) => ({ ...prev, ...patch })); setIssue(null); }, []);
+  const setB = (patch: Partial<State["business"]>) => set({ business: { ...s.business, ...patch } });
   const objective = getObjective(s.objective);
+  const needs = objective?.config.requires ?? [];
+
+  // L'activité déjà connue n'est pas redemandée ; elle reste modifiable dans les réglages.
+  const [knownBusiness] = React.useState(Boolean(b0?.id && b0.name && b0.sector));
+  // Un compte déjà enregistré n'est pas redemandé : seuls les réseaux choisis sans compte connu ont un champ.
+  const toAsk = s.platforms.filter((p) => !b0?.accounts?.[p]?.trim());
+  const [hadWhatsapp] = React.useState(Boolean(c0.destinationWhatsapp));
+  const askWhatsapp = hadWhatsapp || needs.includes("whatsapp");
+
+  // Audience de départ selon le secteur et la ville, tant que le client n'y a pas touché.
+  const audienceTouched = React.useRef(Boolean(c0.targeting.interests.length || c0.targeting.cities.length || c0.targeting.categories.length));
+  const { sector, city } = s.business;
+  React.useEffect(() => {
+    if (audienceTouched.current || !sector) return;
+    const d = defaultAudience({ sector, city });
+    setS((prev) => {
+      const allowed = new Set(prev.targeting.countries.flatMap((c) => CITIES_BY_COUNTRY[c] ?? []));
+      return { ...prev, targeting: { ...prev.targeting, cities: d.cities.filter((c) => allowed.has(c)), ageMin: snapAge(d.ageMin), ageMax: snapAge(d.ageMax), gender: d.gender, interests: d.interests, categories: d.categories.filter((c) => CUSTOMER_CATEGORIES.includes(c)) } };
+    });
+  }, [sector, city]);
+  const setTargeting = (targeting: Targeting) => { audienceTouched.current = true; set({ targeting }); };
+
+  const quote = useQuote(s.id, { adBudget: s.adBudget, durationDays: s.durationDays ?? 0, serviceCode: s.serviceCode, platforms: s.platforms, promoCode: promo, objective: s.objective });
+  const total = quote.quote?.total ?? null;
+  const baseFee = objective ? data.baseFees[objective.serviceCode] ?? data.limits.minServiceFee : data.limits.minServiceFee;
+  const pack = data.levels.find((l) => l.kind === "PACK") ?? null;
+  const level = data.levels.find((l) => l.code === s.serviceCode) ?? null;
+  const media = links.filter((l) => l.role === "CREATIVE" || l.role === "PRODUCT_MEDIA");
+  const copy = s.adCopy ?? emptyCopy;
+  const hasCopy = Boolean(copy.headline.trim() || copy.body.trim());
+  const warnings = policyWarnings([s.productDescription, copy.headline, copy.body].filter(Boolean).join(" "));
 
   /** Nom donné automatiquement tant que le client ne l'a pas personnalisé. */
   function autoName() {
@@ -69,64 +132,57 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
     return name.trim().length >= 2 ? name : "Ma campagne";
   }
 
-  function patchFor(n: number): CampaignPatch | string {
-    switch (n) {
-      case 1:
-        if (!s.platforms.length) return "Choisissez au moins une plateforme pour continuer.";
-        if (!s.objective) return "Choisissez un objectif pour continuer.";
-        return { platforms: s.platforms, objective: s.objective };
-      case 2: {
-        const noAccount = missingAccounts(s.platforms, s.business.accounts);
-        if (noAccount.length) return missingAccountMessage(noAccount[0]!);
-        const copy = s.adCopy;
-        const hasCopy = Boolean(copy && (copy.headline.trim() || copy.body.trim()));
-        return {
-          name: autoName(), business: s.business, productName: s.productName, productDescription: s.productDescription, productPrice: s.productPrice,
-          destinationWhatsapp: s.destinationWhatsapp, destinationUrl: s.destinationUrl, ...(hasCopy ? { adCopy: copy! } : {}),
-        };
-      }
-      case 3: return { targeting: s.targeting, audienceNote: s.audienceNote };
-      default: return { name: s.name.trim() || autoName(), adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "", budgetSplit: s.budgetSplit, serviceCode: s.serviceCode };
-    }
+  /** Ce qui manque avant de payer, dans l'ordre de la page. Le serveur revérifie tout. */
+  function check(): Issue | null {
+    if (!s.objective) return { block: "objectif", message: "Choisissez ce que vous voulez obtenir." };
+    if (!s.platforms.length) return { block: "reseaux", message: "Choisissez au moins un réseau." };
+    const noAccount = missingAccounts(s.platforms, s.business.accounts);
+    if (noAccount.length) return { block: "reseaux", message: missingAccountMessage(noAccount[0]!) };
+    if (needs.includes("whatsapp") && !s.destinationWhatsapp.trim()) return { block: "reseaux", message: "Indiquez votre numéro WhatsApp : c'est là que vos clients vous écriront." };
+    if (s.business.name.trim().length < 2) return { block: "annonce", message: "Indiquez le nom de votre activité." };
+    if (!SECTORS.includes(s.business.sector)) return { block: "annonce", message: "Choisissez votre secteur." };
+    if (s.productDescription.trim().length < 20) return { block: "annonce", message: "Dites en une phrase ou deux ce que vous vendez (20 caractères au minimum)." };
+    if (s.adBudget < data.limits.minAdBudget) return { block: "budget", message: `Le budget minimum est de ${formatFcfa(data.limits.minAdBudget)}.` };
+    if (!s.durationDays) return { block: "budget", message: "Choisissez une durée." };
+    if (Math.floor(s.adBudget / s.durationDays) < data.limits.minDailyBudget) return { block: "budget", message: `Il faut au moins ${formatFcfa(data.limits.minDailyBudget)} par jour : choisissez moins de jours ou un montant plus grand.` };
+    return null;
   }
 
-  async function saveStep(n: number, nextStep: number, quiet = false) {
-    const patch = patchFor(n);
-    if (typeof patch === "string") { if (!quiet) setError(patch); return false; }
-    setBusy(true);
-    if (!quiet) setError(null);
-    const res = await saveCampaignAction(s.id, { ...patch, wizardStep: Math.min(LAST, nextStep) });
-    setBusy(false);
-    if (!res.ok) { if (!quiet) setError(res.error); return false; }
-    if (patch.name) set({ name: patch.name });
-    setWarnings((res.data.warnings as string[] | undefined) ?? []);
-    setSaved(true);
-    return true;
+  /** Les quatre parties de la page, enregistrées ensemble au paiement ou une par une quand le client quitte. */
+  function patches(): CampaignPatch[] {
+    return [
+      { platforms: s.platforms, ...(s.objective ? { objective: s.objective } : {}) },
+      {
+        name: autoName(), business: s.business, productName: s.productName, productDescription: s.productDescription, productPrice: s.productPrice,
+        destinationWhatsapp: s.destinationWhatsapp, destinationUrl: s.destinationUrl, ...(hasCopy ? { adCopy: copy } : {}),
+      },
+      { targeting: s.targeting, audienceNote: s.audienceNote },
+      { adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "", budgetSplit: s.budgetSplit, serviceCode: s.serviceCode },
+    ];
   }
 
-  React.useEffect(() => {
-    if (!saved) return;
-    const t = setTimeout(() => setSaved(false), 2600);
-    return () => clearTimeout(t);
-  }, [saved]);
-
-  async function go(next: number) {
-    if (next > step && !(await saveStep(step, next))) return;
-    setStep(next);
-    setError(null);
-    top.current?.scrollIntoView({ block: "start" });
+  function show(next: Issue) {
+    setIssue(next);
+    requestAnimationFrame(() => document.getElementById(`bloc-${next.block}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
   }
 
   async function quit() {
-    await saveStep(step, step, true);
+    setBusy(true);
+    // Brouillon : chaque partie valable est gardée, les autres seront à compléter au retour.
+    for (const patch of patches()) await saveCampaignAction(s.id, patch);
     router.push("/app/campagnes?etat=attente");
   }
 
   async function order() {
-    if (!(await saveStep(LAST, LAST))) return;
+    const missing = check();
+    if (missing) { show(missing); return; }
     setBusy(true);
+    setIssue(null);
+    const all: CampaignPatch = Object.assign({}, ...patches());
+    const saved = await saveCampaignAction(s.id, { ...all, wizardStep: 4 });
+    if (!saved.ok) { setBusy(false); show({ block: "fin", message: saved.error }); return; }
     const res = await placeOrderAction(s.id, promo || null);
-    if (!res.ok) { setBusy(false); setError(res.error); return; }
+    if (!res.ok) { setBusy(false); show({ block: "fin", message: res.error }); return; }
     router.push(`/app/paiements/${res.data.orderId as string}`);
   }
 
@@ -138,61 +194,154 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
 
   function setObjective(code: string) {
     const o = getObjective(code);
-    set({ objective: code, ...(code !== s.objective ? { adCopy: null, adBudget: o ? o.config.recommendedDailyBudget * o.config.recommendedDays : s.adBudget, durationDays: o?.config.recommendedDays ?? s.durationDays } : {}) });
+    set({ objective: code, ...(code !== s.objective ? { adCopy: null, adBudget: o ? Math.max(data.limits.minAdBudget, o.config.recommendedDailyBudget * o.config.recommendedDays) : s.adBudget, durationDays: o?.config.recommendedDays ?? s.durationDays } : {}) });
+    setPickObjective(false);
   }
 
-  const reached = Math.min(LAST, Math.max(c0.wizardStep, step));
-  const meta = WIZARD_STEPS[step - 1]!;
+  const t = s.targeting;
+  const zone = t.cities.length ? t.cities.slice(0, 2).join(", ") + (t.cities.length > 2 ? ` +${t.cities.length - 2}` : "") : t.countries.map((c) => TARGET_COUNTRIES.find((x) => x.code === c)?.name ?? c).join(", ");
+  const audienceLabel = `${zone} · ${t.ageMin}–${t.ageMax >= 65 ? "65+" : t.ageMax} ans · ${GENDERS.find((g) => g.id === t.gender)?.label ?? "Tout le monde"}`;
+  const levelLabel = level ? level.name : "J'ai mes textes et visuels";
+  let n = 0;
 
   return (
-    <div ref={top} className="mx-auto max-w-3xl scroll-mt-24">
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <button type="button" onClick={quit} disabled={busy} title="Enregistrer et quitter" className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2.5 pr-3.5 text-[0.8125rem] font-medium text-ink-soft transition-colors hover:border-line-strong hover:text-ink disabled:opacity-60">
-          <X className="size-3.5" />Quitter
-        </button>
-        <span className={cn("flex items-center gap-1.5 text-[0.8125rem] text-green transition-opacity duration-300", saved ? "opacity-100" : "opacity-0")} aria-live="polite"><CircleCheck className="size-4" />Enregistré</span>
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-4 flex items-center gap-3">
+        <button type="button" onClick={quit} disabled={busy} aria-label="Enregistrer et quitter" title="Enregistrer et quitter" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-ink-soft shadow-card transition-colors hover:text-ink disabled:opacity-60"><ArrowLeft className="size-5" /></button>
+        <h1 className="min-w-0 flex-1 truncate text-[1.375rem] font-semibold leading-tight sm:text-[1.75rem]">Votre publicité</h1>
       </div>
 
-      <div className="mb-7"><Stepper steps={WIZARD_STEPS} current={step} reached={reached} onSelect={go} disabled={busy} /></div>
-
-      <header key={step} className="mb-6 animate-rise">
-        <h1 className="text-[1.5rem] font-semibold leading-tight sm:text-[1.75rem]">{meta.heading}</h1>
-      </header>
-
-      <div key={`step-${step}`} className="animate-rise">
-        {step === 1 && (
-          <div className="space-y-7">
-            <Section icon={<Share2 />} tone="sky" title="Où diffuser ?">
-              <PlatformPicker value={s.platforms} onChange={setPlatforms} extraFee={data.limits.extraPlatformFee} />
-            </Section>
-            <Section icon={<Target />} tone="marigold" title="Votre objectif">
-              <ObjectivePicker value={s.objective} platforms={s.platforms} baseFees={data.baseFees} onChange={setObjective} />
-            </Section>
+      <div className="space-y-4 sm:space-y-5">
+        {objective ? (
+          <div id="bloc-objectif" className="flex scroll-mt-20 items-center gap-3 rounded-[22px] bg-forest px-4 py-3 text-white shadow-lift sm:rounded-[28px] sm:px-6 sm:py-4">
+            <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-marigold"><ObjectiveIcon name={objective.icon} className="size-5" /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[0.78125rem] text-white/70">Vous voulez</span>
+              <span className="block truncate text-[1rem] font-semibold">{objectiveShort(objective)}</span>
+            </span>
+            <Dialog open={pickObjective} onOpenChange={setPickObjective}>
+              <DialogTrigger className="shrink-0 rounded-full bg-white/10 px-3.5 py-2 text-[0.8125rem] font-medium text-white ring-1 ring-inset ring-white/15 transition-colors hover:bg-white/20">Changer</DialogTrigger>
+              <DialogContent title="Que voulez-vous obtenir ?" side="bottom">
+                <ObjectivePicker value={s.objective} platforms={s.platforms} baseFees={data.baseFees} onChange={setObjective} />
+              </DialogContent>
+            </Dialog>
           </div>
+        ) : (
+          <Block id="objectif" n={++n} title="Que voulez-vous obtenir ?" issue={issue}>
+            <ObjectivePicker value={s.objective} platforms={s.platforms} baseFees={data.baseFees} onChange={setObjective} />
+          </Block>
         )}
-        {step === 2 && <AdStep s={s} set={set} data={data} links={links} setLinks={setLinks} />}
-        {step === 3 && <AudienceStep s={s} set={set} />}
-        {step === 4 && <BudgetStep s={s} set={set} data={data} links={links} promo={promo} setPromo={setPromo} onTotal={setTotal} onEdit={go} />}
+
+        <Block id="reseaux" n={++n} title="Où la montrer ?" issue={issue}>
+          <PlatformPicker value={s.platforms} onChange={setPlatforms} extraFee={data.limits.extraPlatformFee} />
+          {(toAsk.length > 0 || askWhatsapp) && (
+            <div className="mt-5 space-y-4">
+              {toAsk.length > 0 && <AccountFields platforms={toAsk} value={s.business.accounts} onChange={(accounts) => setB({ accounts })} />}
+              {askWhatsapp && (
+                <Field label="Votre numéro WhatsApp" htmlFor="wa" hint={needs.includes("whatsapp") ? "Vos clients vous écriront sur ce numéro." : undefined}>
+                  <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" autoComplete="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />
+                </Field>
+              )}
+            </div>
+          )}
+        </Block>
+
+        <Block id="annonce" n={++n} title="Que vendez-vous ?" issue={issue}>
+          <div className="space-y-4">
+            {!knownBusiness && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Nom de votre activité" htmlFor="bname"><Input id="bname" value={s.business.name} maxLength={80} autoComplete="organization" onChange={(e) => setB({ name: e.target.value })} placeholder="Boutique Afi" /></Field>
+                <Field label="Secteur" htmlFor="sector">
+                  <Select id="sector" value={s.business.sector} onChange={(e) => setB({ sector: e.target.value })}><option value="" disabled>Choisir…</option>{SECTORS.map((x) => <option key={x}>{x}</option>)}</Select>
+                </Field>
+              </div>
+            )}
+            <div>
+              <label htmlFor="pdesc" className="sr-only">Que vendez-vous ?</label>
+              <Textarea id="pdesc" rows={3} value={s.productDescription} maxLength={1500} onChange={(e) => set({ productDescription: e.target.value })} placeholder="Robes en wax cousues main, 15 000 F, livraison à Cotonou en 48 h…" />
+              <p className="mt-1.5 text-[0.8125rem] text-muted">Le produit, le prix, la livraison : une ou deux phrases suffisent.</p>
+            </div>
+            {warnings.length > 0 && <Notice tone="warn" title="À vérifier">{warnings.map((w) => <p key={w}>{w}</p>)}</Notice>}
+            <div>
+              <p className="mb-2 text-[0.84375rem] font-medium text-ink">Photo ou vidéo <span className="ml-1 rounded-full bg-sand px-1.5 py-px text-[11px] font-normal text-muted">facultatif</span></p>
+              <MediaGrid campaignId={s.id} role="CREATIVE" items={media} setLinks={setLinks} library={data.library} />
+            </div>
+            {pack && (!level || level.code === pack.code) && (
+              <ToggleRow icon={<Wand2 />} label="Créez mes visuels et mes textes" htmlFor="pack-toggle"
+                hint={<span className="tnum">Notre équipe s&apos;en charge{Math.max(pack.fee, baseFee) > baseFee ? ` : + ${formatFcfa(Math.max(pack.fee, baseFee) - baseFee)}` : ""}</span>}>
+                <Switch id="pack-toggle" checked={s.serviceCode === pack.code} onCheckedChange={(v) => set({ serviceCode: v ? pack.code : null })} />
+              </ToggleRow>
+            )}
+          </div>
+        </Block>
+
+        <Block id="budget" n={++n} title="Votre budget" issue={issue}>
+          <BudgetQuick limits={data.limits} value={{ adBudget: s.adBudget, durationDays: s.durationDays ?? 0 }} onChange={set}
+            recommended={objective ? { daily: objective.config.recommendedDailyBudget, days: objective.config.recommendedDays } : null} />
+        </Block>
+
+        <section aria-labelledby="titre-reglages">
+          <div className="mb-2 px-1">
+            <h2 id="titre-reglages" className="text-[1.0625rem] font-semibold leading-snug">Déjà réglé pour vous</h2>
+            <p className="text-[0.8125rem] text-muted">Rien à faire ici. Touchez une ligne pour la changer.</p>
+          </div>
+          <div className="overflow-hidden rounded-[22px] border border-line/70 bg-surface shadow-card sm:rounded-[28px]">
+            <Setting icon={<Users />} title="À qui la montrer" value={audienceLabel}>
+              <AudiencePanel t={t} onChange={setTargeting} />
+            </Setting>
+            <Setting icon={<Type />} title="Texte de l'annonce" value={hasCopy ? copy.headline || copy.body : "Écrit par notre équipe"}>
+              <div className="space-y-4">
+                <Field label="Texte" htmlFor="copy-b" hint={<span className="tnum block text-right">{copy.body.length} / 900</span>}>
+                  <Textarea id="copy-b" rows={4} value={copy.body} maxLength={900} onChange={(e) => set({ adCopy: { ...copy, body: e.target.value } })} placeholder="Offrez-vous une robe unique, cousue à vos mesures…" />
+                </Field>
+                <Field label="Titre" htmlFor="copy-h"><Input id="copy-h" value={copy.headline} maxLength={90} onChange={(e) => set({ adCopy: { ...copy, headline: e.target.value } })} placeholder="Votre robe sur mesure en 48 h" /></Field>
+                <p className="text-[0.8125rem] text-muted">Laissez vide : notre équipe l&apos;écrit pour vous.</p>
+              </div>
+            </Setting>
+            <Setting icon={<CalendarDays />} title="Début" value={s.startDate ? formatDate(new Date(`${s.startDate}T00:00:00Z`)) : "À choisir"}>
+              <ScheduleFields value={{ adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "", budgetSplit: s.budgetSplit, platforms: s.platforms }} onChange={set} />
+            </Setting>
+            <Setting icon={<Sparkles />} title="Formule" value={levelLabel}>
+              <LevelPicker levels={data.levels} value={s.serviceCode} onChange={(serviceCode) => set({ serviceCode })} baseFee={baseFee} />
+            </Setting>
+            {knownBusiness && (
+              <Setting icon={<Store />} title="Votre activité" value={[s.business.name, s.business.city].filter(Boolean).join(" · ")}>
+                <div className="space-y-4">
+                  {data.businesses.length > 1 && (
+                    <Field label="Entreprise" htmlFor="businessId">
+                      <Select id="businessId" value={s.business.id ?? ""} onChange={(e) => { const b = data.businesses.find((x) => x.id === e.target.value); if (b) set({ business: { ...b } }); }}>
+                        {data.businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      </Select>
+                    </Field>
+                  )}
+                  <Field label="Nom de votre activité" htmlFor="bname"><Input id="bname" value={s.business.name} maxLength={80} onChange={(e) => setB({ name: e.target.value })} /></Field>
+                  <Field label="Secteur" htmlFor="sector"><Select id="sector" value={s.business.sector} onChange={(e) => setB({ sector: e.target.value })}>{SECTORS.map((x) => <option key={x}>{x}</option>)}</Select></Field>
+                  <Field label="Ville" htmlFor="city"><Input id="city" value={s.business.city} maxLength={60} onChange={(e) => setB({ city: e.target.value })} placeholder="Cotonou" /></Field>
+                  <AccountFields platforms={s.platforms.filter((p) => !toAsk.includes(p))} value={s.business.accounts} onChange={(accounts) => setB({ accounts })} />
+                </div>
+              </Setting>
+            )}
+            <Setting icon={<Eye />} title="Aperçu" value="Voir l'annonce sur un téléphone">
+              <PhonePreview s={s} links={links} />
+            </Setting>
+          </div>
+        </section>
+
+        <section id="bloc-fin" data-quote className="scroll-mt-20 space-y-2.5">
+          <QuotePanel state={quote} promo={promo} onPromo={setPromo} />
+          <p className="px-1 text-[0.8125rem] leading-relaxed text-muted">Les résultats ne sont pas garantis.</p>
+          {issue?.block === "fin" && <Notice tone="danger">{issue.message}</Notice>}
+        </section>
       </div>
 
-      {warnings.length > 0 && <Notice tone="warn" className="mt-6" title="À vérifier">{warnings.map((w) => <p key={w}>{w}</p>)}</Notice>}
-      {error && <Notice tone="danger" className="mt-6">{error}</Notice>}
-
-      <div className="safe-bottom sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-line bg-surface/95 px-4 pt-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
-        <Button type="button" variant="ghost" disabled={step === 1 || busy} onClick={() => go(step - 1)}><ArrowLeft />Retour</Button>
-        {step < LAST ? (
-          <Button type="button" size="lg" disabled={busy} onClick={() => go(step + 1)}>{busy && <LoaderCircle className="animate-spin" />}Continuer<ArrowRight /></Button>
-        ) : (
-          <Button type="button" size="lg" variant="accent" disabled={busy} onClick={order}>
-            {busy && <LoaderCircle className="animate-spin" />}Payer{total ? <span className="tnum hidden sm:inline"> · {formatFcfa(total)}</span> : null}<ArrowRight />
-          </Button>
-        )}
+      <div className="safe-bottom sticky bottom-0 z-20 -mx-4 mt-6 border-t border-line bg-surface/95 px-4 pt-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-t-2xl lg:border-x lg:px-4">
+        <Button type="button" size="lg" variant="accent" className="w-full" disabled={busy} aria-busy={busy} onClick={order}>
+          {busy ? <LoaderCircle className="animate-spin" /> : <Wallet />}Payer{total ? <span className="tnum"> · {formatFcfa(total)}</span> : null}{!busy && <ArrowRight />}
+        </Button>
       </div>
     </div>
   );
 }
-
-type StepProps = { s: State; set: (patch: Partial<State>) => void };
 
 // ─────────────────────────── Fichiers ───────────────────────────
 
@@ -240,7 +389,7 @@ export function MediaGrid({ campaignId, role, items, setLinks, library, accept =
   );
 }
 
-// ─────────────────────────── Étape 2 : l'annonce ───────────────────────────
+// ─────────────────────────── Aperçu ───────────────────────────
 
 function PhonePreview({ s, links }: { s: State; links: LinkedAsset[] }) {
   const [platform, setPlatform] = React.useState<PlatformCode>(s.platforms[0] ?? "FACEBOOK");
@@ -274,263 +423,66 @@ function PhonePreview({ s, links }: { s: State; links: LinkedAsset[] }) {
   );
 }
 
-function AdStep({ s, set, data, links, setLinks }: StepProps & { data: EditorData; links: LinkedAsset[]; setLinks: SetLinks }) {
-  const objective = getObjective(s.objective);
-  const needs = objective?.config.requires ?? [];
-  const media = links.filter((l) => l.role === "CREATIVE" || l.role === "PRODUCT_MEDIA");
-  const setB = (patch: Partial<State["business"]>) => set({ business: { ...s.business, ...patch } });
-  const copy = s.adCopy ?? emptyCopy;
-  const setCopy = (patch: Partial<AdCopy>) => set({ adCopy: { ...copy, ...patch } });
-  // Une activité déjà connue est résumée sur une ligne : inutile de reposer les mêmes questions.
-  const [editBusiness, setEditBusiness] = React.useState(!(s.business.id && s.business.name && s.business.sector && s.business.city));
-  const [showWa] = React.useState(Boolean(s.destinationWhatsapp) || needs.includes("whatsapp"));
-  const [showLink] = React.useState(Boolean(s.destinationUrl));
-  // Comptes déjà connus : rien à ressaisir. Sinon un champ par réseau choisi.
-  const [askAccounts] = React.useState(missingAccounts(s.platforms, s.business.accounts).length > 0);
-  const knownAccounts = s.platforms.map((p) => s.business.accounts?.[p]).filter((v): v is string => Boolean(v)).map(accountDisplay);
-  const [showText, setShowText] = React.useState(Boolean(s.adCopy?.headline || s.adCopy?.body));
-  const pack = data.levels.find((l) => l.kind === "PACK");
+// ─────────────────────────── Audience ───────────────────────────
 
-  const textOpen = showText || Boolean(copy.headline || copy.body);
-  const summary = "flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3.5 text-sm font-medium text-ink sm:px-5";
-
-  return (
-    <div className="space-y-7">
-      <Section icon={<Store />} title="Votre activité">
-        <div className="space-y-4">
-          {!editBusiness ? (
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3.5 sm:px-5">
-              <span className="min-w-0">
-                <span className="block truncate font-medium text-ink">{s.business.name}</span>
-                <span className="block truncate text-[0.84375rem] text-muted">{[s.business.sector, s.business.city].filter(Boolean).join(" · ")}</span>
-                {!askAccounts && knownAccounts.length > 0 && <span className="mt-0.5 block truncate text-[0.8125rem] text-green">{knownAccounts.join(" · ")}</span>}
-              </span>
-              <button type="button" onClick={() => setEditBusiness(true)} className="shrink-0 rounded-full px-2.5 py-1 text-[0.84375rem] font-medium text-green hover:bg-green-soft">Modifier</button>
-            </div>
-          ) : (
-            <>
-              {data.businesses.length > 1 && (
-                <Field label="Entreprise" htmlFor="businessId">
-                  <Select id="businessId" value={s.business.id ?? ""} onChange={(e) => { const b = data.businesses.find((x) => x.id === e.target.value); set({ business: b ? { ...b } : { id: null, name: "", sector: "", city: "" } }); }}>
-                    {data.businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    <option value="">+ Nouvelle entreprise</option>
-                  </Select>
-                </Field>
-              )}
-              <Field label="Nom de l'entreprise" htmlFor="bname"><Input id="bname" value={s.business.name} maxLength={80} onChange={(e) => setB({ name: e.target.value })} placeholder="Boutique Afi" /></Field>
-              <Field label="Secteur" htmlFor="sector">
-                <Select id="sector" value={s.business.sector} onChange={(e) => setB({ sector: e.target.value })}><option value="" disabled>Choisir…</option>{SECTORS.map((x) => <option key={x}>{x}</option>)}</Select>
-              </Field>
-              <Field label="Ville" htmlFor="city"><Input id="city" value={s.business.city} maxLength={60} onChange={(e) => setB({ city: e.target.value })} placeholder="Cotonou" /></Field>
-            </>
-          )}
-          {(askAccounts || editBusiness) && <AccountFields platforms={s.platforms} value={s.business.accounts} onChange={(accounts) => setB({ accounts })} />}
-          {showWa && (
-            <Field label="Numéro WhatsApp" htmlFor="wa">
-              <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />
-            </Field>
-          )}
-          {showLink && (
-            <Field label="Lien de votre page" htmlFor="url">
-              <Input id="url" type="url" value={s.destinationUrl} maxLength={300} onChange={(e) => set({ destinationUrl: e.target.value })} placeholder="https://facebook.com/votrepage" />
-            </Field>
-          )}
-        </div>
-      </Section>
-
-      <Section icon={<Tag />} tone="marigold" title="Votre offre">
-        <div className="space-y-4">
-          <Field label="Que vendez-vous ?" htmlFor="pdesc" hint={<span className="tnum block text-right">{s.productDescription.trim().length} / 1 500</span>}>
-            <Textarea id="pdesc" rows={4} value={s.productDescription} maxLength={1500} onChange={(e) => set({ productDescription: e.target.value })} placeholder="Robes en wax cousues main, 15 000 F, livraison à Cotonou en 48 h…" />
-          </Field>
-        </div>
-      </Section>
-
-      <Section icon={<ImageIcon />} tone="sky" title="Photo ou vidéo" description={needs.includes("video") ? "Vidéo recommandée." : undefined}>
-        <MediaGrid campaignId={s.id} role="CREATIVE" items={media} setLinks={setLinks} library={data.library} />
-        {media.length === 0 && pack && <p className="mt-3 text-[0.84375rem] text-muted">Pas de visuel ? Choisissez « {pack.name} » à l&apos;étape 4.</p>}
-      </Section>
-
-      <Section icon={<Type />} tone="violet" title="Texte">
-        <div className="space-y-4">
-          {textOpen ? (
-            <>
-              <Field label="Texte" htmlFor="copy-b" hint={<span className="tnum block text-right">{copy.body.length} / 900</span>}>
-                <Textarea id="copy-b" rows={4} value={copy.body} maxLength={900} onChange={(e) => setCopy({ body: e.target.value })} placeholder="Offrez-vous une robe unique, cousue à vos mesures…" />
-              </Field>
-              <Field label="Titre" htmlFor="copy-h"><Input id="copy-h" value={copy.headline} maxLength={90} onChange={(e) => setCopy({ headline: e.target.value })} placeholder="Votre robe sur mesure en 48 h" /></Field>
-            </>
-          ) : (
-            <p className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-paper px-4 py-3 text-[0.84375rem] text-muted">
-              Notre équipe peut l&apos;écrire pour vous.
-              <button type="button" onClick={() => setShowText(true)} className="font-medium text-green hover:underline">Écrire moi-même</button>
-            </p>
-          )}
-
-          <details className="group">
-            <summary className={summary}><span className="flex items-center gap-2.5"><Eye className="size-4 text-green" />Aperçu</span><ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></summary>
-            <div className="mt-3"><PhonePreview s={s} links={links} /></div>
-          </details>
-        </div>
-      </Section>
-    </div>
-  );
-}
-
-// ─────────────────────────── Étape 3 : l'audience ───────────────────────────
-
-function AudienceStep({ s, set }: StepProps) {
-  const t = s.targeting;
+/** Réglage fin de l'audience : zone, profil, centres d'intérêt. Facultatif, un réglage de départ est déjà appliqué. */
+function AudiencePanel({ t, onChange }: { t: Targeting; onChange: (next: Targeting) => void }) {
   const latest = React.useRef(t);
   latest.current = t;
-  const setT = (patch: Partial<Targeting>) => set({ targeting: { ...latest.current, ...patch } });
-  const [open, setOpen] = React.useState(false);
+  const setT = (patch: Partial<Targeting>) => onChange({ ...latest.current, ...patch });
   const cities = t.countries.flatMap((c) => (CITIES_BY_COUNTRY[c] ?? []).map((city) => ({ city, country: c })));
-  const pristine = !t.interests.length && !t.cities.length && !t.categories.length;
-
-  // Première visite : audience de départ selon le secteur et la ville de l'entreprise. Le client peut tout changer.
-  const started = React.useRef(false);
-  React.useEffect(() => {
-    if (started.current || !pristine) return;
-    started.current = true;
-    const d = defaultAudience({ sector: s.business.sector, city: s.business.city });
-    const now = latest.current;
-    const allowed = new Set(now.countries.flatMap((c) => CITIES_BY_COUNTRY[c] ?? []));
-    const snap = (v: number) => AGE_BOUNDS.reduce((best, b) => (Math.abs(b - v) < Math.abs(best - v) ? b : best), AGE_BOUNDS[0] as number);
-    set({ targeting: { ...now, cities: d.cities.filter((c) => allowed.has(c)), ageMin: snap(d.ageMin), ageMax: snap(d.ageMax), gender: d.gender, interests: d.interests, categories: d.categories.filter((c) => CUSTOMER_CATEGORIES.includes(c)) } });
-  }, [pristine, s.business.sector, s.business.city, set]);
-
-  const zone = t.cities.length ? t.cities.slice(0, 3).join(", ") + (t.cities.length > 3 ? ` +${t.cities.length - 3}` : "") : t.countries.map((c) => TARGET_COUNTRIES.find((x) => x.code === c)?.name ?? c).join(", ");
-  const gender = GENDERS.find((g) => g.id === t.gender)?.label ?? "Tout le monde";
-  const interests = [...t.interests, ...t.categories];
-
   return (
-    <div className="space-y-6">
-      <section aria-labelledby="audience">
-        <h2 id="audience" className="mb-2.5 text-[0.9375rem] font-semibold tracking-normal [font-family:var(--font-sans)]">Votre audience</h2>
-        <ul className="grid gap-2.5 sm:grid-cols-3">
-          {[
-            { icon: <MapPin />, tone: "bg-green-soft text-green", label: "Zone", value: zone || "À définir" },
-            { icon: <Users />, tone: "bg-sky-soft text-sky", label: "Profil", value: `${gender}, ${t.ageMin}–${t.ageMax >= 65 ? "65+" : t.ageMax} ans` },
-            { icon: <Heart />, tone: "bg-rose-soft text-rose", label: "Intérêts", value: interests.length ? `${interests.length} choisi${interests.length > 1 ? "s" : ""}` : "Audience large" },
-          ].map((x) => (
-            <li key={x.label} className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3.5 shadow-card sm:flex-col sm:items-start sm:p-4">
-              <span aria-hidden className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5", x.tone)}>{x.icon}</span>
-              <span className="min-w-0"><span className="block text-[0.78125rem] text-muted">{x.label}</span><span className="block text-[0.9375rem] font-semibold leading-snug text-ink">{x.value}</span></span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-
-      <div className="rounded-lg border border-line bg-surface">
-        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left sm:px-5">
-          <span className="flex items-center gap-2.5 font-medium text-ink"><SlidersHorizontal className="size-4 text-green" />Personnaliser</span>
-          <ChevronDown className={cn("size-5 shrink-0 text-muted transition-transform", open && "rotate-180")} />
-        </button>
-        {open && (
-          <div className="animate-rise space-y-7 border-t border-line px-4 py-5 sm:px-5">
-            <div className="space-y-4">
-              <h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold [font-family:var(--font-sans)]"><MapPin className="size-4 text-green" />Zone</h3>
-              <div>
-                <p className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Pays</p>
-                <div className="flex flex-wrap gap-1.5">{TARGET_COUNTRIES.map((c) => <Chip key={c.code} active={t.countries.includes(c.code)} onClick={() => { const countries = toggle(t.countries, c.code); const ok = new Set(countries.flatMap((x) => CITIES_BY_COUNTRY[x] ?? [])); setT({ countries: countries.length ? countries : t.countries, cities: t.cities.filter((x) => ok.has(x)) }); }}>{c.name}</Chip>)}</div>
-              </div>
-              {cities.length > 0 && (
-                <div>
-                  <p className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Villes <span className="font-normal text-muted">— aucune = tout le pays</span></p>
-                  <div className="flex flex-wrap gap-1.5">{cities.map(({ city }) => <Chip key={city} active={t.cities.includes(city)} onClick={() => setT({ cities: toggle(t.cities, city) })}>{city}</Chip>)}</div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4 border-t border-line pt-6">
-              <h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold [font-family:var(--font-sans)]"><Users className="size-4 text-sky" />Profil</h3>
-              <div>
-                <p className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Genre</p>
-                <div className="inline-flex gap-1 rounded-full bg-sand p-1">
-                  {GENDERS.map((g) => <button key={g.id} type="button" aria-pressed={t.gender === g.id} onClick={() => setT({ gender: g.id as Targeting["gender"] })} className={cn("rounded-full px-4 py-2 text-[0.84375rem] font-medium transition-colors", t.gender === g.id ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>{g.label}</button>)}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Âge minimum" htmlFor="ageMin"><Select id="ageMin" value={t.ageMin} onChange={(e) => { const v = Number(e.target.value); setT({ ageMin: v, ageMax: Math.max(v, t.ageMax) }); }}>{AGE_BOUNDS.map((a) => <option key={a} value={a}>{a} ans</option>)}</Select></Field>
-                <Field label="Âge maximum" htmlFor="ageMax"><Select id="ageMax" value={t.ageMax} onChange={(e) => { const v = Number(e.target.value); setT({ ageMax: v, ageMin: Math.min(v, t.ageMin) }); }}>{AGE_BOUNDS.map((a) => <option key={a} value={a}>{a === 65 ? "65 ans et plus" : `${a} ans`}</option>)}</Select></Field>
-              </div>
-              <p className="text-xs text-muted">18 ans et plus uniquement.</p>
-            </div>
-
-            <div className="space-y-3 border-t border-line pt-6">
-              <div className="flex items-baseline justify-between"><h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold [font-family:var(--font-sans)]"><Heart className="size-4 text-rose" />Centres d&apos;intérêt</h3><span className="tnum text-xs text-muted">{t.interests.length} sélectionné{t.interests.length > 1 ? "s" : ""}</span></div>
-              {INTEREST_GROUPS.map((g) => {
-                const picked = g.items.filter((i) => t.interests.includes(i)).length;
-                return (
-                  <details key={g.group} className="group rounded-md bg-paper" open={picked > 0 || undefined}>
-                    <summary className="flex items-center justify-between gap-3 px-4 py-3 text-[0.84375rem] font-medium text-ink">
-                      {g.group}
-                      <span className="flex items-center gap-2">{picked > 0 && <span className="tnum rounded-full bg-forest px-2 py-px text-[11px] font-semibold text-white">{picked}</span>}<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></span>
-                    </summary>
-                    <div className="flex flex-wrap gap-1.5 px-4 pb-4">{g.items.map((i) => <Chip key={i} active={t.interests.includes(i)} disabled={!t.interests.includes(i) && t.interests.length >= 25} onClick={() => setT({ interests: toggle(t.interests, i) })}>{i}</Chip>)}</div>
-                  </details>
-                );
-              })}
-            </div>
-
-            <div className="border-t border-line pt-6">
-              <ToggleRow icon={<Users />} label="Recibler mes clients" htmlFor="custom-aud">
-                <Switch id="custom-aud" checked={t.customAudience.requested} onCheckedChange={(v) => setT({ customAudience: { ...t.customAudience, requested: v } })} />
-              </ToggleRow>
-            </div>
+    <div className="space-y-7">
+      <div className="space-y-4">
+        <h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold [font-family:var(--font-sans)]"><MapPin className="size-4 text-green" />Zone</h3>
+        <div>
+          <p className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Pays</p>
+          <div className="flex flex-wrap gap-1.5">{TARGET_COUNTRIES.map((c) => <Chip key={c.code} active={t.countries.includes(c.code)} onClick={() => { const countries = toggle(t.countries, c.code); const ok = new Set(countries.flatMap((x) => CITIES_BY_COUNTRY[x] ?? [])); setT({ countries: countries.length ? countries : t.countries, cities: t.cities.filter((x) => ok.has(x)) }); }}>{c.name}</Chip>)}</div>
+        </div>
+        {cities.length > 0 && (
+          <div>
+            <p className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Villes <span className="font-normal text-muted">— aucune = tout le pays</span></p>
+            <div className="flex flex-wrap gap-1.5">{cities.map(({ city }) => <Chip key={city} active={t.cities.includes(city)} onClick={() => setT({ cities: toggle(t.cities, city) })}>{city}</Chip>)}</div>
           </div>
         )}
       </div>
-    </div>
-  );
-}
 
-// ─────────────────────────── Étape 4 : budget et récapitulatif ───────────────────────────
+      <div className="space-y-4 border-t border-line pt-6">
+        <h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold [font-family:var(--font-sans)]"><Users className="size-4 text-sky" />Profil</h3>
+        <div>
+          <p className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Genre</p>
+          <div className="inline-flex gap-1 rounded-full bg-sand p-1">
+            {GENDERS.map((g) => <button key={g.id} type="button" aria-pressed={t.gender === g.id} onClick={() => setT({ gender: g.id as Targeting["gender"] })} className={cn("rounded-full px-4 py-2 text-[0.84375rem] font-medium transition-colors", t.gender === g.id ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")}>{g.label}</button>)}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Âge minimum" htmlFor="ageMin"><Select id="ageMin" value={t.ageMin} onChange={(e) => { const v = Number(e.target.value); setT({ ageMin: v, ageMax: Math.max(v, t.ageMax) }); }}>{AGE_BOUNDS.map((a) => <option key={a} value={a}>{a} ans</option>)}</Select></Field>
+          <Field label="Âge maximum" htmlFor="ageMax"><Select id="ageMax" value={t.ageMax} onChange={(e) => { const v = Number(e.target.value); setT({ ageMax: v, ageMin: Math.min(v, t.ageMin) }); }}>{AGE_BOUNDS.map((a) => <option key={a} value={a}>{a === 65 ? "65 ans et plus" : `${a} ans`}</option>)}</Select></Field>
+        </div>
+        <p className="text-xs text-muted">18 ans et plus uniquement.</p>
+      </div>
 
-function BudgetStep({ s, set, data, links, promo, setPromo, onTotal, onEdit }: StepProps & { data: EditorData; links: LinkedAsset[]; promo: string; setPromo: (v: string) => void; onTotal: (total: number | null) => void; onEdit: (step: number) => void }) {
-  const objective = getObjective(s.objective);
-  const quote = useQuote(s.id, { adBudget: s.adBudget, durationDays: s.durationDays ?? 0, serviceCode: s.serviceCode, platforms: s.platforms, promoCode: promo });
-  const baseFee = objective ? data.baseFees[objective.serviceCode] ?? data.limits.minServiceFee : data.limits.minServiceFee;
-  const t = s.targeting;
-  const visuals = links.filter((l) => l.role === "CREATIVE" || l.role === "PRODUCT_MEDIA").length;
-  const total = quote.quote?.total ?? null;
-  React.useEffect(() => { onTotal(total); }, [total, onTotal]);
+      <div className="space-y-3 border-t border-line pt-6">
+        <div className="flex items-baseline justify-between"><h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold [font-family:var(--font-sans)]"><Heart className="size-4 text-rose" />Centres d&apos;intérêt</h3><span className="tnum text-xs text-muted">{t.interests.length} sélectionné{t.interests.length > 1 ? "s" : ""}</span></div>
+        {INTEREST_GROUPS.map((g) => {
+          const picked = g.items.filter((i) => t.interests.includes(i)).length;
+          return (
+            <details key={g.group} className="group rounded-md bg-paper" open={picked > 0 || undefined}>
+              <summary className="flex items-center justify-between gap-3 px-4 py-3 text-[0.84375rem] font-medium text-ink">
+                {g.group}
+                <span className="flex items-center gap-2">{picked > 0 && <span className="tnum rounded-full bg-forest px-2 py-px text-[11px] font-semibold text-white">{picked}</span>}<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></span>
+              </summary>
+              <div className="flex flex-wrap gap-1.5 px-4 pb-4">{g.items.map((i) => <Chip key={i} active={t.interests.includes(i)} disabled={!t.interests.includes(i) && t.interests.length >= 25} onClick={() => setT({ interests: toggle(t.interests, i) })}>{i}</Chip>)}</div>
+            </details>
+          );
+        })}
+      </div>
 
-  const rows: { label: string; icon: React.ReactNode; value: string; step: number }[] = [
-    { label: "Objectif", icon: <Megaphone />, value: `${objective ? objectiveShort(objective) : "—"} · ${platformLabel(s.platforms)}`, step: 1 },
-    { label: "Annonce", icon: <ImageIcon />, value: `${s.business.name || "—"} · ${s.adCopy?.headline || "texte par notre équipe"} · ${visuals ? `${visuals} visuel${visuals > 1 ? "s" : ""}` : "visuels à créer"}`, step: 2 },
-    { label: "Audience", icon: <Users />, value: `${t.cities.length ? t.cities.slice(0, 3).join(", ") + (t.cities.length > 3 ? "…" : "") : t.countries.map((c) => TARGET_COUNTRIES.find((x) => x.code === c)?.name).join(", ")} · ${t.ageMin}–${t.ageMax === 65 ? "65+" : t.ageMax} ans · ${GENDERS.find((g) => g.id === t.gender)?.label}`, step: 3 },
-  ];
-
-  return (
-    <div className="space-y-7">
-        <Section icon={<Wallet />} title="Budget et durée">
-          <BudgetFields data={data} value={{ adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "", budgetSplit: s.budgetSplit, platforms: s.platforms }} onChange={set}
-            recommended={objective ? { daily: objective.config.recommendedDailyBudget, days: objective.config.recommendedDays } : null} />
-        </Section>
-
-        <Section icon={<Sparkles />} tone="violet" title="Formule">
-          <LevelPicker levels={data.levels} value={s.serviceCode} onChange={(serviceCode) => set({ serviceCode })} baseFee={baseFee} />
-        </Section>
-
-        <Section icon={<ListChecks />} tone="sky" title="Récapitulatif">
-          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
-            {rows.map((r) => (
-              <li key={r.label} className="flex items-center gap-3 px-4 py-3">
-                <span title={r.label} className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sand text-ink-soft [&_svg]:size-4">{r.icon}<span className="sr-only">{r.label}</span></span>
-                <span className="min-w-0 flex-1 truncate text-sm text-ink">{r.value}</span>
-                <Tip label="Modifier"><button type="button" onClick={() => onEdit(r.step)} aria-label={`Modifier : ${r.label}`} className="flex size-9 shrink-0 items-center justify-center rounded-full text-green hover:bg-green-soft"><Pencil className="size-4" /></button></Tip>
-              </li>
-            ))}
-          </ul>
-        </Section>
-
-        <section data-quote className="space-y-2.5">
-          <QuotePanel state={quote} promo={promo} onPromo={setPromo} />
-          <p className="text-[0.8125rem] leading-relaxed text-muted">Les résultats ne sont pas garantis.</p>
-        </section>
+      <div className="border-t border-line pt-6">
+        <ToggleRow icon={<Users />} label="Recibler mes clients" htmlFor="custom-aud">
+          <Switch id="custom-aud" checked={t.customAudience.requested} onCheckedChange={(v) => setT({ customAudience: { ...t.customAudience, requested: v } })} />
+        </ToggleRow>
+      </div>
     </div>
   );
 }
