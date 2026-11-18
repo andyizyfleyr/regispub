@@ -16,7 +16,7 @@ Permettre à une entreprise béninoise, même sans connaissance du marketing dig
 
 ## Deux parcours de commande
 
-- **« Je crée ma publicité »** : assistant en 4 étapes (objectif, annonce, audience, budget). Le brouillon est enregistré à chaque étape.
+- **« Je crée ma publicité »** : une seule page (où la montrer, que vendez-vous, budget), le reste est déjà réglé et reste modifiable. Le brouillon est enregistré quand le client quitte la page.
 - **« Je confie ma publicité à un expert »** : un brief d'une page, des fichiers, un budget. L'équipe prépare tout et soumet les créations.
 
 Dans les deux cas, l'équipe vérifie la campagne avant diffusion.

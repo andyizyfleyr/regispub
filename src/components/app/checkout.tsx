@@ -6,7 +6,6 @@ import { ArrowRight, CircleAlert, LoaderCircle, RefreshCw, ShieldCheck, Smartpho
 import { toast } from "sonner";
 import { OperatorChip } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import { formatPhone, guessBeninOperator, normalizeBeninPhone, type OperatorCode } from "@/lib/phone";
@@ -18,17 +17,21 @@ export type OpenPayment = { id: string; operator: OperatorCode; phone: string; e
 
 const newKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`);
 
-/** Parcours de paiement : opérateur → numéro → confirmation → attente de la validation sur le téléphone. */
-export function Checkout({ orderId, total, operators, defaultPhone, simulation, open, lastFailure, promoCode, canCancel, allowPromo = true }: {
+/**
+ * Paiement en un geste : le numéro est déjà rempli, l'opérateur est reconnu d'après le numéro, il reste à toucher « Payer ».
+ * La confirmation se fait sur le téléphone du client, avec son code secret : aucune seconde confirmation à l'écran.
+ */
+export function Checkout({ orderId, total, operators, defaultPhone, simulation, open, lastFailure, promoCode, canCancel, allowPromo = true, children }: {
   orderId: string; total: number; operators: Operator[]; defaultPhone: string; simulation: boolean; open: OpenPayment | null; lastFailure: string | null; promoCode: string | null; canCancel: boolean;
   /** Les codes promo portent sur les frais de prestation d'une publicité : ils ne s'appliquent pas aux achats d'abonnés ou de J'aime. */
   allowPromo?: boolean;
+  /** Détail du prix, affiché sous le bouton de paiement. */
+  children?: React.ReactNode;
 }) {
   const router = useRouter();
   const [operator, setOperator] = React.useState<OperatorCode | null>(null);
   const [phone, setPhone] = React.useState(defaultPhone);
   const [touched, setTouched] = React.useState(false);
-  const [confirm, setConfirm] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState<OpenPayment | null>(open);
@@ -50,7 +53,6 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
     setError(null);
     const res = await startPaymentAction({ orderId, operator, phone, idempotencyKey: key.current });
     setBusy(false);
-    setConfirm(false);
     if (!res.ok) { setError(res.error); key.current = newKey(); router.refresh(); return; }
     const redirectUrl = res.data.redirectUrl as string | null;
     if (redirectUrl) { window.location.assign(redirectUrl); return; }
@@ -61,60 +63,61 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
   if (pending) return <Waiting payment={pending} operators={operators} simulation={simulation} onDone={() => { key.current = newKey(); setPending(null); router.refresh(); }} />;
 
   return (
-    <div className="space-y-5">
-      {simulation && <Notice tone="warn" title="Mode simulation">Aucun débit réel. Numéro finissant par 00 = refusé, 99 = sans réponse.</Notice>}
+    <div className="space-y-4">
+      <div className="bg-brand relative overflow-hidden rounded-[22px] px-4 py-4 text-white shadow-lift sm:rounded-[28px] sm:px-6 sm:py-5">
+        <div aria-hidden className="bg-grid absolute inset-0 opacity-60" />
+        <div className="relative flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[0.8125rem] text-white/70">Total à payer</p>
+            <p className="tnum font-display text-[1.875rem] font-semibold leading-none sm:text-[2.25rem]">{formatFcfa(total)}</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">{operators.map((o) => <OperatorChip key={o.code} operator={o.code} />)}</div>
+        </div>
+      </div>
+
       {(error ?? lastFailure) && <Notice tone="danger" title="Le paiement n'a pas abouti">{error ?? lastFailure} Rien n&apos;a été encaissé. Réessayez.</Notice>}
 
-      <fieldset>
-        <legend className="mb-2 text-[0.8125rem] font-medium text-ink-soft">Opérateur</legend>
-        <div className="grid grid-cols-3 gap-2.5">
-          {operators.map((o) => (
-            <button key={o.code} type="button" aria-pressed={operator === o.code} onClick={() => { setOperator(o.code); setTouched(true); }}
-              className={cn("relative flex flex-col items-center gap-2 rounded-xl border bg-surface px-2 py-4 text-center transition-[border-color,box-shadow,background-color]", operator === o.code ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card hover:border-line-strong")}>
-              <span aria-hidden className={cn("absolute right-2 top-2 flex size-5 items-center justify-center rounded-full border", operator === o.code ? "border-green bg-green" : "border-line-strong")}>{operator === o.code && <span className="size-2 rounded-full bg-white" />}</span>
-              <OperatorChip operator={o.code} />
-              <span className="text-[0.8125rem] font-medium leading-tight text-ink">{o.label}</span>
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      <div className="space-y-4 rounded-[22px] border border-line/70 bg-surface p-4 shadow-card sm:rounded-[28px] sm:p-6">
+        <Field label="Votre numéro Mobile Money" htmlFor="pay-phone" hint={normalized ? formatPhone(normalized.e164) : "10 chiffres"} error={phone.replace(/\D/g, "").length >= 10 && !normalized ? "Numéro béninois invalide." : undefined}>
+          <Input id="pay-phone" type="tel" inputMode="tel" autoComplete="tel" className="tnum text-base" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01 97 00 00 00" />
+        </Field>
 
-      <Field label="Numéro Mobile Money" htmlFor="pay-phone" hint={normalized ? formatPhone(normalized.e164) : "10 chiffres"} error={phone.replace(/\D/g, "").length >= 10 && !normalized ? "Numéro béninois invalide." : undefined}>
-        <Input id="pay-phone" type="tel" inputMode="tel" autoComplete="tel" className="tnum text-base" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01 97 00 00 00" />
-      </Field>
+        <fieldset>
+          <legend className="mb-2 text-[0.84375rem] font-medium text-ink">Opérateur</legend>
+          <div className="grid grid-cols-3 gap-2">
+            {operators.map((o) => (
+              <button key={o.code} type="button" aria-pressed={operator === o.code} onClick={() => { setOperator(o.code); setTouched(true); }}
+                className={cn("flex flex-col items-center gap-1.5 rounded-xl border bg-surface px-1.5 py-2.5 text-center transition-[border-color,box-shadow,background-color]", operator === o.code ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line hover:border-line-strong")}>
+                <OperatorChip operator={o.code} />
+                <span className="text-[0.75rem] font-medium leading-tight text-ink">{o.label}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
 
-      <Button type="button" size="lg" variant="accent" className="w-full" disabled={!operator || !normalized} onClick={() => setConfirm(true)}>Payer {formatFcfa(total)} <ArrowRight /></Button>
-      <p className="flex items-start gap-2 text-xs text-muted"><ShieldCheck className="mt-px size-4 shrink-0 text-green" />Confirmé par l&apos;opérateur. Aucun code secret conservé.</p>
+        <Button type="button" size="lg" variant="accent" className="w-full" disabled={!operator || !normalized || busy} aria-busy={busy} onClick={pay}>
+          {busy ? <LoaderCircle className="animate-spin" /> : null}{busy ? "Envoi…" : <>Payer {formatFcfa(total)} <ArrowRight /></>}
+        </Button>
+        <p className="flex items-start gap-2 text-xs text-muted"><ShieldCheck className="mt-px size-4 shrink-0 text-green" />Vous validez ensuite sur votre téléphone avec votre code secret. Nous ne le voyons jamais.</p>
+        {simulation && <p className="rounded-md bg-marigold-soft px-3 py-2 text-xs text-ink-soft"><span className="font-semibold">Mode simulation :</span> aucun débit réel. Numéro finissant par 00 = refusé, 99 = sans réponse.</p>}
+      </div>
 
-{allowPromo && (
-            <details className="rounded-lg border border-line bg-surface px-4 py-3 text-sm">
-        <summary className="cursor-pointer font-medium text-ink-soft">Code promo</summary>
-        <div className="mt-3 flex gap-2">
-          <Input value={promo} onChange={(e) => setPromo(e.target.value.toUpperCase())} className="uppercase" placeholder="CODE" maxLength={30} aria-label="Code promotionnel" />
-          <Button type="button" variant="outline" onClick={async () => { const res = await applyPromoAction(orderId, promo); if (!res.ok) toast.error(res.error); else { toast.success(promo ? "Code appliqué." : "Code retiré."); router.refresh(); } }}>Appliquer</Button>
-        </div>
-      </details>
+      {children}
+
+      {allowPromo && (
+        <details className="rounded-lg border border-line bg-surface px-4 py-3 text-sm">
+          <summary className="cursor-pointer font-medium text-ink-soft">Code promo</summary>
+          <div className="mt-3 flex gap-2">
+            <Input value={promo} onChange={(e) => setPromo(e.target.value.toUpperCase())} className="uppercase" placeholder="CODE" maxLength={30} aria-label="Code promotionnel" />
+            <Button type="button" variant="outline" onClick={async () => { const res = await applyPromoAction(orderId, promo); if (!res.ok) toast.error(res.error); else { toast.success(promo ? "Code appliqué." : "Code retiré."); router.refresh(); } }}>Appliquer</Button>
+          </div>
+        </details>
       )}
       {canCancel && (
         <button type="button" className="text-[0.8125rem] text-muted underline-offset-4 hover:text-clay hover:underline" onClick={async () => { if (!window.confirm("Annuler cette commande ?")) return; const res = await cancelOrderAction(orderId); if (!res.ok) toast.error(res.error); else { toast.success("Commande annulée."); router.push("/app/paiements"); router.refresh(); } }}>
           Annuler la commande
         </button>
       )}
-
-      <Dialog open={confirm} onOpenChange={(o) => !busy && setConfirm(o)}>
-        <DialogContent title="Confirmer le paiement" side="bottom">
-          <dl className="space-y-3 text-sm">
-            <div className="flex items-center justify-between"><dt className="text-muted">Montant</dt><dd className="tnum font-display text-2xl font-semibold">{formatFcfa(total)}</dd></div>
-            <div className="flex items-center justify-between"><dt className="text-muted">Opérateur</dt><dd className="flex items-center gap-2 font-medium">{operator && <OperatorChip operator={operator} />}{operators.find((o) => o.code === operator)?.label}</dd></div>
-            <div className="flex items-center justify-between"><dt className="text-muted">Numéro</dt><dd className="tnum font-medium">{normalized ? formatPhone(normalized.e164) : ""}</dd></div>
-          </dl>
-          <p className="mt-4 rounded-md bg-sand px-3 py-2.5 text-[0.8125rem] text-ink-soft">Validez ensuite sur votre téléphone avec votre code secret.</p>
-          <div className="mt-5 flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" disabled={busy} onClick={() => setConfirm(false)}>Modifier</Button>
-            <Button type="button" variant="accent" className="flex-1" disabled={busy} onClick={pay}>{busy && <LoaderCircle className="animate-spin" />}{busy ? "Envoi…" : "Payer"}</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
 import {
-  Bell, ChartColumn, ChevronsUpDown, CreditCard, Ellipsis, FolderKanban, Headset, House, LifeBuoy, LogOut, Megaphone, Menu, PlugZap, Plus,
+  Bell, ChartColumn, ChevronDown, ChevronsUpDown, CreditCard, Ellipsis, FolderKanban, Headset, House, LifeBuoy, LogOut, Megaphone, PlugZap, Plus,
   ReceiptText, ScrollText, Send, Settings, ShieldCheck, Tags, TicketPercent, TrendingUp, UserRound, Users, Wallet, type LucideIcon,
 } from "lucide-react";
 import { Logo } from "@/components/icons";
@@ -14,7 +14,7 @@ import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { cn, initials } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
 
-type NavItem = { id: string; href: string; label: string; short?: string; icon: LucideIcon; exact?: boolean; group?: string };
+type NavItem = { id: string; href: string; label: string; short?: string; icon: LucideIcon; exact?: boolean; /** Entrée peu utilisée, rangée dans le volet replié du menu. */ more?: boolean };
 
 const CLIENT_NAV: NavItem[] = [
   { id: "home", href: "/app", label: "Accueil", icon: House, exact: true },
@@ -25,22 +25,23 @@ const CLIENT_NAV: NavItem[] = [
   { id: "expert", href: "/app/expert", label: "Confier à un expert", icon: Headset },
 ];
 
+/** Le quotidien de l'équipe d'abord ; les réglages, plus rares, sont rangés sous « Réglages et autres ». */
 const STAFF_NAV: NavItem[] = [
-  { id: "home", href: "/gestion", label: "Tableau de bord", icon: House, exact: true, group: "Activité" },
-  { id: "campaigns", href: "/gestion/campagnes", label: "Campagnes", icon: FolderKanban, group: "Activité" },
-  { id: "boosts", href: "/gestion/boosts", label: "Abonnés et J'aime", icon: TrendingUp, group: "Activité" },
-  { id: "orders", href: "/gestion/commandes", label: "Commandes", icon: ReceiptText, group: "Activité" },
-  { id: "payments", href: "/gestion/paiements", label: "Paiements", icon: CreditCard, group: "Activité" },
-  { id: "tickets", href: "/gestion/reclamations", label: "Réclamations", icon: LifeBuoy, group: "Activité" },
-  { id: "reports", href: "/gestion/rapports", label: "Rapports", icon: ChartColumn, group: "Activité" },
-  { id: "users", href: "/gestion/utilisateurs", label: "Clients et entreprises", icon: Users, group: "Comptes" },
-  { id: "staff", href: "/gestion/equipe", label: "Collaborateurs", icon: ShieldCheck, group: "Comptes" },
-  { id: "services", href: "/gestion/services", label: "Prestations et tarifs", icon: Tags, group: "Catalogue" },
-  { id: "promos", href: "/gestion/promos", label: "Codes promotionnels", icon: TicketPercent, group: "Catalogue" },
-  { id: "notifications", href: "/gestion/notifications", label: "Notifications", icon: Send, group: "Plateforme" },
-  { id: "integrations", href: "/gestion/integrations", label: "Intégrations", icon: PlugZap, group: "Plateforme" },
-  { id: "settings", href: "/gestion/parametres", label: "Paramètres", icon: Settings, group: "Plateforme" },
-  { id: "audit", href: "/gestion/journal", label: "Journal d'audit", icon: ScrollText, group: "Plateforme" },
+  { id: "home", href: "/gestion", label: "À faire", icon: House, exact: true },
+  { id: "campaigns", href: "/gestion/campagnes", label: "Campagnes", icon: FolderKanban },
+  { id: "boosts", href: "/gestion/boosts", label: "Abonnés et J'aime", short: "Abonnés", icon: TrendingUp },
+  { id: "payments", href: "/gestion/paiements", label: "Paiements", icon: CreditCard },
+  { id: "tickets", href: "/gestion/reclamations", label: "Réclamations", icon: LifeBuoy },
+  { id: "users", href: "/gestion/utilisateurs", label: "Clients", icon: Users },
+  { id: "orders", href: "/gestion/commandes", label: "Commandes", icon: ReceiptText, more: true },
+  { id: "reports", href: "/gestion/rapports", label: "Rapports", icon: ChartColumn, more: true },
+  { id: "services", href: "/gestion/services", label: "Prestations et tarifs", icon: Tags, more: true },
+  { id: "promos", href: "/gestion/promos", label: "Codes promo", icon: TicketPercent, more: true },
+  { id: "staff", href: "/gestion/equipe", label: "Équipe", icon: ShieldCheck, more: true },
+  { id: "notifications", href: "/gestion/notifications", label: "Notifications", icon: Send, more: true },
+  { id: "integrations", href: "/gestion/integrations", label: "Intégrations", icon: PlugZap, more: true },
+  { id: "settings", href: "/gestion/parametres", label: "Paramètres", icon: Settings, more: true },
+  { id: "audit", href: "/gestion/journal", label: "Journal", icon: ScrollText, more: true },
 ];
 
 const EXTRA_TITLES: [RegExp, string][] = [
@@ -52,30 +53,40 @@ function isActive(pathname: string, item: NavItem) {
   return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
+function NavLink({ item, active, onNavigate }: { item: NavItem; active: boolean; onNavigate?: () => void }) {
+  return (
+    <Link
+      href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
+      className={cn(
+        "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-[0.90625rem] transition-colors",
+        active ? "bg-forest font-semibold text-white shadow-[0_8px_18px_-10px_rgb(11_42_31/0.7)]" : "text-ink-soft hover:bg-sand hover:text-ink",
+      )}
+    >
+      <item.icon className={cn("size-[1.125rem] shrink-0 transition-colors", active ? "text-marigold" : "text-muted group-hover:text-ink-soft")} />
+      {item.label}
+    </Link>
+  );
+}
+
 function NavLinks({ items, pathname, onNavigate }: { items: NavItem[]; pathname: string; onNavigate?: () => void }) {
-  let lastGroup: string | undefined;
+  const main = items.filter((i) => !i.more);
+  const more = items.filter((i) => i.more);
   return (
     <nav className="flex flex-col gap-0.5">
-      {items.map((item) => {
-        const active = isActive(pathname, item);
-        const heading = item.group && item.group !== lastGroup ? item.group : null;
-        lastGroup = item.group;
-        return (
-          <React.Fragment key={item.id}>
-            {heading && <p className="eyebrow mb-1.5 mt-5 px-3 first:mt-0">{heading}</p>}
-            <Link
-              href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
-              className={cn(
-                "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-[0.90625rem] transition-colors",
-                active ? "bg-forest font-semibold text-white shadow-[0_8px_18px_-10px_rgb(11_42_31/0.7)]" : "text-ink-soft hover:bg-sand hover:text-ink",
-              )}
-            >
-              <item.icon className={cn("size-[1.125rem] shrink-0 transition-colors", active ? "text-marigold" : "text-muted group-hover:text-ink-soft")} />
-              {item.label}
-            </Link>
-          </React.Fragment>
-        );
-      })}
+      {main.map((item) => <NavLink key={item.id} item={item} active={isActive(pathname, item)} onNavigate={onNavigate} />)}
+      {more.length > 0 && (
+        // Ouvert d'office quand la page affichée s'y trouve, pour ne jamais perdre sa place dans le menu.
+        <details className="group/more mt-3 border-t border-line pt-3" open={more.some((i) => isActive(pathname, i)) || undefined}>
+          <summary className="flex cursor-pointer list-none items-center gap-3 rounded-md px-3 py-2.5 text-[0.90625rem] text-ink-soft transition-colors hover:bg-sand hover:text-ink [&::-webkit-details-marker]:hidden">
+            <Settings className="size-[1.125rem] shrink-0 text-muted" />
+            <span className="flex-1">Réglages et autres</span>
+            <ChevronDown className="size-4 shrink-0 text-muted transition-transform group-open/more:rotate-180" />
+          </summary>
+          <div className="mt-0.5 flex flex-col gap-0.5">
+            {more.map((item) => <NavLink key={item.id} item={item} active={isActive(pathname, item)} onNavigate={onNavigate} />)}
+          </div>
+        </details>
+      )}
     </nav>
   );
 }
@@ -129,6 +140,9 @@ export function AppShell({ area, user, unread, allowed, children }: {
   const client = area === "client";
   const all = client ? CLIENT_NAV : STAFF_NAV.filter((i) => !allowed || allowed.includes(i.id));
   const home = client ? "/app" : "/gestion";
+  // Sur téléphone, l'équipe a ses quatre pages du quotidien sous le pouce ; le reste est dans « Plus ».
+  const staffBar = client ? [] : all.filter((i) => !i.more).slice(0, 4);
+  const staffElsewhere = !client && !staffBar.some((i) => isActive(pathname, i));
   const notifHref = client ? "/app/notifications" : "/gestion/notifications?vue=miennes";
   // L'assistant de création occupe tout l'écran sur mobile : la barre du bas y est masquée.
   const immersive = /^\/app\/(creer|expert)\/.+/.test(pathname);
@@ -170,15 +184,6 @@ export function AppShell({ area, user, unread, allowed, children }: {
       <div className="flex min-w-0 flex-col">
         <header className="no-print sticky top-0 z-30 flex h-14 items-center sm:h-16 justify-between gap-3 bg-canvas/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-2">
-            {!client && (
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger className="flex size-9 items-center justify-center rounded-full bg-surface text-ink-soft shadow-card sm:size-10 lg:hidden" aria-label="Ouvrir le menu"><Menu className="size-5" /></DialogTrigger>
-                <DialogContent title="Menu" side="left">
-                  <NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} />
-                  <div className="mt-4 border-t border-line pt-4"><UserMenu user={user} area={area} /></div>
-                </DialogContent>
-              </Dialog>
-            )}
             <Link href={home} className="lg:hidden"><Logo /></Link>
             <p className="hidden min-w-0 items-center gap-2 text-[0.84375rem] text-muted lg:flex">
               <span>{client ? "Espace annonceur" : "Espace de gestion"}</span>
@@ -189,7 +194,7 @@ export function AppShell({ area, user, unread, allowed, children }: {
           {bell}
         </header>
 
-        <main className={cn("mx-auto w-full flex-1 px-4 pb-8 pt-2 sm:px-6 lg:px-8 lg:pb-10 lg:pt-4", client ? "max-w-4xl" : "max-w-6xl", client && !immersive && "pb-28 lg:pb-10")}>{children}</main>
+        <main className={cn("mx-auto w-full flex-1 px-4 pb-8 pt-2 sm:px-6 lg:px-8 lg:pb-10 lg:pt-4", client ? "max-w-4xl" : "max-w-6xl", !immersive && "pb-28 lg:pb-10")}>{children}</main>
 
         {client && !immersive && <PullToRefresh />}
 
@@ -208,6 +213,22 @@ export function AppShell({ area, user, unread, allowed, children }: {
                 <DialogContent title="Menu" side="bottom">
                   <div className="mb-3">{createButton(() => setOpen(false))}</div>
                   <NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} />
+                </DialogContent>
+              </Dialog>
+            </div>
+          </nav>
+        )}
+        {!client && (
+          <nav className="no-print pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden" aria-label="Navigation principale">
+            <div className="pointer-events-auto mx-auto grid max-w-md auto-cols-fr grid-flow-col items-center rounded-[24px] border border-line/70 bg-surface/95 px-1.5 py-1 shadow-pop backdrop-blur-xl">
+              {staffBar.map((item) => <BottomLink key={item.id} item={item} active={isActive(pathname, item)} />)}
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger className={cn("flex flex-col items-center gap-0.5 py-1 text-[10.5px]", staffElsewhere ? "font-semibold text-forest" : "font-medium text-muted")}>
+                  <span className={cn("flex h-7 w-11 items-center justify-center rounded-full", staffElsewhere && "bg-forest text-marigold")}><Ellipsis className="size-5" /></span>Plus
+                </DialogTrigger>
+                <DialogContent title="Menu" side="bottom">
+                  <NavLinks items={all} pathname={pathname} onNavigate={() => setOpen(false)} />
+                  <div className="mt-4 border-t border-line pt-4"><UserMenu user={user} area={area} /></div>
                 </DialogContent>
               </Dialog>
             </div>

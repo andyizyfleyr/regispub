@@ -41,7 +41,8 @@ export async function createCampaignAction(mode: "SELF_SERVICE" | "EXPERT", obje
   const campaign = await db.campaign.create({
     data: {
       reference: makeReference("CMP"), userId: user.id, mode: mode === "EXPERT" ? "EXPERT" : "SELF_SERVICE", name: mode === "EXPERT" ? "Campagne confiée à un expert" : "Nouvelle campagne",
-      businessId: business?.id ?? null, destinationWhatsapp: business?.whatsapp ?? null, objective: obj?.code ?? null,
+      businessId: business?.id ?? null, // Le numéro donné à l'inscription sert de numéro WhatsApp par défaut : le client le corrige s'il en utilise un autre.
+      destinationWhatsapp: business?.whatsapp ?? user.phone ?? null, objective: obj?.code ?? null,
       // Présélection : les plateformes de l'objectif, sinon Facebook et Instagram (une seule famille, sans supplément).
       platforms: mode === "EXPERT" ? [] : obj && obj.platforms.length < 3 ? obj.platforms : ["FACEBOOK", "INSTAGRAM"],
       serviceCode: mode === "EXPERT" ? "full_management" : null, startDate: addDays(todayUtc(), 2),
@@ -214,7 +215,7 @@ export async function detachAssetAction(campaignId: string, linkId: string) {
 }
 
 /** Devis affiché à l'étape 7. Calculé uniquement côté serveur à partir du catalogue et des paramètres. */
-export async function previewQuoteAction(campaignId: string, input: { adBudget: number; durationDays: number; serviceCode: string | null; platforms?: PlatformCode[]; promoCode?: string }) {
+export async function previewQuoteAction(campaignId: string, input: { adBudget: number; durationDays: number; serviceCode: string | null; platforms?: PlatformCode[]; promoCode?: string; objective?: string | null }) {
   return safeAction(async () => {
     const user = await assertUser();
     const campaign = await db.campaign.findFirst({ where: { id: campaignId, userId: user.id } });
@@ -228,7 +229,7 @@ export async function previewQuoteAction(campaignId: string, input: { adBudget: 
     }
     try {
       const quote = await quoteCampaign({
-        ...campaign, platforms: (input.platforms ?? campaign.platforms) as PlatformCode[], adBudget: Math.round(Number(input.adBudget) || 0),
+        ...campaign, objective: getObjective(input.objective)?.code ?? campaign.objective, platforms: (input.platforms ?? campaign.platforms) as PlatformCode[], adBudget: Math.round(Number(input.adBudget) || 0),
         durationDays: Math.round(Number(input.durationDays) || 0), serviceCode: input.serviceCode,
       }, promo);
       return { quote, promoError, error: null as string | null };

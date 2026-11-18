@@ -12,7 +12,7 @@ import { formatPhone } from "@/lib/phone";
 import { formatDate, formatFcfa } from "@/lib/utils";
 import { setUserStatusAction } from "@/server/actions/staff-admin";
 
-export const metadata: Metadata = { title: "Clients et entreprises" };
+export const metadata: Metadata = { title: "Clients" };
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string; etat?: string }> }) {
   const actor = await requirePermission("user.view");
@@ -35,7 +35,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const base = "/gestion/utilisateurs";
   return (
     <>
-      <PageHeader title="Clients et entreprises" />
+      <PageHeader title="Clients" />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <SearchForm action={base} q={q} placeholder="Nom, e-mail, téléphone, entreprise…" hidden={{ etat: params.etat }} />
         <FilterChips current={suspended ? "suspendus" : "tous"} items={[{ id: "tous", label: "Tous", href: hrefWith(base, params, { etat: undefined, page: undefined }) }, { id: "suspendus", label: "Suspendus", href: hrefWith(base, params, { etat: "suspendus", page: undefined }) }]} />
