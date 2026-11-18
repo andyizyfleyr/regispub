@@ -165,23 +165,55 @@ describe("comptes du client sur les réseaux", () => {
   });
 });
 
-describe("audience de départ et garde-fous (sans IA)", () => {
-  it("propose une audience selon le secteur et la ville", async () => {
-    const { defaultAudience } = await import("@/lib/catalog/audience-defaults");
-    const { INTEREST_GROUPS, CUSTOMER_CATEGORIES } = await import("@/lib/catalog/targeting");
-    const known = new Set(INTEREST_GROUPS.flatMap((g) => g.items));
-    const beauty = defaultAudience({ sector: "Beauté et cosmétiques", city: "Cotonou" });
-    expect(beauty.cities).toEqual(["Cotonou"]);
-    expect(beauty.gender).toBe("FEMALE");
-    expect(beauty.ageMin).toBeLessThan(beauty.ageMax);
-    expect(beauty.interests.length).toBeGreaterThan(0);
-    expect(beauty.interests.every((i) => known.has(i))).toBe(true);
-    expect(beauty.categories.every((c) => CUSTOMER_CATEGORIES.includes(c))).toBe(true);
-    const unknown = defaultAudience({ sector: "Secteur inconnu" });
-    expect(unknown.cities).toEqual([]);
-    expect(unknown.gender).toBe("ALL");
+describe("ce que le client remplit lui-même", () => {
+  const base = {
+    name: "Ma campagne", platforms: ["FACEBOOK"] as ("FACEBOOK" | "INSTAGRAM" | "TIKTOK")[], objective: "notoriete", serviceCode: null, adBudget: 20000,
+    durationDays: 5, startDate: new Date(Date.now() + 3 * 86_400_000), mode: "SELF_SERVICE" as const, brief: null,
+    adCopy: { headline: "Robes en wax sur mesure", body: "Des robes cousues main, livrées à Cotonou en 48 h.", cta: "" } as unknown,
+  };
+
+  it("accepte une publicité complète sur un seul réseau", async () => {
+    const { campaignMissing } = await import("@/lib/campaigns/missing");
+    const { getObjective, OBJECTIVES } = await import("@/lib/catalog/objectives");
+    const objective = OBJECTIVES.find((o) => o.platforms.includes("FACEBOOK"))!;
+    expect(getObjective(objective.code)).toBeTruthy();
+    expect(campaignMissing({ ...base, objective: objective.code })).toEqual([]);
   });
 
+  it("refuse deux réseaux à la fois, et aucun réseau", async () => {
+    const { campaignMissing, ONE_NETWORK } = await import("@/lib/campaigns/missing");
+    const { OBJECTIVES } = await import("@/lib/catalog/objectives");
+    const objective = OBJECTIVES.find((o) => o.platforms.includes("FACEBOOK") && o.platforms.includes("INSTAGRAM"))!;
+    expect(campaignMissing({ ...base, objective: objective.code, platforms: ["FACEBOOK", "INSTAGRAM"] })).toContain(ONE_NETWORK);
+    expect(campaignMissing({ ...base, objective: objective.code, platforms: [] })).toContain("Choisissez le réseau de votre publicité.");
+  });
+
+  it("demande le titre puis le texte, sans description du produit", async () => {
+    const { adCopyIssue, campaignMissing } = await import("@/lib/campaigns/missing");
+    expect(adCopyIssue(null)).toBe("Écrivez le titre de votre annonce.");
+    expect(adCopyIssue({ headline: "  ", body: "Un texte assez long pour passer." })).toBe("Écrivez le titre de votre annonce.");
+    expect(adCopyIssue({ headline: "Robes en wax", body: "Trop court" })).toMatch(/texte de votre annonce/);
+    expect(adCopyIssue(base.adCopy)).toBeNull();
+    const { OBJECTIVES } = await import("@/lib/catalog/objectives");
+    const objective = OBJECTIVES.find((o) => o.platforms.includes("FACEBOOK"))!;
+    expect(campaignMissing({ ...base, objective: objective.code, adCopy: null })).toEqual(["Écrivez le titre de votre annonce."]);
+    // En mode expert, c'est l'équipe qui écrit : seul le besoin est demandé.
+    expect(campaignMissing({ ...base, objective: objective.code, adCopy: null, mode: "EXPERT", brief: "Je veux plus de clients pour ma boutique." })).toEqual([]);
+  });
+
+  it("ne remplit rien à la place du client", async () => {
+    const { campaignMissing } = await import("@/lib/campaigns/missing");
+    const { EMPTY_TARGETING } = await import("@/lib/catalog/targeting");
+    const { PLATFORM_CHOICES } = await import("@/lib/catalog/platforms");
+    expect(EMPTY_TARGETING.countries).toEqual([]);
+    expect(EMPTY_TARGETING.interests).toEqual([]);
+    expect(PLATFORM_CHOICES.every((c) => c.platforms.length === 1)).toBe(true);
+    const missing = campaignMissing({ ...base, objective: null, platforms: [], adCopy: null, adBudget: 0, durationDays: null, startDate: null });
+    expect(missing).toHaveLength(6);
+  });
+});
+
+describe("garde-fous (sans IA)", () => {
   it("signale les formulations refusées par les plateformes", async () => {
     const { policyWarnings } = await import("@/lib/campaigns/policy");
     expect(policyWarnings("Résultat garanti à 100 %")).toHaveLength(1);

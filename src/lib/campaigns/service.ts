@@ -4,13 +4,13 @@ import { DomainError } from "@/lib/errors";
 import "server-only";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
-import { getObjective, unsupportedPlatforms } from "@/lib/catalog/objectives";
-import { PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
+import { campaignMissing, type QuotableCampaign } from "@/lib/campaigns/missing";
+import type { PlatformCode } from "@/lib/catalog/platforms";
 import { loadSettings } from "@/lib/settings";
 import { notify } from "@/lib/notifications/service";
 import { resolvePromo } from "@/lib/payments/service";
 import { computeCampaignQuote, computeServiceQuote, QuoteError, type PromoInput, type Quote, type ServicePrice } from "@/lib/pricing/quote";
-import { makeReference, todayUtc } from "@/lib/utils";
+import { makeReference } from "@/lib/utils";
 import type { SessionUser } from "@/lib/auth/session";
 import { canTransition, STATUS_META, type CampaignStatusName } from "./status";
 
@@ -18,28 +18,7 @@ export async function loadServicePrices(): Promise<ServicePrice[]> {
   return db.service.findMany({ select: { code: true, name: true, kind: true, fee: true, active: true } });
 }
 
-type QuotableCampaign = {
-  name: string; platforms: PlatformCode[]; objective: string | null; serviceCode: string | null; adBudget: number;
-  durationDays: number | null; startDate: Date | null; mode: "SELF_SERVICE" | "EXPERT"; productDescription: string | null; brief: string | null;
-};
-
-/** Éléments manquants avant de pouvoir passer commande (liste vide = campagne complète). */
-export function campaignMissing(c: QuotableCampaign): string[] {
-  const missing: string[] = [];
-  if (!c.platforms.length) missing.push("Choisissez au moins une plateforme.");
-  const objective = getObjective(c.objective);
-  if (!objective) missing.push("Choisissez un objectif publicitaire.");
-  else {
-    const bad = unsupportedPlatforms(objective, c.platforms);
-    if (bad.length === c.platforms.length) missing.push(`L'objectif « ${objective.label} » n'est pas disponible sur ${bad.map((p) => PLATFORMS[p].label).join(", ")}.`);
-  }
-  if (c.mode === "EXPERT" ? !c.brief?.trim() : !c.productDescription?.trim()) missing.push(c.mode === "EXPERT" ? "Décrivez votre besoin." : "Décrivez votre produit ou service.");
-  if (!c.adBudget) missing.push("Définissez votre budget publicitaire.");
-  if (!c.durationDays) missing.push("Définissez la durée de la campagne.");
-  if (!c.startDate) missing.push("Choisissez une date de début.");
-  else if (c.startDate < todayUtc()) missing.push("La date de début est passée : choisissez une nouvelle date.");
-  return missing;
-}
+export { campaignMissing };
 
 export async function quoteCampaign(c: QuotableCampaign, promo?: PromoInput | null): Promise<Quote> {
   const [services, settings] = await Promise.all([loadServicePrices(), loadSettings()]);

@@ -11,7 +11,7 @@ import { Field, Input } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import type { EditorData } from "@/lib/campaigns/editor-data";
 import { OBJECTIVE_CATEGORIES, OBJECTIVES, objectiveShort, type Objective, type ObjectiveCategory } from "@/lib/catalog/objectives";
-import { platformFamilies, PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
+import { PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import type { Quote } from "@/lib/pricing/quote";
 import { cn, formatFcfa } from "@/lib/utils";
 import { TILE_TONES, toneAt } from "@/components/ui/tile";
@@ -64,26 +64,23 @@ export function ChoiceRow({ active, onClick, children, leading, multiple, disabl
 }
 
 /** Choix des plateformes : une ou plusieurs, en un geste. */
-export function PlatformPicker({ value, onChange, extraFee }: { value: PlatformCode[]; onChange: (p: PlatformCode[]) => void; extraFee?: number }) {
-  const toggle = (p: PlatformCode) => onChange(PLATFORM_CODES.filter((x) => (x === p ? !value.includes(p) : value.includes(x))));
-  const families = platformFamilies(value).length;
+/** Choix du réseau : un seul à la fois, une publicité se lance sur un réseau. */
+export function PlatformPicker({ value, onChange, allowed }: { value: PlatformCode | null; onChange: (p: PlatformCode) => void; allowed?: PlatformCode[] }) {
   return (
-    <div>
-      <div className="grid grid-cols-3 gap-2.5">
-        {PLATFORM_CODES.map((p) => {
-          const active = value.includes(p);
-          return (
-            <button key={p} type="button" onClick={() => toggle(p)} aria-pressed={active}
-              className={cn("relative flex flex-col items-center rounded-xl border bg-surface px-2 py-4 text-center transition-[border-color,box-shadow,background-color] sm:px-4 sm:py-5",
-                active ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card hover:border-line-strong hover:shadow-lift")}>
-              <span aria-hidden className={cn("absolute right-2 top-2 flex size-5 items-center justify-center rounded-[6px] border transition-colors", active ? "border-green bg-green text-white" : "border-line-strong bg-surface text-transparent")}><Check className="size-3" strokeWidth={3} /></span>
-              <PlatformBadge platform={p} size="lg" />
-              <span className="mt-2.5 block text-[0.9375rem] font-semibold text-ink">{PLATFORMS[p].label}</span>
-            </button>
-          );
-        })}
-      </div>
-      {families > 1 && extraFee ? <p className="tnum mt-3 text-[0.8125rem] text-muted">Avec TikTok en plus : + {formatFcfa(extraFee)} de prestation.</p> : null}
+    <div role="radiogroup" aria-label="Réseau" className="grid grid-cols-3 gap-2.5">
+      {PLATFORM_CODES.map((p) => {
+        const active = value === p;
+        const off = Boolean(allowed && !allowed.includes(p));
+        return (
+          <button key={p} type="button" role="radio" aria-checked={active} disabled={off} onClick={() => onChange(p)} title={off ? "Non proposé pour cet objectif" : undefined}
+            className={cn("relative flex flex-col items-center rounded-xl border bg-surface px-2 py-4 text-center transition-[border-color,box-shadow,background-color] disabled:cursor-not-allowed disabled:opacity-45 sm:px-4 sm:py-5",
+              active ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card enabled:hover:border-line-strong enabled:hover:shadow-lift")}>
+            <span aria-hidden className={cn("absolute right-2 top-2 flex size-5 items-center justify-center rounded-full border transition-colors", active ? "border-green bg-green text-white" : "border-line-strong bg-surface text-transparent")}><Check className="size-3" strokeWidth={3} /></span>
+            <PlatformBadge platform={p} size="lg" />
+            <span className="mt-2.5 block text-[0.9375rem] font-semibold text-ink">{PLATFORMS[p].label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -297,7 +294,7 @@ function withAdvised(list: number[], advised: number | null): number[] {
 }
 
 /**
- * Budget en deux gestes : un montant, une durée. Le montant conseillé est déjà choisi.
+ * Budget en deux gestes : un montant, une durée. Rien n'est choisi d'avance ; le montant conseillé est seulement signalé.
  * Les durées qui feraient passer le budget par jour sous le minimum ne sont pas proposées.
  */
 export function BudgetQuick({ limits, value, onChange, recommended }: {
@@ -315,18 +312,13 @@ export function BudgetQuick({ limits, value, onChange, recommended }: {
   const daily = value.durationDays > 0 ? Math.floor(value.adBudget / value.durationDays) : 0;
   const tooLow = value.adBudget > 0 && value.adBudget < limits.minAdBudget;
 
-  /** Nouveau montant : si la durée choisie ne tient plus, on prend la plus longue durée possible. */
-  function setBudget(adBudget: number) {
-    if (fits(adBudget, value.durationDays) || adBudget < limits.minAdBudget) { onChange({ adBudget }); return; }
-    const best = [...durations].reverse().find((d) => d <= value.durationDays && fits(adBudget, d)) ?? durations.find((d) => fits(adBudget, d));
-    onChange({ adBudget, ...(best ? { durationDays: best } : {}) });
-  }
+  const setBudget = (adBudget: number) => onChange({ adBudget });
 
   return (
     <div className="space-y-5">
       <div>
         <p className="mb-2 text-[0.84375rem] font-medium text-ink">Combien voulez-vous dépenser en publicité ?</p>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <div className="grid grid-cols-3 gap-2">
           {presets.map((v) => {
             const active = !custom && value.adBudget === v;
             return (
@@ -355,7 +347,7 @@ export function BudgetQuick({ limits, value, onChange, recommended }: {
         <div className="grid grid-cols-4 gap-2">
           {durations.map((d) => {
             const active = value.durationDays === d;
-            const ok = fits(value.adBudget, d) || active;
+            const ok = !value.adBudget || fits(value.adBudget, d) || active;
             return (
               <button key={d} type="button" aria-pressed={active} disabled={!ok} onClick={() => onChange({ durationDays: d })}
                 className={cn("rounded-xl border bg-surface px-1 py-3 text-center text-[0.9375rem] font-semibold text-ink transition-[border-color,box-shadow,background-color] disabled:cursor-not-allowed disabled:opacity-40", active ? "border-green bg-green-soft/40 shadow-[0_0_0_1px_var(--color-green)]" : "border-line shadow-card hover:border-line-strong")}>
@@ -372,11 +364,8 @@ export function BudgetQuick({ limits, value, onChange, recommended }: {
   );
 }
 
-/** Date de début et, s'il y a plusieurs réseaux, part du budget pour chacun. */
-export function ScheduleFields({ value, onChange }: {
-  value: { adBudget: number; durationDays: number; startDate: string; budgetSplit: Record<string, number>; platforms: PlatformCode[] };
-  onChange: (patch: Partial<{ startDate: string; budgetSplit: Record<string, number> }>) => void;
-}) {
+/** Date de début, choisie par le client. */
+export function ScheduleFields({ value, onChange }: { value: { durationDays: number; startDate: string }; onChange: (patch: { startDate: string }) => void }) {
   const end = React.useMemo(() => {
     if (!value.startDate || !value.durationDays) return null;
     const d = new Date(`${value.startDate}T00:00:00Z`);
@@ -384,43 +373,16 @@ export function ScheduleFields({ value, onChange }: {
     return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(d);
   }, [value.startDate, value.durationDays]);
   const today = new Date().toISOString().slice(0, 10);
-  const [first, ...rest] = value.platforms;
-  function setSplit(platform: string, pct: number) {
-    const next = { ...value.budgetSplit, [platform]: pct };
-    const others = rest.reduce((a, p) => a + (next[p] ?? 0), 0);
-    if (others > 95) return;
-    next[first!] = 100 - others;
-    onChange({ budgetSplit: next });
-  }
   return (
-    <div className="space-y-5">
-      <Field label="Début" htmlFor="startDate" hint={end ? `Fin le ${end}` : undefined} className="max-w-xs">
-        <DatePicker id="startDate" min={today} value={value.startDate} onChange={(e) => onChange({ startDate: e.target.value })} />
-      </Field>
-      {value.platforms.length > 1 && (
-        <div>
-          <p className="mb-2 text-[0.84375rem] font-medium text-ink">Part du budget par réseau</p>
-          <div className="space-y-3">
-            {value.platforms.map((p, i) => {
-              const pct = value.budgetSplit[p] ?? 0;
-              return (
-                <div key={p} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:gap-3">
-                  <span className="flex w-24 items-center gap-2 text-[0.8125rem] text-ink sm:w-28"><PlatformBadge platform={p} size="sm" />{PLATFORMS[p].label}</span>
-                  {i === 0 ? <span className="h-1.5 rounded-full bg-line"><span className="block h-full rounded-full bg-green" style={{ width: `${pct}%` }} /></span>
-                    : <Slider min={5} max={90} step={5} value={pct} onChange={(v) => setSplit(p, v)} label={`Part de ${PLATFORMS[p].label}`} className="min-w-0" />}
-                  <span className="tnum w-[6.5rem] text-right text-[0.8125rem] text-ink-soft sm:w-28">{pct} % · {formatFcfa(Math.round((value.adBudget * pct) / 100))}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
+    <Field label="Date de début" htmlFor="startDate" hint={end ? `Fin le ${end}` : undefined} className="max-w-xs">
+      <DatePicker id="startDate" min={today} value={value.startDate} onChange={(e) => onChange({ startDate: e.target.value })} />
+    </Field>
   );
 }
 
-export function LevelPicker({ levels, value, onChange, baseFee, expert }: { levels: EditorData["levels"]; value: string | null; onChange: (code: string | null) => void; baseFee: number; expert?: boolean }) {
-  const base = value === null || !levels.some((l) => l.code === value);
+/** `unset` : le client n'a encore rien choisi, aucune ligne n'est cochée. */
+export function LevelPicker({ levels, value, onChange, baseFee, expert, unset }: { levels: EditorData["levels"]; value: string | null; onChange: (code: string | null) => void; baseFee: number; expert?: boolean; unset?: boolean }) {
+  const base = !unset && (value === null || !levels.some((l) => l.code === value));
   return (
     <ChoiceList>
       {!expert && (
@@ -430,12 +392,37 @@ export function LevelPicker({ levels, value, onChange, baseFee, expert }: { leve
         </ChoiceRow>
       )}
       {levels.filter((l) => !expert || l.kind === "MANAGEMENT" || l.kind === "PACK").map((l) => (
-        <ChoiceRow key={l.code} active={value === l.code} onClick={() => onChange(l.code)}>
+        <ChoiceRow key={l.code} active={!unset && value === l.code} onClick={() => onChange(l.code)}>
           <span className="flex items-baseline justify-between gap-3"><span className="font-medium text-ink">{l.name}</span><span className="tnum shrink-0 text-sm font-semibold">{formatFcfa(Math.max(l.fee, baseFee))}</span></span>
-          {value === l.code && l.features.length > 0 && <ul className="mt-2 animate-rise space-y-1 text-[0.8125rem] text-ink-soft">{l.features.map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 size-3.5 shrink-0 text-green" />{f}</li>)}</ul>}
+          {!unset && value === l.code && l.features.length > 0 && <ul className="mt-2 animate-rise space-y-1 text-[0.8125rem] text-ink-soft">{l.features.map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 size-3.5 shrink-0 text-green" />{f}</li>)}</ul>}
         </ChoiceRow>
       ))}
     </ChoiceList>
+  );
+}
+
+/** Avancement : un pictogramme par étape. Les étapes déjà atteintes sont cliquables. */
+export function Stepper({ steps, current, reached, onSelect, disabled }: { steps: { title: string; icon: React.ReactNode }[]; current: number; reached: number; onSelect: (n: number) => void; disabled?: boolean }) {
+  return (
+    <ol className="flex items-start" aria-label="Étapes">
+      {steps.map((step, i) => {
+        const n = i + 1;
+        const active = n === current;
+        const done = n < current;
+        const clickable = n <= reached && !active && !disabled;
+        return (
+          <li key={step.title} className="relative flex flex-1 flex-col items-center">
+            {i > 0 && <span aria-hidden className={cn("absolute right-1/2 top-5 h-0.5 w-full -translate-y-1/2", done || active ? "bg-green" : "bg-line")} />}
+            <button type="button" disabled={!clickable} onClick={() => onSelect(n)} aria-current={active ? "step" : undefined} aria-label={`Étape ${n} : ${step.title}`}
+              className={cn("relative flex size-10 items-center justify-center rounded-full border-2 transition-colors disabled:cursor-default [&_svg]:size-[1.125rem]",
+                active ? "border-forest bg-forest text-white shadow-lift" : done ? "border-green bg-green text-white" : "border-line bg-surface text-muted")}>
+              {done ? <Check strokeWidth={3} /> : step.icon}
+            </button>
+            <span className={cn("mt-1.5 text-xs", active ? "font-semibold text-ink" : "text-muted")}>{step.title}</span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 

@@ -30,7 +30,6 @@ export default async function SettingsPage() {
           <CardHeader title="Tarification" />
           <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {num("minServiceFee", "Frais de prestation minimum (F)", "Jamais inférieur à 10 000 F.", 500)}
-            {num("extraPlatformFee", "Supplément par plateforme additionnelle (F)", "Meta (Facebook + Instagram) compte pour une plateforme.", 500)}
             {num("minAdBudget", "Budget publicitaire minimum (F)", undefined, 500)}
             {num("minDailyBudget", "Budget quotidien minimum (F)", undefined, 100)}
             {num("maxAdBudget", "Budget publicitaire maximum (F)", undefined, 1000)}

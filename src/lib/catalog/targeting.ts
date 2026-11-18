@@ -67,6 +67,12 @@ export type Targeting = {
   customAudience: { requested: boolean; note: string };
 };
 
+/** Audience d'une campagne que le client n'a pas encore réglée : aucun pays choisi, aucune restriction d'âge ou de genre. */
+export const EMPTY_TARGETING: Targeting = {
+  countries: [], cities: [], zoneNote: "", ageMin: 18, ageMax: 65, gender: "ALL",
+  interests: [], categories: [], languages: ["fr"], customAudience: { requested: false, note: "" },
+};
+
 export const DEFAULT_TARGETING: Targeting = {
   countries: ["BJ"], cities: [], zoneNote: "", ageMin: 18, ageMax: 45, gender: "ALL",
   interests: [], categories: [], languages: ["fr"], customAudience: { requested: false, note: "" },

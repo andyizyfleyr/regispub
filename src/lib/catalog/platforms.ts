@@ -8,12 +8,11 @@ export const PLATFORMS: Record<PlatformCode, { label: string; family: "META" | "
 
 export const PLATFORM_CODES = Object.keys(PLATFORMS) as PlatformCode[];
 
+/** Une publicité se lance sur un seul réseau à la fois. */
 export const PLATFORM_CHOICES: { id: string; label: string; description: string; platforms: PlatformCode[] }[] = [
   { id: "facebook", label: "Facebook", description: "Le réseau le plus utilisé pour vendre et se faire connaître localement.", platforms: ["FACEBOOK"] },
   { id: "instagram", label: "Instagram", description: "Idéal pour la mode, la beauté, la restauration et les produits visuels.", platforms: ["INSTAGRAM"] },
   { id: "tiktok", label: "TikTok", description: "Vidéos courtes, audience jeune et forte viralité.", platforms: ["TIKTOK"] },
-  { id: "meta", label: "Facebook + Instagram", description: "Une seule campagne diffusée sur les deux réseaux de Meta.", platforms: ["FACEBOOK", "INSTAGRAM"] },
-  { id: "all", label: "Les trois plateformes", description: "Présence maximale : Facebook, Instagram et TikTok en parallèle.", platforms: ["FACEBOOK", "INSTAGRAM", "TIKTOK"] },
 ];
 
 export function platformFamilies(platforms: PlatformCode[]) {
