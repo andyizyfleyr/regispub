@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
+import { PlatformBadge } from "@/components/icons";
 import { ServiceDialog } from "@/components/staff/admin-panels";
+import { BoostProductDialog } from "@/components/staff/boost-panels";
 import { EyeOff } from "lucide-react";
 import { ToneIcon } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Notice, PageHeader, Table } from "@/components/ui/misc";
 import { requirePermission } from "@/lib/auth/session";
+import { BOOST_KINDS, unitPriceLabel } from "@/lib/boost/catalog";
+import { loadBoostProducts } from "@/lib/boost/service";
+import { PLATFORM_CODES, PLATFORMS } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
 import { effectiveMinFee } from "@/lib/pricing/quote";
 import { getSettings } from "@/lib/settings";
-import { formatFcfa } from "@/lib/utils";
+import { formatFcfa, formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Prestations et tarifs" };
 
@@ -21,7 +26,7 @@ const KINDS: Record<string, { title: string; description: string }> = {
 
 export default async function ServicesPage() {
   await requirePermission("pricing.manage");
-  const [services, settings] = await Promise.all([db.service.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }), getSettings()]);
+  const [services, settings, boosts] = await Promise.all([db.service.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }), getSettings(), loadBoostProducts()]);
   const minFee = effectiveMinFee(settings);
   return (
     <>
@@ -48,6 +53,36 @@ export default async function ServicesPage() {
             </Card>
           );
         })}
+        {boosts.length > 0 && (
+          <section id="abonnes" className="scroll-mt-20 space-y-6">
+            <div className="px-1">
+              <h2 className="font-display text-[1.125rem] font-semibold text-ink">Abonnés, J&apos;aime, commentaires, vues</h2>
+              <p className="mt-0.5 text-[0.84375rem] text-muted">Vendus à la quantité. Le plancher des prestations ne s&apos;applique pas ici.</p>
+            </div>
+            {PLATFORM_CODES.map((platform) => {
+              const list = boosts.filter((b) => b.platform === platform);
+              if (!list.length) return null;
+              return (
+                <Card key={platform}>
+                  <CardHeader title={PLATFORMS[platform].label} icon={<PlatformBadge platform={platform} size="md" />} />
+                  <Table head={["Produit", "Packs", "Autre quantité", "État", ""]} mobileCorner={4}>
+                    {list.map((b) => (
+                      <tr key={b.id}>
+                        <td><span className="block font-medium text-ink">{BOOST_KINDS[b.kind].label}</span>{b.delay ? <span className="block text-xs text-muted">Livraison sous {b.delay}</span> : null}</td>
+                        <td data-empty={b.packs.length ? undefined : ""}>
+                          {b.packs.length ? <span className="tnum flex flex-wrap gap-x-3 gap-y-0.5 text-[0.8125rem] max-sm:justify-end">{b.packs.map((p) => <span key={p.quantity} className="whitespace-nowrap">{formatNumber(p.quantity)} : <span className="font-medium text-ink">{formatFcfa(p.price)}</span></span>)}</span> : "—"}
+                        </td>
+                        <td className="tnum text-[0.8125rem]"><span className="block whitespace-nowrap font-medium text-ink">{unitPriceLabel(b)}</span><span className="block whitespace-nowrap text-xs text-muted">de {formatNumber(b.minQuantity)} à {formatNumber(b.maxQuantity)}</span></td>
+                        <td><ToneIcon tone={b.active ? "ok" : "neutral"} label={b.active ? "Proposé" : "Masqué"} icon={b.active ? undefined : <EyeOff aria-hidden />} /></td>
+                        <td className="text-right"><BoostProductDialog product={b} /></td>
+                      </tr>
+                    ))}
+                  </Table>
+                </Card>
+              );
+            })}
+          </section>
+        )}
       </div>
     </>
   );

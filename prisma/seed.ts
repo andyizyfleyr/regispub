@@ -5,6 +5,8 @@ import { randomBytes } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
+import { BOOST_DEFAULTS, BOOST_KIND_CODES } from "../src/lib/boost/catalog";
+import { PLATFORM_CODES } from "../src/lib/catalog/platforms";
 
 const SERVICES = [
   { code: "campaign_creation", name: "Création de campagne", kind: "CAMPAIGN", fee: 10_000, description: "Paramétrage et lancement d'une campagne pour promouvoir un produit ou un service.", features: ["Configuration de la campagne", "Ciblage de base", "Lancement et suivi"] },
@@ -30,6 +32,14 @@ export async function seed(opts: { onlyIfEmpty?: boolean } = {}) {
         where: { code: s.code }, update: {},
         create: { code: s.code, name: s.name, kind: s.kind, fee: s.fee, description: s.description, features: [...s.features], periodDays: "periodDays" in s ? s.periodDays : null, sortOrder: i },
       });
+    }
+
+    // Abonnés, J'aime, commentaires, vues : un produit par réseau, avec des tarifs d'exemple. Jamais écrasés ensuite.
+    for (const platform of PLATFORM_CODES) {
+      for (const kind of BOOST_KIND_CODES) {
+        const d = BOOST_DEFAULTS[platform][kind];
+        await db.boostProduct.upsert({ where: { platform_kind: { platform, kind } }, update: {}, create: { platform, kind, pricePer1000: d.pricePer1000, minQuantity: d.minQuantity, maxQuantity: d.maxQuantity, packs: d.packs, delay: d.delay } });
+      }
     }
 
     const adminEmail = (process.env.SEED_ADMIN_EMAIL || "admin@regispub.local").toLowerCase();

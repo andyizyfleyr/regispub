@@ -4,6 +4,7 @@ import { can, type Permission, type RoleName } from "./permissions";
 const NAV_PERMISSIONS: Record<string, Permission[]> = {
   home: ["backoffice.access"],
   campaigns: ["campaign.view_all", "campaign.view_assigned"],
+  boosts: ["boost.manage"],
   orders: ["order.view"],
   payments: ["payment.view"],
   tickets: ["ticket.manage"],

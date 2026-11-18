@@ -33,7 +33,7 @@ export function CampaignStatusIcon({ status, className }: { status: string; clas
   return <StatusIcon label={meta?.label ?? status} tone={meta?.tone ?? "neutral"} className={className}><Icon aria-hidden /></StatusIcon>;
 }
 
-type StateKind = "order" | "payment" | "refund" | "approval" | "revision" | "ticket" | "subscription" | "delivery" | "import";
+type StateKind = "order" | "payment" | "refund" | "approval" | "revision" | "ticket" | "subscription" | "delivery" | "import" | "boost";
 
 const GENERIC: Record<string, { label: string; tone: Tone; icon: LucideIcon }> = {
   // commandes
@@ -52,6 +52,9 @@ const GENERIC: Record<string, { label: string; tone: Tone; icon: LucideIcon }> =
   "ticket.OPEN": { label: "Ouverte", tone: "warn", icon: MessageSquareText }, "ticket.IN_PROGRESS": { label: "En cours", tone: "info", icon: Hourglass }, "ticket.RESOLVED": { label: "Résolue", tone: "ok", icon: Check }, "ticket.CLOSED": { label: "Clôturée", tone: "neutral", icon: Lock },
   // abonnements
   "subscription.PENDING": { label: "En attente de paiement", tone: "warn", icon: Wallet }, "subscription.ACTIVE": { label: "Actif", tone: "ok", icon: Check }, "subscription.EXPIRED": { label: "Expiré", tone: "neutral", icon: TimerOff }, "subscription.CANCELLED": { label: "Résilié", tone: "neutral", icon: X },
+  // livraison des commandes d'abonnés, de J'aime, de commentaires et de vues
+  "boost.AWAITING_PAYMENT": { label: "À régler", tone: "warn", icon: Wallet }, "boost.TO_DELIVER": { label: "Payée, à livrer", tone: "info", icon: Clock }, "boost.IN_PROGRESS": { label: "Livraison en cours", tone: "info", icon: Rocket },
+  "boost.DELIVERED": { label: "Livrée", tone: "ok", icon: Check }, "boost.CANCELLED": { label: "Annulée", tone: "neutral", icon: X },
   // envois
   "delivery.SENT": { label: "Envoyé", tone: "ok", icon: Send }, "delivery.FAILED": { label: "Échec", tone: "danger", icon: TriangleAlert }, "delivery.SKIPPED": { label: "Non envoyé", tone: "neutral", icon: Minus },
   "import.PENDING": { label: "À valider", tone: "warn", icon: Clock }, "import.VALIDATED": { label: "Validé", tone: "ok", icon: Check }, "import.REJECTED": { label: "Rejeté", tone: "danger", icon: X },

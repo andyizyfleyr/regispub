@@ -60,6 +60,8 @@ model User {
   tickets           Ticket[]             @relation("TicketAuthor")
   assignedTickets   Ticket[]             @relation("TicketAssignee")
   subscriptions     Subscription[]
+  boostOrders       BoostOrder[]
+  boostsHandled     BoostOrder[]         @relation("BoostHandler")
   loyaltyEntries    LoyaltyEntry[]
   promoRedemptions  PromoRedemption[]
   ownedPromoCodes   PromoCode[]
@@ -111,10 +113,10 @@ model Business {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  campaigns       Campaign[]
-  assets          Asset[]
-  subscriptions   Subscription[]
-  accesses        AccountAccess[]
+  campaigns     Campaign[]
+  assets        Asset[]
+  subscriptions Subscription[]
+  accesses      AccountAccess[]
 
   @@index([ownerId])
 }
@@ -461,6 +463,7 @@ model Order {
   refunds    Refund[]
   redemption PromoRedemption?
   tickets    Ticket[]
+  boost      BoostOrder?
 
   @@index([userId, createdAt])
   @@index([campaignId])
@@ -779,4 +782,68 @@ model RateLimit {
   key         String   @id
   count       Int
   windowStart DateTime
+}
+
+// ─────────────────────────── Vente d'abonnés, J'aime, commentaires et vues ───────────────────────────
+
+enum BoostKind {
+  FOLLOWERS
+  LIKES
+  COMMENTS
+  VIEWS
+}
+
+enum BoostStatus {
+  AWAITING_PAYMENT // commande créée, pas encore réglée
+  TO_DELIVER // payée : l'équipe doit la passer chez son fournisseur
+  IN_PROGRESS // passée chez le fournisseur, livraison en cours
+  DELIVERED
+  CANCELLED
+}
+
+/// Un produit par réseau et par type. Les tarifs se règlent dans Gestion → Prestations et tarifs.
+model BoostProduct {
+  id           String    @id @default(cuid())
+  platform     Platform
+  kind         BoostKind
+  pricePer1000 Int // tarif des quantités libres, en F CFA pour 1 000 unités
+  minQuantity  Int
+  maxQuantity  Int
+  packs        Json      @default("[]") // [{ quantity, price }] : packs à prix fixe
+  delay        String    @default("") // délai de livraison annoncé au client
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  orders BoostOrder[]
+
+  @@unique([platform, kind])
+}
+
+/// Détail d'une commande d'abonnés, de J'aime, de commentaires ou de vues. Le paiement est porté par Order.
+model BoostOrder {
+  id           String        @id @default(cuid())
+  orderId      String        @unique
+  order        Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId    String?
+  product      BoostProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  platform     Platform
+  kind         BoostKind
+  quantity     Int
+  link         String // compte ou publication à faire grandir
+  comments     String[] // textes écrits par le client (commandes de commentaires)
+  status       BoostStatus   @default(AWAITING_PAYMENT)
+  staffNote    String? // note interne (référence fournisseur…)
+  cancelReason String? // motif communiqué au client
+  startedAt    DateTime?
+  deliveredAt  DateTime?
+  handledById  String?
+  handledBy    User?         @relation("BoostHandler", fields: [handledById], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
 }

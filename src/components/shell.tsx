@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
 import {
   Bell, ChartColumn, ChevronsUpDown, CreditCard, Ellipsis, FolderKanban, Headset, House, LifeBuoy, LogOut, Megaphone, Menu, PlugZap, Plus,
-  ReceiptText, ScrollText, Send, Settings, ShieldCheck, Tags, TicketPercent, UserRound, Users, Wallet, type LucideIcon,
+  ReceiptText, ScrollText, Send, Settings, ShieldCheck, Tags, TicketPercent, TrendingUp, UserRound, Users, Wallet, type LucideIcon,
 } from "lucide-react";
 import { Logo } from "@/components/icons";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -20,6 +20,7 @@ const CLIENT_NAV: NavItem[] = [
   { id: "home", href: "/app", label: "Accueil", icon: House, exact: true },
   { id: "campaigns", href: "/app/campagnes", label: "Mes campagnes", short: "Campagnes", icon: Megaphone },
   { id: "payments", href: "/app/paiements", label: "Paiements", icon: Wallet },
+  { id: "boost", href: "/app/booster", label: "Abonnés et J'aime", icon: TrendingUp },
   { id: "account", href: "/app/compte", label: "Mon compte", short: "Compte", icon: UserRound },
   { id: "expert", href: "/app/expert", label: "Confier à un expert", icon: Headset },
 ];
@@ -27,6 +28,7 @@ const CLIENT_NAV: NavItem[] = [
 const STAFF_NAV: NavItem[] = [
   { id: "home", href: "/gestion", label: "Tableau de bord", icon: House, exact: true, group: "Activité" },
   { id: "campaigns", href: "/gestion/campagnes", label: "Campagnes", icon: FolderKanban, group: "Activité" },
+  { id: "boosts", href: "/gestion/boosts", label: "Abonnés et J'aime", icon: TrendingUp, group: "Activité" },
   { id: "orders", href: "/gestion/commandes", label: "Commandes", icon: ReceiptText, group: "Activité" },
   { id: "payments", href: "/gestion/paiements", label: "Paiements", icon: CreditCard, group: "Activité" },
   { id: "tickets", href: "/gestion/reclamations", label: "Réclamations", icon: LifeBuoy, group: "Activité" },

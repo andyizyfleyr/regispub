@@ -13,6 +13,7 @@ import { notify, notifyStaff } from "@/lib/notifications/service";
 import { normalizeBeninPhone, PAYMENT_COUNTRIES, type OperatorCode } from "@/lib/phone";
 import { loyaltyPointsFor, type PromoInput } from "@/lib/pricing/quote";
 import { addDays, formatFcfa, randomCode } from "@/lib/utils";
+import { announceBoostPaid, markBoostPaid } from "@/lib/boost/settle";
 import { getActiveProvider, getProviderById } from "./registry";
 import { PaymentProviderError, WebhookSignatureError, type VerifyResult } from "./types";
 
@@ -241,6 +242,8 @@ async function settlePayment(paymentId: string, providerStatus: string) {
       }
     }
 
+    const boost = await markBoostPaid(tx, order.id);
+
     if (order.promoCodeId && order.discount > 0) {
       await tx.promoRedemption.create({ data: { promoCodeId: order.promoCodeId, userId: order.userId, orderId: order.id, amount: order.discount } });
       await tx.promoCode.update({ where: { id: order.promoCodeId }, data: { usedCount: { increment: 1 } } });
@@ -253,7 +256,8 @@ async function settlePayment(paymentId: string, providerStatus: string) {
     }
 
     let referrerId: string | null = null;
-    if (order.user.referredById && settings.referralReward > 0) {
+    // Une petite commande d'abonnés ou de J'aime ne déclenche pas la récompense de parrainage : elle reste due à la première publicité.
+    if (!boost && order.user.referredById && settings.referralReward > 0) {
       const already = await tx.referralReward.findUnique({ where: { refereeId: order.userId } });
       if (!already) {
         const voucher = await tx.promoCode.create({
@@ -263,7 +267,7 @@ async function settlePayment(paymentId: string, providerStatus: string) {
         referrerId = order.user.referredById;
       }
     }
-    return { kind: "settled" as const, payment, order, invoiceNumber, points, referrerId };
+    return { kind: "settled" as const, payment, order, invoiceNumber, points, referrerId, boost };
   });
 
   if (outcome.kind === "already") return;
@@ -283,12 +287,13 @@ async function settlePayment(paymentId: string, providerStatus: string) {
   const needsAccess = paidCampaign ? accessToGive(await loadAccessRows(paidCampaign.businessId), paidCampaign.platforms as PlatformCode[], paidCampaign.id).length > 0 : false;
   await notify({
     userId: order.userId, type: "payment.succeeded", title: needsAccess ? "Paiement confirmé. Donnez-nous l'accès" : "Paiement confirmé",
-    body: `Nous avons bien reçu ${formatFcfa(payment.amount)} pour la commande ${order.reference}. Votre reçu ${outcome.invoiceNumber} est disponible.${needsAccess ? " Dernière étape : donnez-nous l'accès à votre page pour que nous lancions votre publicité." : ""}`,
+    body: `Nous avons bien reçu ${formatFcfa(payment.amount)} pour la commande ${order.reference}. Votre reçu ${outcome.invoiceNumber} est disponible.${needsAccess ? " Dernière étape : donnez-nous l'accès à votre page pour que nous lancions votre publicité." : ""}${outcome.boost ? " Notre équipe lance la livraison." : ""}`,
     link: order.campaignId ? `/app/campagnes/${order.campaignId}` : `/app/paiements/${order.id}`, email: true, whatsapp: true,
   });
   if (order.campaignId) {
     await notifyStaff("campaign.assign", { type: "order.paid", title: "Nouvelle commande payée", body: `Commande ${order.reference} — ${order.serviceLabel}. À attribuer.`, link: `/gestion/campagnes/${order.campaignId}`, email: true });
   }
+  if (outcome.boost) await announceBoostPaid(outcome.boost, order.reference);
   if (outcome.referrerId) {
     await notify({ userId: outcome.referrerId, type: "referral.reward", title: "Votre parrainage est récompensé", body: `Un filleul vient de passer sa première commande. Un bon de ${formatFcfa(settings.referralReward)} a été ajouté à votre compte.`, link: "/app/compte?onglet=fidelite", email: true });
   }
