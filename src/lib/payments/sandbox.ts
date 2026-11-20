@@ -19,6 +19,7 @@ export class SandboxProvider implements PaymentProvider {
   readonly id = "sandbox";
   readonly label = "Simulateur (aucun débit réel)";
   readonly mode = "simulation" as const;
+  readonly checkout = "phone" as const;
   readonly testNotice = "Simulation : un numéro finissant par 00 est refusé, par 99 reste sans réponse. Tout autre numéro est accepté.";
   readonly testNumbers = null;
   readonly supportedOperators: OperatorCode[] = ["MTN", "MOOV", "CELTIIS"];
@@ -43,6 +44,7 @@ export class SandboxProvider implements PaymentProvider {
   }
 
   async initiate(input: InitiateInput): Promise<InitiateResult> {
+    if (!input.phone) throw new PaymentProviderError("Le simulateur a besoin d'un numéro", "Saisissez votre numéro Mobile Money.", undefined, "invalid");
     const ending = input.phone.national.slice(-2);
     const outcome: Ref["o"] = ending === "00" ? "ko" : ending === "99" ? "wait" : "ok";
     return { providerRef: this.encode({ p: input.paymentId, a: input.amount, t: this.now(), o: outcome }), status: "PENDING", providerStatus: "pending" };

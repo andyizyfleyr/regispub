@@ -36,8 +36,8 @@ Ajouter un agrégateur de paiement (KKiaPay, CinetPay…) revient à implémente
 
 ## Paiement
 
-1. Le client choisit un opérateur et un numéro. Le serveur verrouille la commande, relit le montant en base et crée un `Payment` (clé d'idempotence : deux clics ne créent qu'un paiement ; un paiement en cours bloque le suivant).
-2. Le prestataire envoie la demande de validation sur le téléphone. Si elle ne part pas, le client règle la même transaction sur la page de paiement du prestataire.
+1. Le client touche « Payer ». Le serveur verrouille la commande, relit le montant en base et crée un `Payment` (clé d'idempotence : deux clics ne créent qu'un paiement).
+2. Avec FedaPay, le client est envoyé sur la page de paiement de FedaPay, qui lui demande son moyen de paiement et son numéro, puis le renvoie sur la commande. Notre site n'affiche ni numéro ni opérateur. S'il revient sans avoir payé, « Payer » le renvoie sur la même page (même collecte, pas de double paiement). Seul le simulateur fait saisir un numéro et un opérateur chez nous.
 3. L'état est relu chez le prestataire par trois chemins : interrogation depuis la page de paiement, webhook signé (réponse immédiate, traitement ensuite), tâche planifiée. Un refus n'est pas tenu pour définitif : une tentative close est encore relue pendant 26 heures.
 4. `applyVerification` contrôle le montant et la référence. En cas d'écart, le paiement passe en échec et l'équipe est alertée.
 5. La validation est transactionnelle et idempotente : commande payée, numéro de reçu, campagne « Payée », points de fidélité, récompense de parrainage, notifications — une seule fois, même si la confirmation arrive plusieurs fois.

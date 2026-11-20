@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, CircleCheck, Download } from "lucide-react";
+import { ArrowRight, CircleCheck, CreditCard, Download } from "lucide-react";
 import { BoostDelivery } from "@/components/app/boost-delivery";
 import { Checkout } from "@/components/app/checkout";
 import { QuoteLines } from "@/components/app/quote-box";
@@ -13,7 +13,7 @@ import { Notice, PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { paymentModeInfo, refreshOrderPayments } from "@/lib/payments/service";
-import { formatPhone, groupDigits, maskPhone, type OperatorCode } from "@/lib/phone";
+import { formatPhone, maskPhone, type OperatorCode } from "@/lib/phone";
 import type { QuoteLine } from "@/lib/pricing/quote";
 import { formatDateTime, formatFcfa, isRecord } from "@/lib/utils";
 
@@ -47,11 +47,6 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
   const lastFailure = last && ["FAILED", "CANCELLED", "EXPIRED"].includes(last.status)
     ? last.failureReason ?? (last.status === "EXPIRED" ? "Demande expirée sans validation." : last.status === "CANCELLED" ? "La demande a été annulée." : "Paiement refusé par l'opérateur.")
     : null;
-  // En mode test, le prestataire refuse d'office tout numéro hors de sa liste : on le dit tel quel au lieu de laisser croire à un incident.
-  const testNumbers = mode.testNumbers;
-  const testRefused = Boolean(lastFailure && testNumbers && last && last.provider === mode.providerId && !testNumbers.includes(last.phone.slice(-8)));
-  // En test, le numéro du client serait refusé : le champ est rempli avec un numéro d'essai.
-  const defaultPhone = testNumbers?.[0] ? groupDigits(testNumbers[0]) : user.phone?.startsWith("+229") ? formatPhone(user.phone).replace(/^\+229\s?/, "") : "";
   const isPaid = order.status === "PAID" || order.status === "PARTIALLY_REFUNDED" || order.status === "REFUNDED";
   const title = order.campaign?.name ?? order.serviceLabel;
 
@@ -66,7 +61,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
               <CircleCheck className="size-8 text-green" />
               <h2 className="mt-3 text-xl font-semibold">Merci !</h2>
               <p className="tnum mt-1.5 text-sm text-ink-soft">
-                {formatFcfa(order.total)} reçus{order.paidAt ? ` le ${formatDateTime(order.paidAt)}` : ""}{paidPayment ? ` · ${maskPhone(paidPayment.phone)}` : ""}.
+                {formatFcfa(order.total)} reçus{order.paidAt ? ` le ${formatDateTime(order.paidAt)}` : ""}{paidPayment?.phone ? ` · ${maskPhone(paidPayment.phone)}` : ""}.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Button asChild><a href={`/api/receipts/${order.id}`} target="_blank" rel="noreferrer"><Download />Reçu</a></Button>
@@ -78,9 +73,9 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
         {order.boost && <BoostDelivery boost={order.boost} orderStatus={order.status} refundPending={order.refunds.some((r) => r.status === "REQUESTED")} />}
 
         {order.status === "PENDING" && mode.available ? (
-          <Checkout orderId={order.id} total={order.total} operators={mode.operators} defaultPhone={defaultPhone}
-            testNotice={mode.testNotice} testNumbers={testNumbers} testRefused={testRefused} providerLabel={mode.providerLabel ?? "notre prestataire"} promoCode={order.promoCode?.code ?? null} allowPromo={!order.boost} canCancel={!open} lastFailure={lastFailure}
-            open={open ? { id: open.id, operator: open.operator as OperatorCode, phone: open.phone, expiresAt: open.expiresAt.toISOString(), redirectUrl: open.redirectUrl } : null}>
+          <Checkout orderId={order.id} total={order.total} operators={mode.operators} hosted={mode.checkout === "hosted"} defaultPhone={user.phone?.startsWith("+229") ? formatPhone(user.phone).replace(/^\+229\s?/, "") : ""}
+            testNotice={mode.testNotice} providerLabel={mode.providerLabel ?? "notre prestataire"} promoCode={order.promoCode?.code ?? null} allowPromo={!order.boost} canCancel={!open} lastFailure={lastFailure}
+            open={open ? { id: open.id, operator: open.operator as OperatorCode | null, phone: open.phone, expiresAt: open.expiresAt.toISOString(), redirectUrl: open.redirectUrl } : null}>
             <details className="group rounded-lg border border-line bg-surface">
               <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink-soft">
                 <span className="min-w-0 truncate">Détail : {title}</span><span className="shrink-0 text-[0.8125rem] font-normal text-green group-open:hidden">Voir</span>
@@ -134,9 +129,9 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
               <ul className="divide-y divide-line border-t border-line">
                 {order.payments.map((p) => (
                   <li key={p.id} className="flex items-center gap-3 px-4 py-3 text-sm sm:px-5">
-                    <OperatorChip operator={p.operator as OperatorCode} />
+                    {p.operator ? <OperatorChip operator={p.operator as OperatorCode} /> : <span className="flex h-7 min-w-12 items-center justify-center rounded-md bg-sand text-ink-soft"><CreditCard className="size-4" /></span>}
                     <span className="min-w-0 flex-1">
-                      <span className="tnum block text-ink">{maskPhone(p.phone)} · {formatFcfa(p.amount)}</span>
+                      <span className="tnum block text-ink">{p.phone ? `${maskPhone(p.phone)} · ` : ""}{formatFcfa(p.amount)}</span>
                       <span className="block truncate text-xs text-muted">{formatDateTime(p.createdAt)}{p.providerRef ? ` · réf. ${p.providerRef}` : ""}{p.duplicate ? " · doublon, remboursement en cours" : ""}</span>
                     </span>
                     <StateIcon kind="payment" value={p.status} />

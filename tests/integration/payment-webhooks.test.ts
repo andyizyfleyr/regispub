@@ -42,9 +42,9 @@ function notification(providerRef: string | null) {
 }
 
 describe("démarrage d'un paiement", () => {
-  it("renvoie l'échéance réelle de la demande, et dit si elle est partie sur le téléphone", async () => {
+  it("renvoie l'échéance réelle de la demande ; avec le simulateur, aucune page extérieure à ouvrir", async () => {
     const { started, payment } = await newPayment();
-    expect(started.pushed).toBe(true);
+    expect(started.redirectUrl).toBeUndefined();
     expect(started.expiresAt.getTime()).toBe(payment.expiresAt.getTime());
     expect(started.expiresAt.getTime()).toBeGreaterThan(Date.now() + 60_000);
   });

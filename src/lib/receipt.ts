@@ -13,7 +13,7 @@ export type ReceiptData = {
   campaignName: string | null;
   lines: QuoteLine[];
   total: number;
-  payment: { operator: string; phone: string; providerLabel: string; providerRef: string | null; simulated: boolean };
+  payment: { operator: string; phone: string | null; providerLabel: string; providerRef: string | null; simulated: boolean };
   refunds: { amount: number; processedAt: Date | null; reference: string | null }[];
 };
 
@@ -85,7 +85,7 @@ export async function renderReceiptPdf(data: ReceiptData, settings: PlatformSett
   y -= 34;
 
   text("Règlement", left, 8, bold, MUTED); y -= 15;
-  text(`${data.payment.operator} — ${maskPhone(data.payment.phone)}`, left, 10); y -= 14;
+  text(data.payment.phone ? `${data.payment.operator} — ${maskPhone(data.payment.phone)}` : data.payment.operator, left, 10); y -= 14;
   text(`Prestataire : ${data.payment.providerLabel}${data.payment.providerRef ? ` — transaction ${data.payment.providerRef.slice(0, 40)}` : ""}`, left, 9, regular, MUTED);
   y -= 14;
   if (data.payment.simulated) { text("PAIEMENT SIMULÉ — document de démonstration sans valeur comptable.", left, 9, bold, rgb(0.7, 0.2, 0.1)); y -= 14; }

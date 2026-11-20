@@ -1,5 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import type { NormalizedPhone, OperatorCode } from "@/lib/phone";
+import type { OperatorCode } from "@/lib/phone";
 import { isRecord } from "@/lib/utils";
 import {
   PaymentProviderError, WebhookSignatureError,
@@ -8,24 +8,18 @@ import {
 
 /**
  * Agrégateur FedaPay (Bénin). Écrit d'après la documentation officielle (https://docs.fedapay.com) et les
- * bibliothèques fedapay-node / fedapay-php, sans dépendance : trois appels suffisent.
+ * bibliothèques fedapay-node / fedapay-php, sans dépendance : deux appels suffisent.
  *
- * Paiement « sans redirection » :
- *   1. POST /transactions                créer la collecte (montant, client, notre référence)
- *   2. POST /transactions/{id}/token     obtenir le jeton de paiement et le lien de la page FedaPay
- *   3. POST /{mode}                      envoyer la demande de validation sur le téléphone du client
- * Le résultat n'est jamais déduit de ces réponses : il est relu avec GET /transactions/{id}.
+ * Le client paie sur la page de paiement de FedaPay :
+ *   1. POST /transactions                créer la collecte (montant, client, notre référence, adresse de retour)
+ *   2. POST /transactions/{id}/token     obtenir le lien de la page de paiement FedaPay de cette collecte
+ * Nous envoyons le client sur ce lien. C'est FedaPay qui lui demande son moyen de paiement et son numéro, puis qui le
+ * renvoie chez nous. Le résultat n'est jamais déduit de l'adresse de retour : il est relu avec GET /transactions/{id}.
  */
 
 const BASE_URLS = { live: "https://api.fedapay.com/v1", sandbox: "https://sandbox-api.fedapay.com/v1" } as const;
 
-/** Modes « sans redirection » au Bénin (page « Méthodes de paiement » de la documentation). */
-export const FEDAPAY_LIVE_MODES: Record<OperatorCode, string> = { MTN: "mtn_open", MOOV: "moov", CELTIIS: "sbin" };
-
-/** En test, FedaPay n'accepte plus qu'un seul mode : les serveurs de test des opérateurs ont été retirés. */
-export const FEDAPAY_TEST_MODE = "momo_test";
-
-/** Seuls numéros acceptés en test. Tout autre numéro simule un paiement échoué. */
+/** Seuls numéros acceptés par FedaPay en mode test : tout autre numéro y simule un paiement échoué. Rappelés à l'équipe. */
 export const FEDAPAY_TEST_NUMBERS = ["64000001", "66000001"] as const;
 
 /** Une notification plus ancienne est refusée (protection contre le rejeu), comme dans les bibliothèques FedaPay. */
@@ -41,19 +35,13 @@ export type FedapayConfig = {
   apiBase?: string;
 };
 
-export function fedapayMode(operator: OperatorCode, environment: FedapayEnvironment) {
-  return environment === "live" ? FEDAPAY_LIVE_MODES[operator] : FEDAPAY_TEST_MODE;
-}
-
-/**
- * Numéro transmis à FedaPay. En réel : le format international. En test : les deux numéros de la documentation
- * sont envoyés tels qu'elle les écrit (8 chiffres), quel que soit le format saisi par le client.
- */
-export function fedapayPhone(phone: NormalizedPhone, environment: FedapayEnvironment) {
-  const country = phone.country.toLowerCase();
-  const tail = phone.national.slice(-8);
-  if (environment === "sandbox" && (FEDAPAY_TEST_NUMBERS as readonly string[]).includes(tail)) return { number: tail, country };
-  return { number: phone.e164, country };
+/** Opérateur d'après le champ « mode » d'une transaction FedaPay (mtn_open, moov, sbin…). null si ce n'est pas l'un des nôtres. */
+export function operatorFromFedapayMode(mode: unknown): OperatorCode | null {
+  if (typeof mode !== "string") return null;
+  if (/^mtn/i.test(mode)) return "MTN";
+  if (/^moov/i.test(mode)) return "MOOV";
+  if (/^(sbin|celtiis)/i.test(mode)) return "CELTIIS";
+  return null;
 }
 
 /**
@@ -64,7 +52,7 @@ export function mapFedapayStatus(status: string): { status: ProviderPaymentStatu
   if (PAID_STATUSES.has(status)) return { status: "SUCCEEDED" };
   switch (status) {
     case "declined": // interruption volontaire ou accidentelle par le client
-      return { status: "CANCELLED", reason: "La validation sur le téléphone n'est pas allée au bout (demande refusée, fermée ou délai dépassé)." };
+      return { status: "CANCELLED", reason: "Le paiement n'a pas été validé (demande refusée, fermée ou délai dépassé)." };
     case "canceled": // solde insuffisant ou autre problème de paiement
       return { status: "FAILED", reason: "L'opérateur n'a pas accepté le paiement. Vérifiez le solde de votre compte Mobile Money." };
     case "expired":
@@ -147,6 +135,7 @@ export type FedapayDiagnosis = {
 export class FedapayProvider implements PaymentProvider {
   readonly id = "fedapay";
   readonly label = "FedaPay";
+  readonly checkout = "hosted" as const;
   readonly supportedOperators: OperatorCode[] = ["MTN", "MOOV", "CELTIIS"];
   private readonly fetchImpl: typeof fetch;
 
@@ -155,9 +144,8 @@ export class FedapayProvider implements PaymentProvider {
   }
 
   get mode() { return this.config.environment === "live" ? "live" as const : "test" as const; }
-  get testNotice() {
-    return this.config.environment === "live" ? null : "Mode test : aucun débit réel. Pour un paiement accepté, tapez le numéro 64 00 00 01 ou 66 00 00 01. Tout autre numéro est refusé.";
-  }
+  /** Le client paie sur la page FedaPay, qui signale elle-même le mode test : rien à lui dire de notre côté. */
+  readonly testNotice = null;
   get testNumbers() { return this.config.environment === "live" ? null : FEDAPAY_TEST_NUMBERS; }
   isConfigured() { return Boolean(this.config.secretKey); }
 
@@ -193,7 +181,7 @@ export class FedapayProvider implements PaymentProvider {
 
   async initiate(input: InitiateInput): Promise<InitiateResult> {
     const [firstname, ...rest] = input.customer.name.trim().split(/\s+/);
-    // 1. La collecte. FedaPay retrouve le client par son e-mail ; le numéro à débiter n'est donné qu'à l'étape 3.
+    // 1. La collecte. FedaPay retrouve le client par son e-mail ; le numéro à débiter est demandé sur sa page de paiement.
     //    merchant_reference doit être unique : c'est l'identifiant de notre tentative de paiement.
     const created = FedapayProvider.transaction(
       await this.request("POST", "/transactions", {
@@ -208,25 +196,11 @@ export class FedapayProvider implements PaymentProvider {
     );
     const providerRef = String(created.id);
 
-    // 2. Le jeton, et le lien de la page de paiement FedaPay pour cette même collecte.
+    // 2. Le lien de la page de paiement FedaPay pour cette collecte.
     const token = await this.request("POST", `/transactions/${encodeURIComponent(providerRef)}/token`);
-    const tokenValue = typeof token.token === "string" ? token.token : null;
-    const hostedUrl = typeof token.url === "string" && /^https?:\/\//.test(token.url) ? token.url : undefined;
-    if (!tokenValue) throw new PaymentProviderError("Jeton de paiement FedaPay absent", undefined, token);
-
-    // 3. La demande sur le téléphone.
-    const base = { providerRef, status: "PENDING" as const, providerStatus: "pending", redirectUrl: hostedUrl };
-    try {
-      await this.request("POST", `/${fedapayMode(input.operator, this.config.environment)}`, {
-        token: tokenValue,
-        phone_number: fedapayPhone(input.phone, this.config.environment),
-      });
-      return { ...base, pushed: true };
-    } catch (error) {
-      // La collecte existe : le client peut encore la régler sur la page FedaPay. On le lui dit, et on garde la raison pour l'équipe.
-      if (!hostedUrl || !(error instanceof PaymentProviderError) || error.kind === "auth") throw error;
-      return { ...base, pushed: false, pushError: error.message };
-    }
+    const redirectUrl = typeof token.url === "string" && /^https?:\/\//.test(token.url) ? token.url : null;
+    if (!redirectUrl) throw new PaymentProviderError("Lien de la page de paiement FedaPay absent", undefined, token);
+    return { providerRef, status: "PENDING", providerStatus: "pending", redirectUrl };
   }
 
   async verify(providerRef: string): Promise<VerifyResult> {
@@ -240,6 +214,7 @@ export class FedapayProvider implements PaymentProvider {
       providerStatus: errorCode && mapped.status !== "SUCCEEDED" ? `${fedapayStatus} (${errorCode})` : fedapayStatus,
       amount: Number.isFinite(amount) ? amount : null,
       merchantReference: typeof t.merchant_reference === "string" ? t.merchant_reference : null,
+      operator: operatorFromFedapayMode(t.mode),
       failureReason: mapped.reason,
     };
   }

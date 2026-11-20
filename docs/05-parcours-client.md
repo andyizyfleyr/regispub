@@ -50,9 +50,9 @@ Aucun mot de passe n'est demandé au client. Le compte ou la publication doit re
 ## Payer
 
 1. Récapitulatif : budget publicitaire, prestation, frais Mobile Money, total.
-2. Choix de l'opérateur (MTN, Moov, Celtiis) et du numéro ; l'opérateur est suggéré d'après le préfixe.
-3. Confirmation du numéro et du montant avant l'envoi.
-4. Validation sur le téléphone. La page suit l'état et propose « Vérifier maintenant ».
+2. Un bouton « Payer » envoie sur la page de paiement de FedaPay.
+3. Le client y choisit son moyen de paiement, saisit son numéro et valide sur son téléphone.
+4. FedaPay le renvoie sur la commande. La page relit l'état auprès de FedaPay et, s'il est encore en attente, le suit toute seule (bouton « Vérifier »).
 5. Paiement confirmé : reçu téléchargeable, campagne « Payée ». Paiement refusé ou expiré : motif affiché, nouvelle tentative possible, rien n'est encaissé.
 
 ## Donner l'accès aux comptes

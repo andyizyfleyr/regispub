@@ -10,7 +10,7 @@ import { createLogger } from "@/lib/logger";
 import { audit } from "@/lib/audit";
 import { loadSettings } from "@/lib/settings";
 import { notify, notifyStaff } from "@/lib/notifications/service";
-import { normalizeBeninPhone, PAYMENT_COUNTRIES, type OperatorCode } from "@/lib/phone";
+import { normalizeBeninPhone, PAYMENT_COUNTRIES, type NormalizedPhone, type OperatorCode } from "@/lib/phone";
 import { loyaltyPointsFor, type PromoInput } from "@/lib/pricing/quote";
 import { addDays, formatFcfa, randomCode } from "@/lib/utils";
 import { announceBoostPaid, markBoostPaid } from "@/lib/boost/settle";
@@ -28,10 +28,8 @@ const LATE_SETTLEMENT_WINDOW_MS = 26 * 3_600_000;
 export type StartPaymentResult =
   | {
       ok: true; paymentId: string; expiresAt: Date;
-      /** Page de paiement du prestataire pour cette même tentative (secours). */
+      /** Page de paiement du prestataire, où envoyer le client (parcours « hosted »). */
       redirectUrl?: string;
-      /** false : la demande n'est pas partie sur le téléphone, le client doit ouvrir redirectUrl. */
-      pushed: boolean;
     }
   | { ok: false; error: string; paymentId?: string };
 
@@ -54,12 +52,24 @@ export async function resolvePromo(rawCode: string, userId: string, client: Tx |
 
 // ─────────────────────────── Démarrage d'un paiement ───────────────────────────
 
-export async function startPayment(args: { orderId: string; userId: string; operator: OperatorCode; phoneInput: string; idempotencyKey: string }): Promise<StartPaymentResult> {
+/**
+ * Démarre une tentative de paiement. Selon le prestataire :
+ * - « hosted » (FedaPay) : crée la collecte et renvoie le lien de sa page de paiement, où le client choisit son moyen de paiement ;
+ * - « phone » (simulateur) : le numéro et l'opérateur saisis chez nous sont exigés.
+ */
+export async function startPayment(args: { orderId: string; userId: string; idempotencyKey: string; operator?: OperatorCode | null; phoneInput?: string | null }, retried = false): Promise<StartPaymentResult> {
   const provider = await getActiveProvider();
   if (!provider) return { ok: false, error: "Le paiement Mobile Money n'est pas encore activé sur cette plateforme. Contactez le support." };
-  if (!provider.supportedOperators.includes(args.operator)) return { ok: false, error: "Cet opérateur n'est pas disponible pour le moment." };
-  const phone = normalizeBeninPhone(args.phoneInput);
-  if (!phone) return { ok: false, error: "Numéro invalide. Saisissez un numéro béninois à 10 chiffres, par exemple 01 97 00 00 00." };
+  const hosted = provider.checkout === "hosted";
+  let operator: OperatorCode | null = null;
+  let phone: NormalizedPhone | null = null;
+  if (!hosted) {
+    if (!args.operator) return { ok: false, error: "Choisissez votre opérateur Mobile Money." };
+    if (!provider.supportedOperators.includes(args.operator)) return { ok: false, error: "Cet opérateur n'est pas disponible pour le moment." };
+    phone = normalizeBeninPhone(args.phoneInput ?? "");
+    if (!phone) return { ok: false, error: "Numéro invalide. Saisissez un numéro béninois à 10 chiffres, par exemple 01 97 00 00 00." };
+    operator = args.operator;
+  }
   if (!/^[a-zA-Z0-9-]{16,64}$/.test(args.idempotencyKey)) return { ok: false, error: "Requête invalide. Rechargez la page." };
   const settings = await loadSettings();
   const idempotencyKey = createHash("sha256").update(`${args.orderId}:${args.idempotencyKey}`).digest("hex");
@@ -77,7 +87,7 @@ export async function startPayment(args: { orderId: string; userId: string; oper
     if (open) return { busy: open.id } as const;
     const payment = await tx.payment.create({
       data: {
-        orderId: order.id, userId: order.userId, provider: provider.id, operator: args.operator, phone: phone.e164, amount: order.total,
+        orderId: order.id, userId: order.userId, provider: provider.id, operator, phone: phone?.e164 ?? null, amount: order.total,
         currency: order.currency, idempotencyKey, expiresAt: new Date(Date.now() + settings.paymentExpiryMinutes * 60_000),
       },
     });
@@ -87,41 +97,40 @@ export async function startPayment(args: { orderId: string; userId: string; oper
   if ("error" in prepared) return { ok: false, error: prepared.error! };
   if ("existing" in prepared) {
     const same = prepared.existing!;
-    return { ok: true, paymentId: same.id, expiresAt: same.expiresAt, redirectUrl: same.redirectUrl ?? undefined, pushed: true };
+    return { ok: true, paymentId: same.id, expiresAt: same.expiresAt, redirectUrl: same.redirectUrl ?? undefined };
   }
   if ("busy" in prepared) {
-    // Un paiement est déjà en cours : on rafraîchit son état avant de refuser.
+    // Un paiement est déjà en cours : on rafraîchit son état avant de décider.
     const refreshed = await refreshPayment(prepared.busy!, { force: true });
-    if (refreshed?.status === "SUCCEEDED") return { ok: true, paymentId: refreshed.id, expiresAt: refreshed.expiresAt, pushed: true };
+    if (refreshed?.status === "SUCCEEDED") return { ok: true, paymentId: refreshed.id, expiresAt: refreshed.expiresAt };
     if (refreshed && (OPEN_PAYMENT as readonly string[]).includes(refreshed.status)) {
+      // Page du prestataire : le client y retourne pour la même collecte, qui ne peut pas être payée deux fois.
+      if (refreshed.redirectUrl) return { ok: true, paymentId: refreshed.id, expiresAt: refreshed.expiresAt, redirectUrl: refreshed.redirectUrl };
       return { ok: false, paymentId: prepared.busy!, error: "Un paiement est déjà en cours pour cette commande. Validez-le sur votre téléphone ou attendez son expiration avant de réessayer." };
     }
+    // La tentative précédente vient de se clore. Page du prestataire : on en ouvre une nouvelle sans faire recliquer le client.
+    if (hosted && !retried) return startPayment(args, true);
     return { ok: false, error: "Le paiement précédent vient d'échouer. Vous pouvez réessayer." };
   }
 
   const { payment, order } = prepared;
   try {
     const result = await provider.initiate({
-      paymentId: payment.id, orderReference: order.reference, amount: payment.amount, currency: "XOF", operator: args.operator, phone,
+      paymentId: payment.id, orderReference: order.reference, amount: payment.amount, currency: "XOF", operator, phone,
       customer: { name: order.user.name, email: order.user.email },
       description: `RegisPub — commande ${order.reference}`,
       callbackUrl: `${env.appUrl}/app/paiements/${order.id}`,
     });
+    if (hosted && !result.redirectUrl) throw new PaymentProviderError(`${provider.label} n'a pas donné de page de paiement`);
     await db.payment.update({
       where: { id: payment.id },
       data: { providerRef: result.providerRef, status: "PENDING", providerStatus: result.providerStatus ?? null, redirectUrl: result.redirectUrl ?? null },
     });
-    const pushed = result.pushed !== false;
-    if (pushed) log.info("paiement initié", { paymentId: payment.id, provider: provider.id, operator: args.operator, amount: payment.amount });
-    else {
-      // La demande n'est pas partie sur le téléphone : le client règle sur la page du prestataire, et l'équipe garde la raison.
-      log.warn("demande non envoyée sur le téléphone, page du prestataire proposée", { paymentId: payment.id, provider: provider.id, operator: args.operator, reason: result.pushError });
-      await audit({ actorId: args.userId, action: "payment.push_failed", entity: "Payment", entityId: payment.id, meta: { provider: provider.id, operator: args.operator, reason: result.pushError ?? null } });
-    }
-    return { ok: true, paymentId: payment.id, expiresAt: payment.expiresAt, redirectUrl: result.redirectUrl, pushed };
+    log.info("paiement initié", { paymentId: payment.id, provider: provider.id, checkout: provider.checkout, amount: payment.amount });
+    return { ok: true, paymentId: payment.id, expiresAt: payment.expiresAt, redirectUrl: result.redirectUrl };
   } catch (error) {
     const known = error instanceof PaymentProviderError ? error : null;
-    const userMessage = known?.userMessage ?? "La demande de paiement n'a pas pu être envoyée. Vérifiez le numéro et réessayez.";
+    const userMessage = known?.userMessage ?? (hosted ? "La page de paiement n'a pas pu être ouverte. Réessayez dans un instant." : "La demande de paiement n'a pas pu être envoyée. Vérifiez le numéro et réessayez.");
     await db.payment.update({ where: { id: payment.id }, data: { status: "FAILED", failureReason: userMessage, providerStatus: "initiation_error" } });
     log.error("échec de l'initiation du paiement", { error, paymentId: payment.id, kind: known?.kind, details: known?.details });
     if (known?.kind === "auth") await alertProviderRejected(provider.label, known.message);
@@ -180,6 +189,8 @@ export async function refreshPayment(paymentId: string, opts: { force?: boolean 
 export async function applyVerification(paymentId: string, v: VerifyResult) {
   const payment = await db.payment.findUnique({ where: { id: paymentId } });
   if (!payment) return;
+  // Paiement fait sur la page du prestataire : l'opérateur n'est connu qu'une fois le client passé par cette page.
+  if (v.operator && !payment.operator) await db.payment.updateMany({ where: { id: paymentId, operator: null }, data: { operator: v.operator } });
   const mismatch =
     (v.amount !== null && v.amount !== payment.amount ? `montant ${v.amount} ≠ ${payment.amount}` : null) ??
     (v.merchantReference && v.merchantReference !== payment.id ? "référence marchande différente" : null);
@@ -505,6 +516,6 @@ export async function resolveRefund(args: { refundId: string; decision: "PROCESS
 export async function paymentModeInfo() {
   const provider = await getActiveProvider();
   const operators = PAYMENT_COUNTRIES[0]!.operators.filter((o) => provider?.supportedOperators.includes(o.code));
-  return { available: Boolean(provider), providerId: provider?.id ?? null, providerLabel: provider?.label ?? null, mode: provider?.mode ?? null, testNotice: provider?.testNotice ?? null, testNumbers: provider?.testNumbers ? [...provider.testNumbers] : null, operators };
+  return { available: Boolean(provider), providerId: provider?.id ?? null, providerLabel: provider?.label ?? null, mode: provider?.mode ?? null, checkout: provider?.checkout ?? null, testNotice: provider?.testNotice ?? null, testNumbers: provider?.testNumbers ? [...provider.testNumbers] : null, operators };
 }
 

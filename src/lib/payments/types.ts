@@ -7,10 +7,12 @@ export type InitiateInput = {
   orderReference: string;
   amount: number;
   currency: "XOF";
-  operator: OperatorCode;
-  phone: NormalizedPhone;
+  /** Renseignés seulement quand le numéro est saisi chez nous (parcours « phone »). */
+  operator?: OperatorCode | null;
+  phone?: NormalizedPhone | null;
   customer: { name: string; email: string };
   description: string;
+  /** Adresse où le prestataire renvoie le client après le paiement. */
   callbackUrl: string;
 };
 
@@ -18,15 +20,8 @@ export type InitiateResult = {
   providerRef: string;
   status: ProviderPaymentStatus;
   providerStatus?: string;
-  /**
-   * Page de paiement hébergée par le prestataire pour CETTE transaction. Solution de secours quand la demande
-   * n'arrive pas sur le téléphone : comme il s'agit de la même transaction, elle ne peut pas être payée deux fois.
-   */
+  /** Page de paiement du prestataire pour CETTE transaction. Obligatoire quand le parcours est « hosted ». */
   redirectUrl?: string;
-  /** false : la demande n'a pas pu être envoyée sur le téléphone, le client doit passer par redirectUrl. */
-  pushed?: boolean;
-  /** Réponse du prestataire quand l'envoi sur le téléphone a échoué (pour l'équipe, jamais affichée au client). */
-  pushError?: string;
 };
 
 export type VerifyResult = {
@@ -36,6 +31,8 @@ export type VerifyResult = {
   /** Statut tel que le prestataire l'exprime, complété du dernier code d'erreur s'il y en a un. */
   providerStatus: string;
   merchantReference?: string | null;
+  /** Opérateur utilisé par le client, quand le prestataire l'indique. */
+  operator?: OperatorCode | null;
   /** Explication en clair, destinée au client. */
   failureReason?: string;
 };
@@ -67,10 +64,15 @@ export interface PaymentProvider {
   readonly id: string;
   readonly label: string;
   readonly mode: "live" | "test" | "simulation";
+  /**
+   * Où le client paie. « hosted » : sur la page du prestataire, qui demande elle-même le moyen de paiement et le numéro ;
+   * nous ne faisons qu'y envoyer le client. « phone » : le numéro et l'opérateur sont saisis chez nous.
+   */
+  readonly checkout: "hosted" | "phone";
   readonly supportedOperators: OperatorCode[];
-  /** Hors mode réel : phrase affichée au client pour dire qu'aucun argent ne circule et quels numéros essayer. */
+  /** Parcours « phone » hors mode réel : phrase affichée au client pour dire qu'aucun argent ne circule et quels numéros essayer. */
   readonly testNotice: string | null;
-  /** En mode test, les seuls numéros (8 chiffres) qui donnent un paiement accepté. null : pas de liste imposée. */
+  /** En mode test, les seuls numéros (8 chiffres) qui donnent un paiement accepté. Rappelés à l'équipe, pas au client. */
   readonly testNumbers: readonly string[] | null;
   isConfigured(): boolean;
   initiate(input: InitiateInput): Promise<InitiateResult>;
