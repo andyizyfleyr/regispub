@@ -2,6 +2,8 @@ import "server-only";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { AwsClient } from "aws4fetch";
+import { getConfig } from "@/lib/config";
+import { s3Complete } from "@/lib/config/keys";
 import { env } from "@/lib/env";
 import { DomainError } from "@/lib/errors";
 
@@ -93,24 +95,28 @@ class S3Driver implements StorageDriver {
   };
 }
 
-export function s3Configured() {
-  const s = env.s3;
-  return Boolean(s.endpoint && s.bucket && s.accessKeyId && s.secretAccessKey);
+export async function s3Configured() {
+  return s3Complete(await getConfig());
 }
 
-let cached: StorageDriver | null = null;
+let cached: { signature: string; driver: StorageDriver } | null = null;
 
-export function getStorage(): StorageDriver {
-  if (cached) return cached;
-  if (env.storageDriver === "s3") {
-    if (!s3Configured()) throw new Error("STORAGE_DRIVER=s3 mais la configuration S3 est incomplète");
-    cached = new S3Driver(env.s3);
+/** Stockage en vigueur. Le pilote est reconstruit dès qu'une clé change dans l'administration. */
+export async function getStorage(): Promise<StorageDriver> {
+  const config = await getConfig();
+  const signature = config.storageDriver === "s3" ? JSON.stringify(config.s3) : "local";
+  if (cached?.signature === signature) return cached.driver;
+  let driver: StorageDriver;
+  if (config.storageDriver === "s3") {
+    if (!s3Complete(config)) throw new Error("Stockage S3 choisi mais configuration incomplète (Gestion → Paramètres → Clés et connexions)");
+    driver = new S3Driver(config.s3);
   } else {
     // Sur un hébergement serverless le disque est en lecture seule : mieux vaut un message clair qu'une erreur système.
     if (env.readOnlyFs) throw new DomainError("L'envoi de fichiers n'est pas encore activé sur ce site (stockage en cours de configuration).");
-    cached = new LocalDriver(path.resolve(/* turbopackIgnore: true */ process.cwd(), env.storageLocalDir));
+    driver = new LocalDriver(path.resolve(/* turbopackIgnore: true */ process.cwd(), env.storageLocalDir));
   }
-  return cached;
+  cached = { signature, driver };
+  return driver;
 }
 
 export const UPLOAD_RULES = {

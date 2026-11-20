@@ -1,6 +1,8 @@
 # Mise en ligne : Neon, Vercel, Cloudflare R2
 
-Ce guide décrit la mise en ligne telle qu'elle est prévue par le code. Aucune clé ne doit être écrite dans le dépôt : tout passe par les variables d'environnement du projet Vercel.
+Ce guide décrit la mise en ligne telle qu'elle est prévue par le code. Aucune clé ne doit être écrite dans le dépôt.
+
+Seules quelques variables sont à définir dans le projet Vercel (§ 2). Toutes les autres clés (paiement, stockage, e-mails, WhatsApp, API publicitaires) se saisissent ensuite dans le site : **Gestion → Paramètres → Clés et connexions** (§ 3).
 
 ## 1. Base de données (Neon)
 
@@ -32,12 +34,23 @@ Variables à définir pour l'environnement **Production** :
 | `APP_SECRET` | 64 caractères hexadécimaux aléatoires (`openssl rand -hex 32`). Le changer déconnecte tout le monde |
 | `CRON_SECRET` | Chaîne aléatoire : Vercel l'envoie à la tâche planifiée |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Identifiants du premier super administrateur (créé une seule fois) |
-| `PAYMENT_PROVIDER` | `sandbox` tant que FedaPay n'est pas branché, puis `fedapay` |
 | `APP_URL` | Facultatif sur Vercel. À renseigner avec votre propre domaine dès qu'il est branché (liens des e-mails, webhook) |
 
 Seule la branche de production du projet (par défaut `main`) est déployée en production automatiquement. Les autres branches donnent des déploiements de prévisualisation, protégés par la connexion Vercel et sans accès à la base.
 
-## 3. Stockage des fichiers (Cloudflare R2)
+## 3. Clés et connexions (dans le site)
+
+Page **Gestion → Paramètres → Clés et connexions**, réservée au super administrateur. Une carte par service : paiement Mobile Money, stockage des fichiers, e-mails, messages WhatsApp, statistiques publicitaires.
+
+- Une valeur enregistrée est prise en compte en quelques secondes, sans nouveau déploiement.
+- Les clés sont chiffrées en base (AES-256-GCM, clé dérivée de `APP_SECRET`) et ne sont plus jamais affichées : seuls leurs quatre derniers caractères sont rappelés. Pour en changer, coller la nouvelle ; pour la retirer, cocher « Effacer cette clé ».
+- Une valeur saisie dans le site passe avant la variable Vercel du même nom. Les variables déjà définies chez Vercel restent donc valables tant que rien n'est saisi (mention « Valeur de Vercel »), et reprennent la main si la clé est effacée.
+- Un enregistrement qui couperait un service est refusé : FedaPay sans clé secrète, clé de test en mode réel, stockage S3 incomplet, e-mails activés sans clé.
+- Chaque enregistrement est inscrit au journal d'audit (`keys.updated`) avec le nom des clés modifiées, jamais leur valeur.
+
+Restent obligatoirement chez Vercel : `DATABASE_URL` / `DIRECT_URL` (les clés sont rangées dans cette base), `APP_SECRET` (il sert à les chiffrer : s'il change, les clés enregistrées deviennent illisibles et sont à ressaisir) et `CRON_SECRET` (envoyé par Vercel avec les tâches planifiées).
+
+## 4. Stockage des fichiers (Cloudflare R2)
 
 Le bucket reste **privé**. Les fichiers ne sont jamais publics : le site vérifie les droits de la personne connectée, puis sert le fichier lui-même ou, pour les fichiers lourds, redirige vers une adresse signée valable cinq minutes.
 
@@ -71,18 +84,22 @@ Bucket `regispub` → **Settings** → **CORS Policy** → **Add CORS policy** �
 
 Sans cette règle, les photos légères passent, mais les vidéos et les fichiers de plus de 4 Mo sont refusés par le navigateur.
 
-### Variables Vercel
+### Saisir les valeurs
 
-| Variable | Valeur |
+Carte **Stockage des fichiers** de la page Clés et connexions :
+
+| Champ | Valeur |
 | --- | --- |
-| `STORAGE_DRIVER` | `s3` |
-| `S3_ENDPOINT` | `https://<identifiant-du-compte>.r2.cloudflarestorage.com` (sans le nom du bucket) |
-| `S3_REGION` | `auto` |
-| `S3_BUCKET` | `regispub` |
-| `S3_ACCESS_KEY_ID` | Access Key ID |
-| `S3_SECRET_ACCESS_KEY` | Secret Access Key |
+| Stockage utilisé | Espace compatible S3 |
+| Adresse du service | `https://<identifiant-du-compte>.r2.cloudflarestorage.com` (sans le nom du bucket) |
+| Région | `auto` |
+| Nom de l'espace | `regispub` |
+| Identifiant de clé d'accès | Access Key ID |
+| Clé d'accès secrète | Secret Access Key |
 
-Un nouveau déploiement est nécessaire pour qu'elles soient prises en compte. Son journal de build se termine par « Stockage : opérationnel » si les clés, le nom du bucket et la règle CORS sont corrects.
+Pour vérifier que les clés, le nom du bucket et la règle CORS sont corrects : contrôle `/api/health?controle=<clé>` (§ 6), ou journal de build du déploiement suivant, qui se termine par « Stockage : opérationnel ».
+
+Changer d'espace ne déplace pas les fichiers déjà envoyés : ils restent dans l'ancien.
 
 ### Comment circulent les fichiers
 
@@ -92,14 +109,14 @@ Les fonctions Vercel refusent les requêtes de plus de 4,5 Mo. Le site s'y adapt
 - jusqu'à 4 Mo, le fichier passe par le site (`POST /api/files`) ;
 - au-delà (vidéos surtout), le navigateur demande une adresse signée (`POST /api/files/direct`), envoie le fichier directement au bucket, puis le site relit l'objet reçu : taille réelle et signature binaire sont vérifiées avant de créer la fiche, et un fichier non conforme est supprimé.
 
-## 4. Paiements (FedaPay)
+## 5. Paiements (FedaPay)
 
 1. Créer le compte marchand FedaPay et récupérer la clé secrète.
 2. Dans FedaPay, déclarer le webhook `https://votre-domaine/api/webhooks/payments/fedapay` et copier son secret de signature.
-3. Variables : `PAYMENT_PROVIDER=fedapay`, `FEDAPAY_ENV` (`sandbox` puis `live`), `FEDAPAY_SECRET_KEY`, `FEDAPAY_WEBHOOK_SECRET`.
-4. Supprimer `ALLOW_SANDBOX_PAYMENTS` s'il avait été défini pour la recette.
+3. Carte **Paiement Mobile Money** de la page Clés et connexions : prestataire « FedaPay », mode « Test » puis « Réel », clé secrète, secret du webhook.
+4. Dans la même carte, remettre « Simulation sur le site en ligne » sur « Interdite ».
 
-## 5. Vérifier après chaque mise en ligne
+## 6. Vérifier après chaque mise en ligne
 
 - `https://votre-domaine/api/health` répond `{"status":"ok"}` ;
 - `https://votre-domaine/api/health?controle=<clé>` rejoue chaque étape d'un envoi de fichier depuis le serveur en service (écriture, relecture, adresse signée, fiche en base) et nomme celle qui échoue. La clé se calcule à partir de `APP_SECRET` : `node -e 'console.log(require("crypto").createHmac("sha256", process.env.APP_SECRET).update("health:storage").digest("hex").slice(0,24))'`. Le contrôle fait au moment de la construction ne suffit pas : il ne tourne pas dans le serveur Next.js ;

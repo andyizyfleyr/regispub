@@ -1,21 +1,22 @@
 import "server-only";
-import { env } from "@/lib/env";
+import { getConfig } from "@/lib/config";
 
 export type ChannelResult = { status: "SENT" | "FAILED" | "SKIPPED"; detail?: string; providerRef?: string };
 
-export interface EmailChannel { isConfigured(): boolean; send(to: string, subject: string, text: string, html: string): Promise<ChannelResult> }
-export interface WhatsappChannel { isConfigured(): boolean; send(toE164: string, text: string): Promise<ChannelResult> }
+export interface EmailChannel { isConfigured(): Promise<boolean>; send(to: string, subject: string, text: string, html: string): Promise<ChannelResult> }
+export interface WhatsappChannel { isConfigured(): Promise<boolean>; send(toE164: string, text: string): Promise<ChannelResult> }
 
 /** E-mails transactionnels via l'API Resend. */
 export const resendEmail: EmailChannel = {
-  isConfigured: () => env.emailProvider === "resend" && Boolean(env.resendKey),
+  isConfigured: async () => { const c = await getConfig(); return c.emailProvider === "resend" && Boolean(c.resendKey); },
   async send(to, subject, text, html) {
-    if (!this.isConfigured()) return { status: "SKIPPED", detail: "Fournisseur d'e-mail non configuré" };
+    const c = await getConfig();
+    if (c.emailProvider !== "resend" || !c.resendKey) return { status: "SKIPPED", detail: "Fournisseur d'e-mail non configuré" };
     try {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
-        headers: { Authorization: `Bearer ${env.resendKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: env.emailFrom, to: [to], subject, text, html }),
+        headers: { Authorization: `Bearer ${c.resendKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from: c.emailFrom, to: [to], subject, text, html }),
         signal: AbortSignal.timeout(10_000),
       });
       const json = (await res.json().catch(() => ({}))) as { id?: string; message?: string };
@@ -31,12 +32,13 @@ export const resendEmail: EmailChannel = {
  * peuvent être envoyés : le texte est passé comme unique variable du corps du modèle configuré.
  */
 export const whatsappCloud: WhatsappChannel = {
-  isConfigured: () => { const w = env.whatsapp; return Boolean(w.phoneNumberId && w.accessToken && w.templateName); },
+  isConfigured: async () => { const w = (await getConfig()).whatsapp; return Boolean(w.phoneNumberId && w.accessToken && w.templateName); },
   async send(toE164, text) {
-    if (!this.isConfigured()) return { status: "SKIPPED", detail: "WhatsApp Cloud API non configurée" };
-    const w = env.whatsapp;
+    const c = await getConfig();
+    const w = c.whatsapp;
+    if (!w.phoneNumberId || !w.accessToken || !w.templateName) return { status: "SKIPPED", detail: "WhatsApp Cloud API non configurée" };
     try {
-      const res = await fetch(`https://graph.facebook.com/${env.meta.apiVersion}/${w.phoneNumberId}/messages`, {
+      const res = await fetch(`https://graph.facebook.com/${c.meta.apiVersion}/${w.phoneNumberId}/messages`, {
         method: "POST",
         headers: { Authorization: `Bearer ${w.accessToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({

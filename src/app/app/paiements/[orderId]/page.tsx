@@ -39,7 +39,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
     order = (await load(orderId, user.id))!;
   }
 
-  const mode = paymentModeInfo();
+  const mode = await paymentModeInfo();
   const lines = isRecord(order.quote) && Array.isArray(order.quote.lines) ? (order.quote.lines as QuoteLine[]) : [];
   const open = order.payments.find((p) => (p.status === "INITIATED" || p.status === "PENDING") && p.expiresAt > new Date()) ?? null;
   const paidPayment = order.payments.find((p) => p.status === "SUCCEEDED" && !p.duplicate);

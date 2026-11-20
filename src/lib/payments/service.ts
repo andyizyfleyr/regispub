@@ -46,7 +46,7 @@ export async function resolvePromo(rawCode: string, userId: string, client: Tx |
 // ─────────────────────────── Démarrage d'un paiement ───────────────────────────
 
 export async function startPayment(args: { orderId: string; userId: string; operator: OperatorCode; phoneInput: string; idempotencyKey: string }): Promise<StartPaymentResult> {
-  const provider = getActiveProvider();
+  const provider = await getActiveProvider();
   if (!provider) return { ok: false, error: "Le paiement Mobile Money n'est pas encore activé sur cette plateforme. Contactez le support." };
   if (!provider.supportedOperators.includes(args.operator)) return { ok: false, error: "Cet opérateur n'est pas disponible pour le moment." };
   const phone = normalizeBeninPhone(args.phoneInput);
@@ -119,7 +119,7 @@ export async function refreshPayment(paymentId: string, opts: { force?: boolean 
   const payment = await db.payment.findUnique({ where: { id: paymentId } });
   if (!payment) return null;
   if (payment.status === "SUCCEEDED" || !payment.providerRef) return payment;
-  const provider = getProviderById(payment.provider);
+  const provider = await getProviderById(payment.provider);
   if (!provider) return payment;
   if (!opts.force) {
     // Limite la fréquence des appels au prestataire lorsque plusieurs onglets interrogent le statut.
@@ -304,7 +304,7 @@ async function settlePayment(paymentId: string, providerStatus: string) {
 export type WebhookOutcome = { status: number; body: Record<string, unknown> };
 
 export async function handlePaymentWebhook(providerId: string, rawBody: string, headers: Headers): Promise<WebhookOutcome> {
-  const provider = getProviderById(providerId);
+  const provider = await getProviderById(providerId);
   if (!provider) return { status: 404, body: { error: "unknown_provider" } };
   let event;
   try {
@@ -409,8 +409,8 @@ export async function resolveRefund(args: { refundId: string; decision: "PROCESS
   return result;
 }
 
-export function paymentModeInfo() {
-  const provider = getActiveProvider();
+export async function paymentModeInfo() {
+  const provider = await getActiveProvider();
   const operators = PAYMENT_COUNTRIES[0]!.operators.filter((o) => provider?.supportedOperators.includes(o.code));
   return { available: Boolean(provider), providerId: provider?.id ?? null, providerLabel: provider?.label ?? null, mode: provider?.mode ?? null, operators };
 }

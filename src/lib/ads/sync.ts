@@ -33,7 +33,7 @@ export async function syncCampaignMetrics(campaignId: string): Promise<{ synced:
     // Une campagne Meta diffusée sur Facebook et Instagram partage le même identifiant : on ne la lit qu'une fois.
     if (platform === "INSTAGRAM" && refs.FACEBOOK === externalId) continue;
     const adapter = ADS_ADAPTERS[platform === "TIKTOK" ? "TIKTOK" : "META"];
-    if (!adapter.isConfigured()) { messages.push(`${adapter.label} : identifiants non configurés.`); continue; }
+    if (!(await adapter.isConfigured())) { messages.push(`${adapter.label} : identifiants non configurés.`); continue; }
     try {
       const rows = await adapter.fetchDaily(externalId, since, until);
       for (const r of rows) {

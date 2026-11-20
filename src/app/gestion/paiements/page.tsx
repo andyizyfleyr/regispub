@@ -25,7 +25,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
   const refundsView = sp.vue === "remboursements";
   const canRefund = can(user.role, "payment.refund");
   const pendingRefunds = await db.refund.count({ where: { status: "REQUESTED" } });
-  const mode = paymentModeInfo();
+  const mode = await paymentModeInfo();
   const base = "/gestion/paiements";
 
   return (

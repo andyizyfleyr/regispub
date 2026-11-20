@@ -4,7 +4,9 @@
 // À lancer avec : tsx --conditions=react-server scripts/check-storage.ts
 import "dotenv/config";
 import { env } from "../src/lib/env";
-import { getStorage, s3Configured } from "../src/lib/storage";
+import { getConfig } from "../src/lib/config";
+import { s3Complete } from "../src/lib/config/keys";
+import { getStorage } from "../src/lib/storage";
 
 let failures = 0;
 async function step(label: string, run: () => Promise<string | void>) {
@@ -23,11 +25,13 @@ function assert(condition: unknown, message: string): asserts condition {
 async function main() {
   const stage = process.env.VERCEL_ENV;
   if (stage && stage !== "production") return;
-  if (env.storageDriver !== "s3") { console.log("Stockage : aucun bucket configuré, l'envoi de fichiers reste désactivé."); return; }
-  if (!s3Configured()) { console.log("Stockage : ✗ configuration S3 incomplète (S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY)."); return; }
+  // Les clés saisies dans l'administration passent avant celles de l'hébergeur : le contrôle porte sur la configuration réellement utilisée.
+  const config = await getConfig();
+  if (config.storageDriver !== "s3") { console.log("Stockage : aucun bucket configuré, l'envoi de fichiers reste désactivé."); return; }
+  if (!s3Complete(config)) { console.log("Stockage : ✗ configuration S3 incomplète (adresse, espace, identifiant et clé d'accès : Gestion → Paramètres → Clés et connexions)."); return; }
 
-  console.log(`Stockage : contrôle du bucket « ${env.s3.bucket} »`);
-  const storage = getStorage();
+  console.log(`Stockage : contrôle du bucket « ${config.s3.bucket} »`);
+  const storage = await getStorage();
   const direct = storage.direct;
   const key = `verification/${Date.now().toString(36)}.txt`;
   const directKey = `verification/${Date.now().toString(36)}-direct.txt`;
@@ -72,4 +76,7 @@ async function main() {
   console.log(failures ? `Stockage : ${failures} contrôle(s) en échec — l'envoi de fichiers ne fonctionnera pas correctement.` : "Stockage : opérationnel.");
 }
 
-main().catch((error) => { console.log(`Stockage : contrôle impossible : ${(error as Error).message}`); });
+main()
+  .catch((error) => { console.log(`Stockage : contrôle impossible : ${(error as Error).message}`); })
+  // La lecture des clés ouvre une connexion à la base : on termine sans attendre qu'elle se ferme seule.
+  .finally(() => process.exit(0));

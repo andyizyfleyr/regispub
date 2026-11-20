@@ -63,7 +63,7 @@ export async function storeAsset(input: StoreInput) {
   await checkQuota(ownerId);
 
   const key = newKey(ownerId, input.mime);
-  await getStorage().put(key, input.bytes, input.mime);
+  await (await getStorage()).put(key, input.bytes, input.mime);
   const size = kind === "IMAGE" ? imageSize(input.bytes, input.mime) : null;
   return db.asset.create({
     data: {
@@ -82,12 +82,12 @@ type Ticket = { k: string; o: string; m: string; s: number; n: string; src: "UPL
 const DIRECT_TTL_SECONDS = 15 * 60;
 const signTicket = (body: string) => createHmac("sha256", env.appSecret).update(`upload:${body}`).digest("base64url");
 
-export function directUploadAvailable() {
-  try { return Boolean(getStorage().direct); } catch { return false; }
+export async function directUploadAvailable() {
+  try { return Boolean((await getStorage()).direct); } catch { return false; }
 }
 
 export async function beginDirectUpload(input: { owner: Actor; mime: string; size: number; name: string; source: Ticket["src"]; format?: string | null }) {
-  const direct = getStorage().direct;
+  const direct = (await getStorage()).direct;
   if (!direct) return null;
   checkDeclared(input.mime, input.size);
   await checkQuota(input.owner.id);
@@ -104,7 +104,7 @@ export async function completeDirectUpload(owner: Actor, rawTicket: string, desi
   if (!body || !expected || given.length !== expected.length || !timingSafeEqual(given, expected)) throw new DomainError("Envoi invalide. Recommencez.");
   const t = JSON.parse(Buffer.from(body, "base64url").toString()) as Ticket;
   if (t.o !== owner.id || t.e < Math.floor(Date.now() / 1000)) throw new DomainError("Envoi expiré. Recommencez.");
-  const storage = getStorage();
+  const storage = await getStorage();
   if (!storage.direct) throw new DomainError("Envoi direct indisponible.");
   const already = await db.asset.findUnique({ where: { storageKey: t.k } });
   if (already) return already;
@@ -144,5 +144,5 @@ export async function deleteAsset(actor: Actor, assetId: string) {
   if (!asset) throw new DomainError("Fichier introuvable.");
   if (asset.campaignLinks.some((l) => !["DRAFT", "CANCELLED"].includes(l.campaign.status))) throw new DomainError("Ce fichier est utilisé par une campagne commandée : il ne peut pas être supprimé.");
   await db.asset.delete({ where: { id: asset.id } });
-  await getStorage().delete(asset.storageKey).catch(() => undefined);
+  await (await getStorage()).delete(asset.storageKey).catch(() => undefined);
 }

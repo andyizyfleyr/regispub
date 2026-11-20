@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { ActionForm, FieldError, SubmitButton } from "@/components/ui/action-form";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/form";
-import { PageHeader } from "@/components/ui/misc";
+import { PageHeader, TabsNav } from "@/components/ui/misc";
+import { can } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
 import { loadSettings } from "@/lib/settings";
 import type { PlatformSettings } from "@/lib/settings-schema";
@@ -14,7 +15,7 @@ type NumKey = { [K in keyof PlatformSettings]: PlatformSettings[K] extends numbe
 type TextKey = Exclude<{ [K in keyof PlatformSettings]: PlatformSettings[K] extends string ? K : never }[keyof PlatformSettings], "paymentFeePayer">;
 
 export default async function SettingsPage() {
-  await requirePermission("settings.manage");
+  const user = await requirePermission("settings.manage");
   const s = await loadSettings();
   const num = (key: NumKey, label: string, hint?: string, step = 1) => (
     <Field key={key} label={label} htmlFor={`set-${key}`} hint={hint}><Input id={`set-${key}`} name={key} type="number" inputMode="decimal" step={step} min={0} required className="tnum" defaultValue={s[key]} /><FieldError name={key} /></Field>
@@ -25,6 +26,7 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader title="Paramètres" />
+      {can(user.role, "keys.manage") && <TabsNav current="reglages" tabs={[{ id: "reglages", label: "Réglages", href: "/gestion/parametres" }, { id: "cles", label: "Clés et connexions", href: "/gestion/parametres/cles" }]} />}
       <ActionForm action={saveSettingsAction} className="space-y-6">
         <Card>
           <CardHeader title="Tarification" />
