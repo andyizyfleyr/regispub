@@ -34,8 +34,10 @@ export const KEYS: KeyDef[] = [
     hint: "À laisser sur « Interdite » dès que vous encaissez de vrais paiements.",
     options: [{ value: "false", label: "Interdite" }, { value: "true", label: "Autorisée (démonstration)" }] },
   { name: "FEDAPAY_ENV", group: "payments", label: "Mode FedaPay", fallback: "sandbox",
-    hint: "La clé secrète et le secret du webhook doivent venir du même mode. En test, la page de paiement FedaPay n'accepte que les numéros 64 00 00 01 et 66 00 00 01.",
+    hint: "Les clés et le secret du webhook doivent venir du même mode. En test, la page de paiement FedaPay n'accepte que les numéros 64 00 00 01 et 66 00 00 01.",
     options: [{ value: "live", label: "Réel" }, { value: "sandbox", label: "Test" }] },
+  { name: "FEDAPAY_PUBLIC_KEY", group: "payments", label: "Clé publique FedaPay", placeholder: "pk_live_…",
+    hint: "Facultative : le paiement se fait sur la page de FedaPay, qui n'utilise que la clé secrète. Le site vérifie seulement qu'elle vient du même mode." },
   { name: "FEDAPAY_SECRET_KEY", group: "payments", label: "Clé secrète FedaPay", secret: true, placeholder: "sk_live_…" },
   { name: "FEDAPAY_WEBHOOK_SECRET", group: "payments", label: "Secret du webhook FedaPay", secret: true, placeholder: "wh_live_…",
     hint: "Donné par FedaPay quand vous créez le webhook. L'adresse à lui indiquer est dans « Intégrations ». Événements à cocher : transaction.approved, declined, canceled, transferred." },
@@ -112,6 +114,7 @@ export function buildConfig(get: Lookup) {
     paymentProvider: get("PAYMENT_PROVIDER").toLowerCase(),
     allowSandboxPayments: get("ALLOW_SANDBOX_PAYMENTS") === "true",
     fedapayEnv: get("FEDAPAY_ENV") === "live" ? ("live" as const) : ("sandbox" as const),
+    fedapayPublicKey: get("FEDAPAY_PUBLIC_KEY"),
     fedapaySecretKey: get("FEDAPAY_SECRET_KEY"),
     fedapayWebhookSecret: get("FEDAPAY_WEBHOOK_SECRET"),
     storageDriver: get("STORAGE_DRIVER").toLowerCase(),
@@ -155,6 +158,13 @@ export function checkValue(def: KeyDef, raw: string): { ok: true; value: string 
   if (value === "") return { ok: true, value };
   if (def.secret && /\s/.test(value)) return { ok: false, error: "Une clé ne contient pas d'espace : vérifiez le copier-coller." };
   switch (def.name) {
+    case "FEDAPAY_PUBLIC_KEY":
+      // Ce champ est affiché en clair : une clé secrète n'a rien à y faire.
+      if (/^sk_/i.test(value)) return { ok: false, error: "C'est une clé secrète : collez-la dans « Clé secrète FedaPay ». Ici, il faut la clé publique, qui commence par « pk_ »." };
+      break;
+    case "FEDAPAY_SECRET_KEY":
+      if (/^pk_/i.test(value)) return { ok: false, error: "C'est la clé publique. Collez ici la clé secrète, qui commence par « sk_ »." };
+      break;
     case "S3_ENDPOINT":
       if (!/^https:\/\/[^\s/]+\.[^\s/]+(\/[^\s]*)?$/i.test(value)) return { ok: false, error: "L'adresse doit commencer par https://" };
       break;
@@ -187,6 +197,10 @@ export function checkValue(def: KeyDef, raw: string): { ok: true; value: string 
 /** Incohérences d'une configuration complète : une erreur par champ à corriger (objet vide = cohérente). */
 export function configIssues(c: RuntimeConfig): Record<string, string> {
   const issues: Record<string, string> = {};
+  if (c.paymentProvider === "fedapay" && c.fedapayPublicKey) {
+    const kind = /^pk_live_/.test(c.fedapayPublicKey) ? "live" : /^pk_sandbox_/.test(c.fedapayPublicKey) ? "sandbox" : null;
+    if (kind && kind !== c.fedapayEnv) issues.FEDAPAY_PUBLIC_KEY = kind === "live" ? "Cette clé publique est une clé réelle, alors que le mode choisi est « Test »." : "Cette clé publique est une clé de test, alors que le mode choisi est « Réel ».";
+  }
   if (c.paymentProvider === "fedapay" && !c.fedapaySecretKey) issues.FEDAPAY_SECRET_KEY = "Ajoutez la clé secrète FedaPay, ou choisissez « Simulation ».";
   if (c.paymentProvider === "fedapay" && c.fedapaySecretKey) {
     // Une clé de test en mode réel (ou l'inverse) est refusée par FedaPay à chaque paiement.
