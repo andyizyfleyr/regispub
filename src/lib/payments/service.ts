@@ -505,6 +505,6 @@ export async function resolveRefund(args: { refundId: string; decision: "PROCESS
 export async function paymentModeInfo() {
   const provider = await getActiveProvider();
   const operators = PAYMENT_COUNTRIES[0]!.operators.filter((o) => provider?.supportedOperators.includes(o.code));
-  return { available: Boolean(provider), providerId: provider?.id ?? null, providerLabel: provider?.label ?? null, mode: provider?.mode ?? null, testNotice: provider?.testNotice ?? null, operators };
+  return { available: Boolean(provider), providerId: provider?.id ?? null, providerLabel: provider?.label ?? null, mode: provider?.mode ?? null, testNotice: provider?.testNotice ?? null, testNumbers: provider?.testNumbers ? [...provider.testNumbers] : null, operators };
 }
 

@@ -158,6 +158,7 @@ export class FedapayProvider implements PaymentProvider {
   get testNotice() {
     return this.config.environment === "live" ? null : "Mode test : aucun débit réel. Pour un paiement accepté, tapez le numéro 64 00 00 01 ou 66 00 00 01. Tout autre numéro est refusé.";
   }
+  get testNumbers() { return this.config.environment === "live" ? null : FEDAPAY_TEST_NUMBERS; }
   isConfigured() { return Boolean(this.config.secretKey); }
 
   private async request(method: "GET" | "POST", path: string, body?: unknown): Promise<Record<string, unknown>> {

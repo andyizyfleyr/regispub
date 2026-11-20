@@ -98,6 +98,8 @@ describe("FedaPay en mode test", () => {
     const mode = await paymentModeInfo();
     expect(mode).toMatchObject({ available: true, providerId: "fedapay", mode: "test" });
     expect(mode.testNotice).toMatch(/64 00 00 01/);
+    // L'écran de paiement s'en sert pour proposer les numéros d'essai et prévenir qu'un autre numéro sera refusé.
+    expect(mode.testNumbers).toEqual(["64000001", "66000001"]);
     expect(mode.operators.map((o) => o.code)).toEqual(["MTN", "MOOV", "CELTIIS"]);
   });
 

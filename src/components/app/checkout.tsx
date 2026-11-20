@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CircleAlert, LoaderCircle, RefreshCw, ShieldCheck, Smartphone } from "lucide-react";
+import { ArrowRight, CircleAlert, FlaskConical, LoaderCircle, RefreshCw, ShieldCheck, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { OperatorChip } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
-import { formatPhone, guessBeninOperator, normalizeBeninPhone, type OperatorCode } from "@/lib/phone";
+import { formatPhone, groupDigits, guessBeninOperator, normalizeBeninPhone, type OperatorCode } from "@/lib/phone";
 import { cn, formatFcfa } from "@/lib/utils";
 import { applyPromoAction, cancelOrderAction, startPaymentAction } from "@/server/actions/payments";
 
@@ -21,10 +21,14 @@ const newKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? 
  * Paiement en un geste : le numéro est déjà rempli, l'opérateur est reconnu d'après le numéro, il reste à toucher « Payer ».
  * La confirmation se fait sur le téléphone du client, avec son code secret : aucune seconde confirmation à l'écran.
  */
-export function Checkout({ orderId, total, operators, defaultPhone, testNotice, providerLabel, open, lastFailure, promoCode, canCancel, allowPromo = true, children }: {
+export function Checkout({ orderId, total, operators, defaultPhone, testNotice, testNumbers, testRefused = false, providerLabel, open, lastFailure, promoCode, canCancel, allowPromo = true, children }: {
   orderId: string; total: number; operators: Operator[]; defaultPhone: string; open: OpenPayment | null; lastFailure: string | null; promoCode: string | null; canCancel: boolean;
   /** Hors mode réel : rappel qu'aucun argent ne circule, avec les numéros à essayer. */
   testNotice: string | null;
+  /** En mode test, seuls numéros (8 chiffres) que le prestataire accepte. null : pas de liste imposée. */
+  testNumbers: string[] | null;
+  /** La dernière tentative a été refusée parce que son numéro n'était pas un numéro d'essai. */
+  testRefused?: boolean;
   /** Nom du prestataire, pour désigner sa page de paiement. */
   providerLabel: string;
   /** Les codes promo portent sur les frais de prestation d'une publicité : ils ne s'appliquent pas aux achats d'abonnés ou de J'aime. */
@@ -44,6 +48,9 @@ export function Checkout({ orderId, total, operators, defaultPhone, testNotice, 
   const [promo, setPromo] = React.useState(promoCode ?? "");
   const key = React.useRef(newKey());
   const normalized = normalizeBeninPhone(phone);
+  const testList = testNumbers?.map(groupDigits).join(" ou ") ?? "";
+  /** Mode test : le numéro saisi n'est pas un numéro d'essai, le prestataire le refusera d'office. */
+  const willBeRefused = Boolean(testNumbers && normalized && !testNumbers.includes(normalized.national.slice(-8)));
 
   React.useEffect(() => { setPending(open); }, [open]);
   React.useEffect(() => {
@@ -66,7 +73,7 @@ export function Checkout({ orderId, total, operators, defaultPhone, testNotice, 
     router.refresh();
   }
 
-  if (pending) return <Waiting payment={pending} operators={operators} testMode={Boolean(testNotice)} providerLabel={providerLabel} pushed={pending.id !== notPushed} onDone={() => { key.current = newKey(); setPending(null); router.refresh(); }} />;
+  if (pending) return <Waiting payment={pending} operators={operators} testMode={Boolean(testNotice)} providerLabel={providerLabel} pushed={pending.id !== notPushed} onDone={() => { key.current = newKey(); setPending(null); if (testNumbers?.[0] && willBeRefused) setPhone(groupDigits(testNumbers[0])); router.refresh(); }} />;
 
   return (
     <div className="space-y-4">
@@ -81,11 +88,33 @@ export function Checkout({ orderId, total, operators, defaultPhone, testNotice, 
         </div>
       </div>
 
-      {(error ?? lastFailure) && <Notice tone="danger" title="Le paiement n'a pas abouti">{error ?? lastFailure} Rien n&apos;a été encaissé. Réessayez.</Notice>}
+      {error ? <Notice tone="danger" title="Le paiement n'a pas abouti">{error} Rien n&apos;a été encaissé. Réessayez.</Notice>
+        : testRefused ? <Notice tone="warn" title="Numéro refusé : le paiement est en mode test">En mode test, {providerLabel} refuse d&apos;office tout numéro autre que {testList}. Ce n&apos;est pas une panne. Reprenez avec un numéro d&apos;essai.</Notice>
+        : lastFailure ? <Notice tone="danger" title="Le paiement n'a pas abouti">{lastFailure} Rien n&apos;a été encaissé. Réessayez.</Notice> : null}
 
       <div className="space-y-4 rounded-[22px] border border-line/70 bg-surface p-4 shadow-card sm:rounded-[28px] sm:p-6">
-        <Field label="Votre numéro Mobile Money" htmlFor="pay-phone" hint={normalized ? formatPhone(normalized.e164) : "10 chiffres"} error={phone.replace(/\D/g, "").length >= 10 && !normalized ? "Numéro béninois invalide." : undefined}>
-          <Input id="pay-phone" type="tel" inputMode="tel" autoComplete="tel" className="tnum text-base" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01 97 00 00 00" />
+        {testNotice && (
+          <div className="rounded-xl bg-marigold-soft px-3.5 py-3 text-[0.8125rem] text-ink-soft">
+            <p className="flex items-center gap-2 font-semibold text-ink"><FlaskConical className="size-4 shrink-0" />Mode test : aucun argent n&apos;est débité</p>
+            {testNumbers ? (
+              <>
+                <p className="mt-1.5">{providerLabel} n&apos;accepte que ses numéros d&apos;essai. Tout autre numéro, même le vôtre, est refusé.</p>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {testNumbers.map((n) => (
+                    <button key={n} type="button" onClick={() => setPhone(groupDigits(n))} aria-pressed={normalized?.national.slice(-8) === n}
+                      className={cn("tnum rounded-full border bg-surface px-3 py-1.5 text-[0.8125rem] font-medium text-ink transition-colors", normalized?.national.slice(-8) === n ? "border-green shadow-[0_0_0_1px_var(--color-green)]" : "border-line-strong hover:border-green")}>
+                      {groupDigits(n)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : <p className="mt-1.5">{testNotice}</p>}
+          </div>
+        )}
+
+        <Field label={testNumbers ? "Numéro d'essai" : "Votre numéro Mobile Money"} htmlFor="pay-phone" hint={willBeRefused ? undefined : normalized ? formatPhone(normalized.e164) : "10 chiffres"}
+          error={phone.replace(/\D/g, "").length >= 10 && !normalized ? "Numéro béninois invalide." : willBeRefused ? `Ce numéro sera refusé : en mode test, seuls ${testList} passent.` : undefined}>
+          <Input id="pay-phone" type="tel" inputMode="tel" autoComplete={testNumbers ? "off" : "tel"} className="tnum text-base" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01 97 00 00 00" />
         </Field>
 
         <fieldset>
@@ -104,8 +133,9 @@ export function Checkout({ orderId, total, operators, defaultPhone, testNotice, 
         <Button type="button" size="lg" variant="accent" className="w-full" disabled={!operator || !normalized || busy} aria-busy={busy} onClick={pay}>
           {busy ? <LoaderCircle className="animate-spin" /> : null}{busy ? "Envoi…" : <>Payer {formatFcfa(total)} <ArrowRight /></>}
         </Button>
-        <p className="flex items-start gap-2 text-xs text-muted"><ShieldCheck className="mt-px size-4 shrink-0 text-green" />Vous validez ensuite sur votre téléphone avec votre code secret. Nous ne le voyons jamais.</p>
-        {testNotice && <p className="rounded-md bg-marigold-soft px-3 py-2 text-xs text-ink-soft">{testNotice}</p>}
+        {testNotice
+          ? <p className="flex items-start gap-2 text-xs text-muted"><FlaskConical className="mt-px size-4 shrink-0" />Rien n&apos;arrive sur le téléphone en mode test : le résultat s&apos;affiche ici en quelques secondes.</p>
+          : <p className="flex items-start gap-2 text-xs text-muted"><ShieldCheck className="mt-px size-4 shrink-0 text-green" />Vous validez ensuite sur votre téléphone avec votre code secret. Nous ne le voyons jamais.</p>}
       </div>
 
       {children}
@@ -173,8 +203,8 @@ function Waiting({ payment, operators, testMode, providerLabel, pushed, onDone }
         </>
       ) : (
         <>
-          <h2 className="mt-4 text-xl font-semibold">Validez sur votre téléphone</h2>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-muted"><span className="tnum font-medium text-ink">{formatPhone(payment.phone)}</span>{op ? ` · ${op.label}` : ""}. {op?.ussdHint}</p>
+          <h2 className="mt-4 text-xl font-semibold">{testMode ? "Paiement d'essai en cours" : "Validez sur votre téléphone"}</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted"><span className="tnum font-medium text-ink">{formatPhone(payment.phone)}</span>{op ? ` · ${op.label}` : ""}. {testMode ? "Rien n'arrive sur le téléphone en mode test : le résultat s'affiche ici tout seul." : op?.ussdHint}</p>
         </>
       )}
       <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-sand px-3 py-1.5 text-[0.8125rem] text-ink-soft">
@@ -182,11 +212,11 @@ function Waiting({ payment, operators, testMode, providerLabel, pushed, onDone }
         {left !== null && left > 0 && <span className="tnum text-muted">· {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span>}
       </p>
       {offline && <p className="mt-3 flex items-center justify-center gap-1.5 text-[0.8125rem] text-clay"><CircleAlert className="size-4" />Connexion instable. Nouvel essai automatique.</p>}
-      {testMode && <p className="mt-3 text-xs text-muted">Mode test : aucun débit réel.</p>}
+      {testMode && mustUsePage && <p className="mt-3 text-xs text-muted">Mode test : aucun débit réel.</p>}
       <div className="mt-5 flex flex-col items-center gap-2">
         <Button type="button" variant="outline" size="sm" disabled={checking} onClick={check}><RefreshCw className={checking ? "animate-spin" : ""} />Vérifier</Button>
         {!mustUsePage && payment.redirectUrl && (
-          <p className="mt-2 max-w-sm text-[0.8125rem] text-muted">Rien reçu sur votre téléphone ?{" "}
+          <p className="mt-2 max-w-sm text-[0.8125rem] text-muted">{testMode ? "Autre façon d'essayer :" : "Rien reçu sur votre téléphone ?"}{" "}
             <a href={payment.redirectUrl} className="font-medium text-green underline-offset-4 hover:underline">Payer sur la page {providerLabel}</a>
           </p>
         )}

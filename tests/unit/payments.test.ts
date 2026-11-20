@@ -62,7 +62,10 @@ describe("FedaPay : demande de paiement", () => {
     expect(fedapayPhone({ e164: "+2290197000001", national: "0197000001", country: "BJ" }, "sandbox").number).toBe("+2290197000001");
     expect(fedapayPhone({ e164: "+2290164000001", national: "0164000001", country: "BJ" }, "live").number).toBe("+2290164000001");
     expect(provider.testNotice).toMatch(/64 00 00 01/);
-    expect(new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: "", environment: "live" }).testNotice).toBeNull();
+    expect(provider.testNumbers).toEqual(["64000001", "66000001"]);
+    const live = new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: "", environment: "live" });
+    expect(live.testNotice).toBeNull();
+    expect(live.testNumbers).toBeNull();
   });
 
   it("garde la collecte et propose la page FedaPay quand la demande ne part pas sur le téléphone", async () => {

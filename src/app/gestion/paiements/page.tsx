@@ -11,7 +11,7 @@ import { can } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { paymentModeInfo } from "@/lib/payments/service";
-import { formatPhone, maskPhone, type OperatorCode } from "@/lib/phone";
+import { formatPhone, groupDigits, maskPhone, type OperatorCode } from "@/lib/phone";
 import { formatDateTime, formatFcfa } from "@/lib/utils";
 import { recheckPaymentAction } from "@/server/actions/staff-admin";
 
@@ -31,6 +31,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader title="Paiements" />
+      {mode.mode === "test" && <Notice tone="warn" title={`${mode.providerLabel ?? "Paiement"} en mode test`} className="mb-5">Aucun argent réel n&apos;est encaissé{mode.testNumbers ? <> et seuls les numéros d&apos;essai {mode.testNumbers.map(groupDigits).join(" et ")} sont acceptés : tout autre numéro est refusé</> : null}. Pour encaisser, passez en mode « Réel » dans Paramètres, « Clés et connexions ».</Notice>}
       {mode.mode === "simulation" && <Notice tone="warn" title="Mode simulation" className="mb-5">Le simulateur de paiement est actif : ces transactions ne correspondent à aucun encaissement réel.</Notice>}
       <TabsNav current={refundsView ? "remboursements" : "paiements"} tabs={[{ id: "paiements", label: "Transactions", href: base }, { id: "remboursements", label: "Remboursements", href: `${base}?vue=remboursements`, count: pendingRefunds || undefined }]} />
       {refundsView ? <Refunds canRefund={canRefund} /> : <Transactions sp={sp} canRefund={canRefund} canVerify={can(user.role, "payment.verify")} showFullPhone={canRefund} />}
