@@ -24,12 +24,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ orderId: s
   if (!order.invoiceNumber || !order.paidAt || !payment) return new Response("Aucun reçu : cette commande n'est pas payée.", { status: 409 });
   const quote = isRecord(order.quote) && Array.isArray(order.quote.lines) ? (order.quote.lines as QuoteLine[]) : [];
   const provider = await getProviderById(payment.provider);
-  const operator = PAYMENT_COUNTRIES[0]!.operators.find((o) => o.code === payment.operator)?.label ?? payment.operator;
+  const operator = PAYMENT_COUNTRIES[0]!.operators.find((o) => o.code === payment.operator)?.label ?? payment.operator ?? "Mobile Money";
   const pdf = await renderReceiptPdf({
     invoiceNumber: order.invoiceNumber, orderReference: order.reference, paidAt: order.paidAt,
     customer: { name: order.user.name, email: order.user.email, phone: order.user.phone },
     campaignName: order.campaign?.name ?? order.serviceLabel, lines: quote, total: order.total,
-    payment: { operator, phone: maskPhone(payment.phone), providerLabel: provider?.label ?? payment.provider, providerRef: payment.providerRef, simulated: payment.provider === "sandbox" },
+    payment: { operator, phone: payment.phone ? maskPhone(payment.phone) : null, providerLabel: provider?.label ?? payment.provider, providerRef: payment.providerRef, simulated: payment.provider === "sandbox" },
     refunds: order.refunds.map((r) => ({ amount: r.amount, processedAt: r.processedAt, reference: r.reference })),
   }, await loadSettings());
   return new Response(pdf as BodyInit, {

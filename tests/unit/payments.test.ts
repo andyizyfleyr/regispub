@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fedapayMode, fedapayPhone, mapFedapayStatus, signFedapayPayload, verifyFedapaySignature, FedapayProvider } from "@/lib/payments/fedapay";
+import { mapFedapayStatus, operatorFromFedapayMode, signFedapayPayload, verifyFedapaySignature, FedapayProvider } from "@/lib/payments/fedapay";
 import { SandboxProvider } from "@/lib/payments/sandbox";
 import { PaymentProviderError, WebhookSignatureError, type InitiateInput } from "@/lib/payments/types";
 
@@ -27,64 +27,50 @@ function fakeFedapay(routes: Record<string, (call: Call) => { status?: number; j
 
 const created = () => ({ json: { "v1/transaction": { id: 258, klass: "v1/transaction", status: "pending", amount: 45_810 } } });
 const tokenRoute = () => ({ json: { token: "tok_abc", url: "https://process.fedapay.com/tok_abc" } });
-const fedapayInput = (national: string, operator: InitiateInput["operator"] = "MTN"): InitiateInput => ({
-  paymentId: "pay_1", orderReference: "CMD-TEST", amount: 45_810, currency: "XOF", operator,
-  phone: { e164: `+229${national}`, national, country: "BJ" }, customer: { name: "Awa Dossou Kpadonou", email: "awa@example.com" },
+const fedapayInput = (): InitiateInput => ({
+  paymentId: "pay_1", orderReference: "CMD-TEST", amount: 45_810, currency: "XOF", customer: { name: "Awa Dossou Kpadonou", email: "awa@example.com" },
   description: "RegisPub — commande CMD-TEST", callbackUrl: "https://regispub.example/app/paiements/ord_1",
 });
 
 describe("FedaPay : demande de paiement", () => {
-  it("suit les trois appels de la documentation : collecte, jeton, envoi sur le téléphone", async () => {
-    const api = fakeFedapay({ "POST /transactions": created, "POST /transactions/258/token": tokenRoute, "POST /mtn_open": () => ({ json: { message: "ok" } }) });
+  it("crée la collecte puis donne le lien de la page de paiement FedaPay, sans rien demander d'autre", async () => {
+    const api = fakeFedapay({ "POST /transactions": created, "POST /transactions/258/token": tokenRoute });
     const provider = new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: SECRET, environment: "live", fetchImpl: api.fetchImpl });
-    const res = await provider.initiate(fedapayInput("0197000001"));
-    expect(res).toEqual({ providerRef: "258", status: "PENDING", providerStatus: "pending", redirectUrl: "https://process.fedapay.com/tok_abc", pushed: true });
-    expect(api.calls.map((c) => `${c.method} ${c.path}`)).toEqual(["POST /transactions", "POST /transactions/258/token", "POST /mtn_open"]);
+    expect(provider.checkout).toBe("hosted");
+    const res = await provider.initiate(fedapayInput());
+    expect(res).toEqual({ providerRef: "258", status: "PENDING", providerStatus: "pending", redirectUrl: "https://process.fedapay.com/tok_abc" });
+    // Deux appels seulement : c'est la page FedaPay qui demande le moyen de paiement et le numéro.
+    expect(api.calls.map((c) => `${c.method} ${c.path}`)).toEqual(["POST /transactions", "POST /transactions/258/token"]);
     expect(api.calls.every((c) => c.host === "api.fedapay.com" && c.auth === "Bearer sk_live_x")).toBe(true);
     expect(api.calls[0]!.body).toEqual({
       description: "RegisPub — commande CMD-TEST", amount: 45_810, currency: { iso: "XOF" }, callback_url: "https://regispub.example/app/paiements/ord_1",
       merchant_reference: "pay_1", custom_metadata: { payment_id: "pay_1", order_reference: "CMD-TEST" },
       customer: { firstname: "Awa", lastname: "Dossou Kpadonou", email: "awa@example.com" },
     });
-    expect(api.calls[2]!.body).toEqual({ token: "tok_abc", phone_number: { number: "+2290197000001", country: "bj" } });
   });
 
-  it("utilise le mode de chaque opérateur en réel, et le seul mode « momo_test » en test", async () => {
-    expect([fedapayMode("MTN", "live"), fedapayMode("MOOV", "live"), fedapayMode("CELTIIS", "live")]).toEqual(["mtn_open", "moov", "sbin"]);
-    expect([fedapayMode("MTN", "sandbox"), fedapayMode("MOOV", "sandbox"), fedapayMode("CELTIIS", "sandbox")]).toEqual(["momo_test", "momo_test", "momo_test"]);
-    const api = fakeFedapay({ "POST /transactions": created, "POST /transactions/258/token": tokenRoute, "POST /momo_test": () => ({ json: {} }) });
+  it("vise le serveur de test en mode test, et n'affiche rien de particulier au client", async () => {
+    const api = fakeFedapay({ "POST /transactions": created, "POST /transactions/258/token": tokenRoute });
     const provider = new FedapayProvider({ secretKey: "sk_sandbox_x", webhookSecret: SECRET, environment: "sandbox", fetchImpl: api.fetchImpl });
-    expect((await provider.initiate(fedapayInput("0164000001", "MOOV"))).pushed).toBe(true);
-    expect(api.calls[2]).toMatchObject({ host: "sandbox-api.fedapay.com", path: "/momo_test" });
-    // Les deux numéros de test partent tels que la documentation les écrit ; un autre numéro part au format international.
-    expect(api.calls[2]!.body).toEqual({ token: "tok_abc", phone_number: { number: "64000001", country: "bj" } });
-    expect(fedapayPhone({ e164: "+2290166000001", national: "0166000001", country: "BJ" }, "sandbox").number).toBe("66000001");
-    expect(fedapayPhone({ e164: "+2290197000001", national: "0197000001", country: "BJ" }, "sandbox").number).toBe("+2290197000001");
-    expect(fedapayPhone({ e164: "+2290164000001", national: "0164000001", country: "BJ" }, "live").number).toBe("+2290164000001");
-    expect(provider.testNotice).toMatch(/64 00 00 01/);
+    expect((await provider.initiate(fedapayInput())).redirectUrl).toBe("https://process.fedapay.com/tok_abc");
+    expect(api.calls.every((c) => c.host === "sandbox-api.fedapay.com")).toBe(true);
+    expect(provider.mode).toBe("test");
+    expect(provider.testNotice).toBeNull();
+    // Les numéros d'essai ne sont rappelés qu'à l'équipe.
     expect(provider.testNumbers).toEqual(["64000001", "66000001"]);
-    const live = new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: "", environment: "live" });
-    expect(live.testNotice).toBeNull();
-    expect(live.testNumbers).toBeNull();
+    expect(new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: "", environment: "live" }).testNumbers).toBeNull();
   });
 
-  it("garde la collecte et propose la page FedaPay quand la demande ne part pas sur le téléphone", async () => {
-    const api = fakeFedapay({
-      "POST /transactions": created, "POST /transactions/258/token": tokenRoute,
-      "POST /sbin": () => ({ status: 422, json: { message: "Paiement impossible", errors: { phone_number: ["numéro invalide"] } } }),
-    });
+  it("refuse de continuer si FedaPay ne donne pas de lien de page de paiement", async () => {
+    const api = fakeFedapay({ "POST /transactions": created, "POST /transactions/258/token": () => ({ json: { token: "tok_abc" } }) });
     const provider = new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: SECRET, environment: "live", fetchImpl: api.fetchImpl });
-    const res = await provider.initiate(fedapayInput("0140000001", "CELTIIS"));
-    expect(res).toMatchObject({ providerRef: "258", status: "PENDING", pushed: false, redirectUrl: "https://process.fedapay.com/tok_abc" });
-    expect(res.pushError).toContain("Paiement impossible");
-    expect(res.pushError).toContain("phone_number : numéro invalide");
-    expect(res.pushError).toContain("HTTP 422");
+    await expect(provider.initiate(fedapayInput())).rejects.toBeInstanceOf(PaymentProviderError);
   });
 
   it("signale une clé refusée, sans rien proposer au client", async () => {
     const api = fakeFedapay({ "POST /transactions": () => ({ status: 401, json: { message: "Erreur d'authentification" } }) });
     const provider = new FedapayProvider({ secretKey: "sk_live_mauvaise", webhookSecret: SECRET, environment: "live", fetchImpl: api.fetchImpl });
-    const error = await provider.initiate(fedapayInput("0197000001")).catch((e: unknown) => e);
+    const error = await provider.initiate(fedapayInput()).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(PaymentProviderError);
     expect(error).toMatchObject({ kind: "auth", userMessage: expect.stringContaining("indisponible") });
     expect(api.calls).toHaveLength(1);
@@ -116,17 +102,18 @@ describe("FedaPay : état d'une collecte", () => {
     expect(mapFedapayStatus("expired").status).toBe("FAILED");
   });
   it("explique un refus selon la documentation : « declined » vient du client, « canceled » du solde ou de l'opérateur", () => {
-    expect(mapFedapayStatus("declined")).toMatchObject({ status: "CANCELLED", reason: expect.stringContaining("téléphone") });
+    expect(mapFedapayStatus("declined")).toMatchObject({ status: "CANCELLED", reason: expect.stringContaining("pas été validé") });
     expect(mapFedapayStatus("canceled")).toMatchObject({ status: "FAILED", reason: expect.stringContaining("solde") });
   });
   it("relit la collecte : montant, notre référence, statut et dernier code d'erreur", async () => {
     const api = fakeFedapay({
-      "GET /transactions/258": () => ({ json: { "v1/transaction": { id: 258, status: "approved", amount: 45_810, merchant_reference: "pay_1", last_error_code: "NO_ERROR" } } }),
+      "GET /transactions/258": () => ({ json: { "v1/transaction": { id: 258, status: "approved", amount: 45_810, merchant_reference: "pay_1", last_error_code: "NO_ERROR", mode: "mtn_open" } } }),
       "GET /transactions/259": () => ({ json: { "v1/transaction": { id: 259, status: "canceled", amount: 45_810, merchant_reference: "pay_2", last_error_code: "INSUFFICIENT_FUNDS" } } }),
       "GET /transactions/260": () => ({ json: { "v1/transaction": { status: "approved" } } }),
     });
     const provider = new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: "", environment: "live", fetchImpl: api.fetchImpl });
-    expect(await provider.verify("258")).toEqual({ providerRef: "258", status: "SUCCEEDED", providerStatus: "approved", amount: 45_810, merchantReference: "pay_1", failureReason: undefined });
+    expect(await provider.verify("258")).toEqual({ providerRef: "258", status: "SUCCEEDED", providerStatus: "approved", amount: 45_810, merchantReference: "pay_1", operator: "MTN", failureReason: undefined });
+    expect(["mtn_open", "mtn", "moov", "sbin", "momo_test", undefined].map(operatorFromFedapayMode)).toEqual(["MTN", "MTN", "MOOV", "CELTIIS", null, null]);
     expect(await provider.verify("259")).toMatchObject({ status: "FAILED", providerStatus: "canceled (INSUFFICIENT_FUNDS)", amount: 45_810, merchantReference: "pay_2" });
     // Une réponse sans transaction n'est jamais prise pour un paiement.
     await expect(provider.verify("260")).rejects.toThrow(PaymentProviderError);

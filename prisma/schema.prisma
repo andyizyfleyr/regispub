@@ -492,8 +492,10 @@ model Payment {
   userId         String
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   provider       String
-  operator       MobileOperator
-  phone          String // MSISDN au format international, nécessaire aux remboursements
+  // Opérateur et numéro : saisis chez nous avec le simulateur ; inconnus au départ quand le client paie sur la page
+  // du prestataire (l'opérateur est alors complété après le paiement, si le prestataire l'indique).
+  operator       MobileOperator?
+  phone          String?
   amount         Int
   currency       String         @default("XOF")
   status         PaymentStatus  @default(INITIATED)

@@ -5,15 +5,16 @@ Ce document distingue ce qui fonctionne aujourd'hui, ce qui est écrit mais n'a 
 ## Paiement Mobile Money — FedaPay
 
 - **Écrit d'après la documentation officielle** (docs.fedapay.com et bibliothèques `fedapay-node` / `fedapay-php`), dans `src/lib/payments/fedapay.ts` :
-  - trois appels : `POST /transactions` (collecte, `merchant_reference` = notre identifiant de tentative), `POST /transactions/{id}/token` (jeton et lien de la page FedaPay), `POST /{mode}` (demande sur le téléphone) ;
-  - modes en réel : MTN `mtn_open`, Moov `moov`, Celtiis `sbin`. En test, FedaPay n'accepte plus que `momo_test`, et seuls les numéros `64000001` et `66000001` aboutissent ;
-  - si la demande ne part pas sur le téléphone, le client règle la **même collecte** sur la page FedaPay (pas de second paiement possible) et la raison est gardée dans le journal (`payment.push_failed`) ;
+  - le client paie sur la **page de paiement de FedaPay** : deux appels, `POST /transactions` (collecte, `merchant_reference` = notre identifiant de tentative, `callback_url` = la page de la commande) puis `POST /transactions/{id}/token` (lien de la page FedaPay), et le client y est envoyé. C'est FedaPay qui demande le moyen de paiement et le numéro ; notre site n'affiche ni l'un ni l'autre ;
+  - l'opérateur utilisé est repris ensuite du champ `mode` de la transaction (`mtn_open`, `moov`, `sbin`) quand FedaPay le donne ;
+  - en mode test, sur la page FedaPay, seuls les numéros `64000001` et `66000001` aboutissent (rappelé à l'équipe dans l'administration, pas au client) ;
+  - un client qui revient sans avoir payé est renvoyé sur la **même collecte** (pas de second paiement possible) ;
   - le résultat vient toujours de `GET /transactions/{id}`, jamais de l'adresse de retour ni du contenu d'une notification ;
   - `declined` (interrompu par le client) et `canceled` (solde ou opérateur) ne sont pas définitifs chez FedaPay : la tentative est close chez nous, mais une approbation tardive reste encaissée (webhook, retour sur la commande, tâche planifiée pendant 26 h) ;
   - webhook signé (`X-FEDAPAY-SIGNATURE`, HMAC-SHA256 sur `horodatage.corps`, rejet au-delà de 5 minutes) : réponse 2xx immédiate, traitement ensuite, reprise si le traitement échoue.
 - **Non testé avec un vrai compte.** Les tests automatiques rejouent le parcours face à un faux serveur FedaPay construit d'après la documentation (`tests/integration/payment-fedapay.test.ts`). Le bouton « Tester FedaPay » de la page Clés et connexions fait, lui, un essai réel des clés.
 - **À fournir** : compte marchand FedaPay validé (pièce d'identité, IFU, RCCM), clé secrète, secret de webhook, URL du webhook déclarée dans le tableau de bord FedaPay.
-- **À vérifier avant ouverture** : en mode test, un paiement avec `64000001` ; en mode réel, un paiement de petit montant sur chacun des trois opérateurs ; la réception du webhook (bouton « Tester FedaPay »). Événements à cocher pour le webhook : `transaction.approved`, `transaction.declined`, `transaction.canceled`, `transaction.transferred`.
+- **À vérifier avant ouverture** : en mode test, un paiement avec `64000001` saisi sur la page FedaPay ; en mode réel, un paiement de petit montant sur chacun des trois opérateurs ; la réception du webhook (bouton « Tester FedaPay »). Événements à cocher pour le webhook : `transaction.approved`, `transaction.declined`, `transaction.canceled`, `transaction.transferred`.
 - **Limite connue** : pas de remboursement automatique d'un paiement Mobile Money. Le transfert se fait depuis le compte marchand ; l'application en garde la trace.
 - **Frais** : le taux affiché au client (`1,8 %` par défaut) est un paramètre. Il doit correspondre à votre contrat.
 

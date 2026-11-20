@@ -14,16 +14,20 @@ import { safeAction, UserError } from "@/server/action";
 
 const OPERATORS: OperatorCode[] = ["MTN", "MOOV", "CELTIIS"];
 
-/** Lance la demande de paiement Mobile Money. La confirmation ne vient jamais de cette réponse : elle est vérifiée auprès du prestataire. */
-export async function startPaymentAction(input: { orderId: string; operator: string; phone: string; idempotencyKey: string }) {
+/**
+ * Lance le paiement d'une commande. Avec un prestataire qui a sa propre page de paiement (FedaPay), la réponse porte
+ * l'adresse où envoyer le client ; opérateur et numéro ne sont demandés que par le simulateur.
+ * La confirmation ne vient jamais de cette réponse : elle est vérifiée auprès du prestataire.
+ */
+export async function startPaymentAction(input: { orderId: string; idempotencyKey: string; operator?: string | null; phone?: string | null }) {
   return safeAction(async () => {
     const user = await assertUser();
-    if (!OPERATORS.includes(input.operator as OperatorCode)) throw new UserError("Choisissez votre opérateur Mobile Money.");
+    const operator = OPERATORS.includes(input.operator as OperatorCode) ? (input.operator as OperatorCode) : null;
     if (!(await rateLimit(`pay:${user.id}`, 12, 900))) throw new UserError("Trop de tentatives de paiement. Réessayez dans quelques minutes.");
-    const res = await startPayment({ orderId: input.orderId, userId: user.id, operator: input.operator as OperatorCode, phoneInput: String(input.phone ?? ""), idempotencyKey: String(input.idempotencyKey ?? "") });
-    await audit({ actorId: user.id, action: res.ok ? "payment.started" : "payment.start_failed", entity: "Order", entityId: input.orderId, meta: { operator: input.operator, paymentId: res.paymentId }, ip: await clientIp() });
+    const res = await startPayment({ orderId: String(input.orderId ?? ""), userId: user.id, operator, phoneInput: input.phone ? String(input.phone) : null, idempotencyKey: String(input.idempotencyKey ?? "") });
+    await audit({ actorId: user.id, action: res.ok ? "payment.started" : "payment.start_failed", entity: "Order", entityId: input.orderId, meta: { operator, paymentId: res.paymentId }, ip: await clientIp() });
     if (!res.ok) throw new UserError(res.error);
-    return { paymentId: res.paymentId, redirectUrl: res.redirectUrl ?? null, pushed: res.pushed, expiresAt: res.expiresAt.toISOString() };
+    return { paymentId: res.paymentId, redirectUrl: res.redirectUrl ?? null, expiresAt: res.expiresAt.toISOString() };
   });
 }
 

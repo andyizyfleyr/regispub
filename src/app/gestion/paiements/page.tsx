@@ -31,7 +31,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader title="Paiements" />
-      {mode.mode === "test" && <Notice tone="warn" title={`${mode.providerLabel ?? "Paiement"} en mode test`} className="mb-5">Aucun argent réel n&apos;est encaissé{mode.testNumbers ? <> et seuls les numéros d&apos;essai {mode.testNumbers.map(groupDigits).join(" et ")} sont acceptés : tout autre numéro est refusé</> : null}. Pour encaisser, passez en mode « Réel » dans Paramètres, « Clés et connexions ».</Notice>}
+      {mode.mode === "test" && <Notice tone="warn" title={`${mode.providerLabel ?? "Paiement"} en mode test`} className="mb-5">Aucun argent réel n&apos;est encaissé{mode.testNumbers ? <> et, sur la page de paiement, seuls les numéros d&apos;essai {mode.testNumbers.map(groupDigits).join(" et ")} sont acceptés : tout autre numéro est refusé</> : null}. Pour encaisser, passez en mode « Réel » dans Paramètres, « Clés et connexions ».</Notice>}
       {mode.mode === "simulation" && <Notice tone="warn" title="Mode simulation" className="mb-5">Le simulateur de paiement est actif : ces transactions ne correspondent à aucun encaissement réel.</Notice>}
       <TabsNav current={refundsView ? "remboursements" : "paiements"} tabs={[{ id: "paiements", label: "Transactions", href: base }, { id: "remboursements", label: "Remboursements", href: `${base}?vue=remboursements`, count: pendingRefunds || undefined }]} />
       {refundsView ? <Refunds canRefund={canRefund} /> : <Transactions sp={sp} canRefund={canRefund} canVerify={can(user.role, "payment.verify")} showFullPhone={canRefund} />}
@@ -75,13 +75,13 @@ async function Transactions({ sp, canRefund, canVerify, showFullPhone }: { sp: {
                       {p.failureReason && <span className="block max-w-64 truncate text-xs text-clay" title={p.failureReason}>{p.failureReason}</span>}
                     </td>
                     <td>{p.user.name}</td>
-                    <td><span className="flex items-center gap-2"><OperatorChip operator={p.operator as OperatorCode} /><span className="tnum whitespace-nowrap text-[0.8125rem]">{showFullPhone ? formatPhone(p.phone) : maskPhone(p.phone)}</span></span></td>
+                    <td><span className="flex items-center gap-2">{p.operator && <OperatorChip operator={p.operator as OperatorCode} />}<span className="tnum whitespace-nowrap text-[0.8125rem]">{p.phone ? (showFullPhone ? formatPhone(p.phone) : maskPhone(p.phone)) : p.operator ? "" : <span className="text-muted">Page du prestataire</span>}</span></span></td>
                     <td className="tnum whitespace-nowrap font-medium">{formatFcfa(p.amount)}</td>
                     <td><StateIcon kind="payment" value={p.status} /></td>
                     <td className="text-right">
                       <span className="flex justify-end gap-2">
                         {canVerify && (open || p.status === "EXPIRED" || p.status === "FAILED" || p.status === "CANCELLED") && p.providerRef && <ActionButton variant="outline" size="sm" action={recheckPaymentAction.bind(null, p.id)} successMessage="Vérification effectuée auprès du prestataire.">Revérifier</ActionButton>}
-                        {canRefund && refundable > 0 && <RefundDialog paymentId={p.id} max={refundable} label={`${p.order.reference} · ${p.user.name} · ${formatPhone(p.phone)}`} />}
+                        {canRefund && refundable > 0 && <RefundDialog paymentId={p.id} max={refundable} label={`${p.order.reference} · ${p.user.name}${p.phone ? ` · ${formatPhone(p.phone)}` : ""}`} />}
                       </span>
                     </td>
                   </tr>
@@ -111,7 +111,7 @@ async function Refunds({ canRefund }: { canRefund: boolean }) {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-ink"><span className="tnum font-medium">{formatFcfa(r.amount)}</span> · {r.order.user.name} · <span className="font-mono text-[0.8125rem]">{r.order.reference}</span></p>
-                    <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[0.8125rem] text-ink-soft"><OperatorChip operator={r.payment.operator as OperatorCode} /><span className="tnum">{canRefund ? formatPhone(r.payment.phone) : maskPhone(r.payment.phone)}</span>{r.payment.duplicate && <span className="font-medium text-clay">paiement en double</span>}</p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[0.8125rem] text-ink-soft">{r.payment.operator && <OperatorChip operator={r.payment.operator as OperatorCode} />}{r.payment.phone && <span className="tnum">{canRefund ? formatPhone(r.payment.phone) : maskPhone(r.payment.phone)}</span>}{r.payment.duplicate && <span className="font-medium text-clay">paiement en double</span>}</p>
                     <p className="mt-1 text-ink-soft">{r.reason}</p>
                     <p className="mt-1 text-xs text-muted">Créé le {formatDateTime(r.createdAt)} par {names.get(r.requestedById) ?? "le système"}{r.processedAt ? ` · traité le ${formatDateTime(r.processedAt)}${r.processedById ? ` par ${names.get(r.processedById) ?? "—"}` : ""}` : ""}{r.reference ? ` · réf. ${r.reference}` : ""}{r.note ? ` · ${r.note}` : ""}</p>
                   </div>
