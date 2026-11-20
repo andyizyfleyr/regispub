@@ -49,14 +49,14 @@ describe("FedaPay : demande de paiement", () => {
     });
   });
 
-  it("vise le serveur de test en mode test, et n'affiche rien de particulier au client", async () => {
+  it("vise le serveur de test en mode test, et prévient le client que seuls les numéros d'essai passent", async () => {
     const api = fakeFedapay({ "POST /transactions": created, "POST /transactions/258/token": tokenRoute });
     const provider = new FedapayProvider({ secretKey: "sk_sandbox_x", webhookSecret: SECRET, environment: "sandbox", fetchImpl: api.fetchImpl });
     expect((await provider.initiate(fedapayInput())).redirectUrl).toBe("https://process.fedapay.com/tok_abc");
     expect(api.calls.every((c) => c.host === "sandbox-api.fedapay.com")).toBe(true);
     expect(provider.mode).toBe("test");
-    expect(provider.testNotice).toBeNull();
-    // Les numéros d'essai ne sont rappelés qu'à l'équipe.
+    expect(provider.testNotice).toMatch(/aucun argent n'est débité.*64 00 00 01 ou 66 00 00 01.*refusé/);
+    expect(new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: "", environment: "live" }).testNotice).toBeNull();
     expect(provider.testNumbers).toEqual(["64000001", "66000001"]);
     expect(new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: "", environment: "live" }).testNumbers).toBeNull();
   });

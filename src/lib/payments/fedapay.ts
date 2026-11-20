@@ -1,5 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import type { OperatorCode } from "@/lib/phone";
+import { groupDigits, type OperatorCode } from "@/lib/phone";
 import { isRecord } from "@/lib/utils";
 import {
   PaymentProviderError, WebhookSignatureError,
@@ -144,8 +144,14 @@ export class FedapayProvider implements PaymentProvider {
   }
 
   get mode() { return this.config.environment === "live" ? "live" as const : "test" as const; }
-  /** Le client paie sur la page FedaPay, qui signale elle-même le mode test : rien à lui dire de notre côté. */
-  readonly testNotice = null;
+  /**
+   * En mode test, la page FedaPay n'accepte que ses deux numéros d'essai et répond « Transaction échouée » à tout autre
+   * numéro, sans dire pourquoi : on prévient donc le client avant de l'y envoyer.
+   */
+  get testNotice() {
+    if (this.config.environment === "live") return null;
+    return `Mode test : aucun argent n'est débité. Sur la page de paiement, saisissez le numéro d'essai ${FEDAPAY_TEST_NUMBERS.map(groupDigits).join(" ou ")}. Tout autre numéro, même un vrai, est refusé.`;
+  }
   get testNumbers() { return this.config.environment === "live" ? null : FEDAPAY_TEST_NUMBERS; }
   isConfigured() { return Boolean(this.config.secretKey); }
 
