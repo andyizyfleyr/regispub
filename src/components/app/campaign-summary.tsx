@@ -32,7 +32,8 @@ export function CampaignSummary({ c, compact }: { c: SummaryCampaign; compact?: 
       { label: "Diffusion", value: c.startDate ? `${formatPureDate(c.startDate)}${c.endDate ? ` → ${formatPureDate(c.endDate)}` : ""}${c.durationDays ? ` (${c.durationDays} j)` : ""}` : c.durationDays ? `${c.durationDays} jours` : null },
       { label: "Zone", value: [countries, t.cities.join(", "), t.zoneNote].filter(Boolean).join(" · ") },
       { label: "Audience", value: `${gender}, ${t.ageMin}–${t.ageMax >= 65 ? "65+" : t.ageMax} ans${languages ? ` · ${languages}` : ""}` },
-      { label: "Centres d'intérêt", value: [...t.interests, ...t.categories].join(", ") },
+      // Plus proposés à la création : la ligne ne reste que pour les anciennes campagnes qui en avaient.
+      ...(t.interests.length + t.categories.length ? [{ label: "Centres d'intérêt", value: [...t.interests, ...t.categories].join(", ") }] : []),
       { label: "Destination", value: [c.destinationWhatsapp ? `WhatsApp ${formatPhone(c.destinationWhatsapp)}` : null, c.destinationUrl].filter(Boolean).join(" · ") },
       ...(c.audienceNote ? [{ label: "Clientèle visée", value: c.audienceNote }] : []),
       ...(t.customAudience.requested ? [{ label: "Audience personnalisée", value: t.customAudience.note || "Demandée" }] : []),

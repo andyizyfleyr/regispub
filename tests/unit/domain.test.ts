@@ -180,6 +180,22 @@ describe("ce que le client remplit lui-même", () => {
     expect(campaignMissing({ ...base, objective: objective.code })).toEqual([]);
   });
 
+  it("regroupe les objectifs qui disaient la même chose, sans perdre les anciens codes", async () => {
+    const { getObjective, MERGED_OBJECTIVES, OBJECTIVES, objectiveShort } = await import("@/lib/catalog/objectives");
+    const codes = OBJECTIVES.map((o) => o.code);
+    expect(codes).toHaveLength(14);
+    expect(new Set(codes).size).toBe(codes.length);
+    expect(new Set(OBJECTIVES.map((o) => objectiveShort(o))).size).toBe(codes.length);
+    for (const [old, kept] of Object.entries(MERGED_OBJECTIVES)) {
+      // L'ancien code n'est plus proposé, mais une campagne qui le porte garde un objectif.
+      expect(codes).not.toContain(old);
+      expect(codes).toContain(kept);
+      expect(getObjective(old)?.code).toBe(kept);
+    }
+    expect(getObjective("page_likes")?.label).toBe("Gagner des abonnés et des J'aime Facebook");
+    expect(getObjective("inconnu")).toBeNull();
+  });
+
   it("refuse deux réseaux à la fois, et aucun réseau", async () => {
     const { campaignMissing, ONE_NETWORK } = await import("@/lib/campaigns/missing");
     const { OBJECTIVES } = await import("@/lib/catalog/objectives");
