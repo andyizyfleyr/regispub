@@ -11,7 +11,7 @@ import { handlePaymentWebhook, paymentModeInfo, refreshOrderPayments, refreshPay
 
 const SECRET_KEY = "sk_sandbox_cleDeTest0123456789";
 const WEBHOOK_SECRET = "wh_sandbox_secretDeTest";
-const TEST_NUMBERS = ["64000001", "66000001"];
+const TEST_NUMBERS = ["0164000001", "0166000001"];
 
 type Tx = { id: number; status: string; amount: number; merchant_reference: string; last_error_code: string | null; mode: string | null };
 const fedapay = {
@@ -98,9 +98,9 @@ describe("FedaPay : paiement sur la page FedaPay", () => {
     const mode = await paymentModeInfo();
     expect(mode).toMatchObject({ available: true, providerId: "fedapay", mode: "test", checkout: "hosted" });
     // Le client est prévenu avant d'aller sur la page FedaPay : en test, seuls les numéros d'essai passent.
-    expect(mode.testNotice).toContain("64 00 00 01 ou 66 00 00 01");
+    expect(mode.testNotice).toContain("01 64 00 00 01 ou 01 66 00 00 01");
     // Rappel réservé à l'équipe.
-    expect(mode.testNumbers).toEqual(["64000001", "66000001"]);
+    expect(mode.testNumbers).toEqual(["0164000001", "0166000001"]);
   });
 
   it("envoie le client sur la page FedaPay, puis encaisse après relecture de la collecte", async () => {
@@ -117,7 +117,7 @@ describe("FedaPay : paiement sur la page FedaPay", () => {
     expect(await db.payment.findUniqueOrThrow({ where: { id: started.paymentId } })).toMatchObject({ status: "PENDING", provider: "fedapay", phone: null, operator: null, redirectUrl: started.redirectUrl });
 
     // Le client paie sur la page FedaPay et revient : la commande est relue (l'adresse de retour n'est pas crue).
-    await payOnFedapayPage(started.paymentId, "64000001", "mtn_open");
+    await payOnFedapayPage(started.paymentId, "0164000001", "mtn_open");
     expect(await refreshOrderPayments(order.id, { force: true })).toBe(true);
     // L'opérateur utilisé est repris de FedaPay.
     expect(await db.payment.findUniqueOrThrow({ where: { id: started.paymentId } })).toMatchObject({ status: "SUCCEEDED", providerStatus: "approved", operator: "MTN" });
@@ -150,7 +150,7 @@ describe("FedaPay : paiement sur la page FedaPay", () => {
     if (!second.ok) throw new Error(second.error);
     expect(second.paymentId).not.toBe(first.paymentId);
     expect(second.redirectUrl).not.toBe(first.redirectUrl);
-    await payOnFedapayPage(second.paymentId, "66000001");
+    await payOnFedapayPage(second.paymentId, "0166000001");
     await refreshPayment(second.paymentId, { force: true });
     expect(await orderStatus(order.id)).toBe("PAID");
     expect(new Set([...fedapay.transactions.values()].map((t) => t.merchant_reference)).size).toBe(fedapay.transactions.size);
@@ -175,7 +175,7 @@ describe("FedaPay : notifications signées", () => {
     const order = await newOrder();
     const started = await pay(order.id);
     if (!started.ok) throw new Error(started.error);
-    await payOnFedapayPage(started.paymentId, "64000001");
+    await payOnFedapayPage(started.paymentId, "0164000001");
     const payment = await db.payment.findUniqueOrThrow({ where: { id: started.paymentId } });
     const n = fedapayNotification("transaction.approved", Number(payment.providerRef));
     expect(await handlePaymentWebhook("fedapay", n.raw, n.headers)).toMatchObject({ status: 200, body: { outcome: "verified:SUCCEEDED" } });
@@ -188,7 +188,7 @@ describe("FedaPay : notifications signées", () => {
     const order = await newOrder();
     const started = await pay(order.id);
     if (!started.ok) throw new Error(started.error);
-    await payOnFedapayPage(started.paymentId, "64000001");
+    await payOnFedapayPage(started.paymentId, "0164000001");
     const payment = await db.payment.findUniqueOrThrow({ where: { id: started.paymentId } });
     fedapay.transactions.get(Number(payment.providerRef))!.status = "pending";
     const n = fedapayNotification("transaction.approved", Number(payment.providerRef));
@@ -201,7 +201,7 @@ describe("FedaPay : notifications signées", () => {
     const order = await newOrder();
     const started = await pay(order.id);
     if (!started.ok) throw new Error(started.error);
-    await payOnFedapayPage(started.paymentId, "64000001");
+    await payOnFedapayPage(started.paymentId, "0164000001");
     const payment = await db.payment.findUniqueOrThrow({ where: { id: started.paymentId } });
     const n = fedapayNotification("transaction.approved", Number(payment.providerRef), "wh_sandbox_autre");
     expect((await handlePaymentWebhook("fedapay", n.raw, n.headers)).status).toBe(400);
@@ -213,7 +213,7 @@ describe("FedaPay : notifications signées", () => {
     const order = await newOrder();
     const started = await pay(order.id);
     if (!started.ok) throw new Error(started.error);
-    await payOnFedapayPage(started.paymentId, "64000001");
+    await payOnFedapayPage(started.paymentId, "0164000001");
     const payment = await db.payment.findUniqueOrThrow({ where: { id: started.paymentId } });
     await db.payment.update({ where: { id: payment.id }, data: { providerRef: null } });
     const n = fedapayNotification("transaction.approved", Number(payment.providerRef));
@@ -228,7 +228,7 @@ describe("FedaPay : quand ça ne se passe pas comme prévu", () => {
     const started = await pay(order.id);
     if (!started.ok) throw new Error(started.error);
     await db.payment.update({ where: { id: started.paymentId }, data: { status: "EXPIRED" } });
-    await payOnFedapayPage(started.paymentId, "64000001");
+    await payOnFedapayPage(started.paymentId, "0164000001");
     expect(await refreshOrderPayments(order.id)).toBe(true);
     expect(await orderStatus(order.id)).toBe("PAID");
   });

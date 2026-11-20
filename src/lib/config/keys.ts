@@ -34,7 +34,7 @@ export const KEYS: KeyDef[] = [
     hint: "À laisser sur « Interdite » dès que vous encaissez de vrais paiements.",
     options: [{ value: "false", label: "Interdite" }, { value: "true", label: "Autorisée (démonstration)" }] },
   { name: "FEDAPAY_ENV", group: "payments", label: "Mode FedaPay", fallback: "sandbox",
-    hint: "Les clés et le secret du webhook doivent venir du même mode. En test, la page de paiement FedaPay n'accepte que les numéros 64 00 00 01 et 66 00 00 01.",
+    hint: "Les clés et le secret du webhook doivent venir du même mode. En test, la page de paiement FedaPay n'accepte que les numéros 01 64 00 00 01 et 01 66 00 00 01.",
     options: [{ value: "live", label: "Réel" }, { value: "sandbox", label: "Test" }] },
   { name: "FEDAPAY_PUBLIC_KEY", group: "payments", label: "Clé publique FedaPay", placeholder: "pk_live_…",
     hint: "Facultative : le paiement se fait sur la page de FedaPay, qui n'utilise que la clé secrète. Le site vérifie seulement qu'elle vient du même mode." },

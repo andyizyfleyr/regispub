@@ -60,7 +60,7 @@ export function formatPhone(e164: string) {
   return m ? `+229 ${m.slice(1).join(" ")}` : e164;
 }
 
-/** « 64000001 » → « 64 00 00 01 » : chiffres groupés par deux, pour l'affichage. */
+/** « 0164000001 » → « 01 64 00 00 01 » : chiffres groupés par deux, pour l'affichage. */
 export function groupDigits(digits: string) {
   return digits.replace(/(\d{2})(?=\d)/g, "$1 ");
 }
