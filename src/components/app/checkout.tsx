@@ -28,7 +28,7 @@ export function Checkout({ orderId, total, operators, hosted, defaultPhone, test
   orderId: string; total: number; operators: Operator[]; defaultPhone: string; open: OpenPayment | null; lastFailure: string | null; promoCode: string | null; canCancel: boolean;
   /** true : le client paie sur la page du prestataire. */
   hosted: boolean;
-  /** Simulateur : rappel qu'aucun argent ne circule, avec les numéros à essayer. */
+  /** Simulateur ou mode test du prestataire : rappel qu'aucun argent ne circule, avec les numéros à essayer. */
   testNotice: string | null;
   /** Nom du prestataire, pour désigner sa page de paiement. */
   providerLabel: string;
@@ -94,6 +94,7 @@ export function Checkout({ orderId, total, operators, hosted, defaultPhone, test
 
       {hosted ? (
         <div className="space-y-3 rounded-[22px] border border-line/70 bg-surface p-4 shadow-card sm:rounded-[28px] sm:p-6">
+          {testNotice && <Notice tone="warn" title="Paiement en mode test">{testNotice}</Notice>}
           <Button type="button" size="lg" variant="accent" className="w-full" disabled={busy} aria-busy={busy} onClick={pay}>
             {busy ? <LoaderCircle className="animate-spin" /> : null}{busy ? "Ouverture de la page de paiement…" : <>Payer {formatFcfa(total)} <ArrowRight /></>}
           </Button>
@@ -202,7 +203,7 @@ function Waiting({ payment, operators, hosted, simulated, onDone }: { payment: O
         </p>
       </div>
       {offline && <p className="mt-3 flex items-center justify-center gap-1.5 text-[0.8125rem] text-clay"><CircleAlert className="size-4" />Connexion instable. Nouvel essai automatique.</p>}
-      {simulated && <p className="mt-3 text-xs text-muted">Simulation : aucun débit réel.</p>}
+      {simulated && <p className="mt-3 text-xs text-muted">{hosted ? "Mode test : aucun débit réel." : "Simulation : aucun débit réel."}</p>}
       <div className="mt-5 flex flex-col items-center gap-2">
         <Button type="button" variant="outline" size="sm" disabled={checking} onClick={check}><RefreshCw className={checking ? "animate-spin" : ""} />Vérifier</Button>
       </div>

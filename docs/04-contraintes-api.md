@@ -7,7 +7,7 @@ Ce document distingue ce qui fonctionne aujourd'hui, ce qui est écrit mais n'a 
 - **Écrit d'après la documentation officielle** (docs.fedapay.com et bibliothèques `fedapay-node` / `fedapay-php`), dans `src/lib/payments/fedapay.ts` :
   - le client paie sur la **page de paiement de FedaPay** : deux appels, `POST /transactions` (collecte, `merchant_reference` = notre identifiant de tentative, `callback_url` = la page de la commande) puis `POST /transactions/{id}/token` (lien de la page FedaPay), et le client y est envoyé. C'est FedaPay qui demande le moyen de paiement et le numéro ; notre site n'affiche ni l'un ni l'autre ;
   - l'opérateur utilisé est repris ensuite du champ `mode` de la transaction (`mtn_open`, `moov`, `sbin`) quand FedaPay le donne ;
-  - en mode test, sur la page FedaPay, seuls les numéros `64000001` et `66000001` aboutissent (rappelé à l'équipe dans l'administration, pas au client) ;
+  - en mode test, sur la page FedaPay, seuls les numéros `64000001` et `66000001` aboutissent (rappelé à l'équipe dans l'administration, et au client sur l'écran de commande, juste au-dessus du bouton « Payer ») ;
   - un client qui revient sans avoir payé est renvoyé sur la **même collecte** (pas de second paiement possible) ;
   - le résultat vient toujours de `GET /transactions/{id}`, jamais de l'adresse de retour ni du contenu d'une notification ;
   - `declined` (interrompu par le client) et `canceled` (solde ou opérateur) ne sont pas définitifs chez FedaPay : la tentative est close chez nous, mais une approbation tardive reste encaissée (webhook, retour sur la commande, tâche planifiée pendant 26 h) ;

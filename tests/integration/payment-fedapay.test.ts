@@ -96,7 +96,9 @@ function fedapayNotification(name: string, transactionId: number, secret = WEBHO
 describe("FedaPay : paiement sur la page FedaPay", () => {
   it("n'a rien à faire saisir au client : ni mode test, ni numéro, ni opérateur", async () => {
     const mode = await paymentModeInfo();
-    expect(mode).toMatchObject({ available: true, providerId: "fedapay", mode: "test", checkout: "hosted", testNotice: null });
+    expect(mode).toMatchObject({ available: true, providerId: "fedapay", mode: "test", checkout: "hosted" });
+    // Le client est prévenu avant d'aller sur la page FedaPay : en test, seuls les numéros d'essai passent.
+    expect(mode.testNotice).toContain("64 00 00 01 ou 66 00 00 01");
     // Rappel réservé à l'équipe.
     expect(mode.testNumbers).toEqual(["64000001", "66000001"]);
   });
