@@ -60,6 +60,11 @@ export function formatPhone(e164: string) {
   return m ? `+229 ${m.slice(1).join(" ")}` : e164;
 }
 
+/** « 64000001 » → « 64 00 00 01 » : chiffres groupés par deux, pour l'affichage. */
+export function groupDigits(digits: string) {
+  return digits.replace(/(\d{2})(?=\d)/g, "$1 ");
+}
+
 export function maskPhone(e164: string) {
   const m = e164.match(/^\+229(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/);
   return m ? `+229 ${m[1]} ${m[2]} •• •• ${m[5]}` : e164.replace(/\d(?=\d{2})/g, "•");

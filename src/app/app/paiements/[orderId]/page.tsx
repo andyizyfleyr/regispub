@@ -13,7 +13,7 @@ import { Notice, PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { paymentModeInfo, refreshOrderPayments } from "@/lib/payments/service";
-import { formatPhone, maskPhone, type OperatorCode } from "@/lib/phone";
+import { formatPhone, groupDigits, maskPhone, type OperatorCode } from "@/lib/phone";
 import type { QuoteLine } from "@/lib/pricing/quote";
 import { formatDateTime, formatFcfa, isRecord } from "@/lib/utils";
 
@@ -47,6 +47,11 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
   const lastFailure = last && ["FAILED", "CANCELLED", "EXPIRED"].includes(last.status)
     ? last.failureReason ?? (last.status === "EXPIRED" ? "Demande expirée sans validation." : last.status === "CANCELLED" ? "La demande a été annulée." : "Paiement refusé par l'opérateur.")
     : null;
+  // En mode test, le prestataire refuse d'office tout numéro hors de sa liste : on le dit tel quel au lieu de laisser croire à un incident.
+  const testNumbers = mode.testNumbers;
+  const testRefused = Boolean(lastFailure && testNumbers && last && last.provider === mode.providerId && !testNumbers.includes(last.phone.slice(-8)));
+  // En test, le numéro du client serait refusé : le champ est rempli avec un numéro d'essai.
+  const defaultPhone = testNumbers?.[0] ? groupDigits(testNumbers[0]) : user.phone?.startsWith("+229") ? formatPhone(user.phone).replace(/^\+229\s?/, "") : "";
   const isPaid = order.status === "PAID" || order.status === "PARTIALLY_REFUNDED" || order.status === "REFUNDED";
   const title = order.campaign?.name ?? order.serviceLabel;
 
@@ -73,8 +78,8 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
         {order.boost && <BoostDelivery boost={order.boost} orderStatus={order.status} refundPending={order.refunds.some((r) => r.status === "REQUESTED")} />}
 
         {order.status === "PENDING" && mode.available ? (
-          <Checkout orderId={order.id} total={order.total} operators={mode.operators} defaultPhone={user.phone?.startsWith("+229") ? formatPhone(user.phone).replace(/^\+229\s?/, "") : ""}
-            testNotice={mode.testNotice} providerLabel={mode.providerLabel ?? "notre prestataire"} promoCode={order.promoCode?.code ?? null} allowPromo={!order.boost} canCancel={!open} lastFailure={lastFailure}
+          <Checkout orderId={order.id} total={order.total} operators={mode.operators} defaultPhone={defaultPhone}
+            testNotice={mode.testNotice} testNumbers={testNumbers} testRefused={testRefused} providerLabel={mode.providerLabel ?? "notre prestataire"} promoCode={order.promoCode?.code ?? null} allowPromo={!order.boost} canCancel={!open} lastFailure={lastFailure}
             open={open ? { id: open.id, operator: open.operator as OperatorCode, phone: open.phone, expiresAt: open.expiresAt.toISOString(), redirectUrl: open.redirectUrl } : null}>
             <details className="group rounded-lg border border-line bg-surface">
               <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink-soft">

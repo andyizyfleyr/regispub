@@ -19,7 +19,8 @@ export class SandboxProvider implements PaymentProvider {
   readonly id = "sandbox";
   readonly label = "Simulateur (aucun débit réel)";
   readonly mode = "simulation" as const;
-  readonly testNotice = "Mode simulation : aucun débit réel. Numéro finissant par 00 = refusé, 99 = sans réponse.";
+  readonly testNotice = "Simulation : un numéro finissant par 00 est refusé, par 99 reste sans réponse. Tout autre numéro est accepté.";
+  readonly testNumbers = null;
   readonly supportedOperators: OperatorCode[] = ["MTN", "MOOV", "CELTIIS"];
 
   constructor(private readonly secret: string, private readonly now: () => number = Date.now, private readonly delayMs = SANDBOX_APPROVAL_DELAY_MS) {}

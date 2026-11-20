@@ -8,8 +8,10 @@ import { KEY_NAMES, keyDef } from "@/lib/config/keys";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { createLogger } from "@/lib/logger";
+import { FEDAPAY_TEST_NUMBERS } from "@/lib/payments/fedapay";
 import { fedapayFrom } from "@/lib/payments/registry";
 import { PaymentProviderError } from "@/lib/payments/types";
+import { groupDigits } from "@/lib/phone";
 import { formatDateTime } from "@/lib/utils";
 import { rateLimit } from "@/lib/rate-limit";
 import { formAction, safeAction, UserError } from "@/server/action";
@@ -65,6 +67,7 @@ export async function testFedapayAction() {
       const provider = fedapayFrom(config);
       const result = await provider.diagnose(webhookUrl);
       lines.push({ tone: "ok", text: `Clé acceptée par FedaPay en mode ${modeLabel}.` });
+      if (config.fedapayEnv !== "live") lines.push({ tone: "warn", text: `Mode test : aucun argent réel n'est encaissé et seuls les numéros ${FEDAPAY_TEST_NUMBERS.map(groupDigits).join(" et ")} sont acceptés, tout autre numéro est refusé. Pour encaisser de vrais paiements, choisissez le mode « Réel » avec la clé secrète et le webhook du mode réel.` });
       if (result.webhook === "active") lines.push({ tone: "ok", text: "FedaPay a bien un webhook actif vers ce site." });
       if (result.webhook === "disabled") lines.push({ tone: "danger", text: "Le webhook vers ce site est désactivé chez FedaPay. Réactivez-le dans votre compte FedaPay, menu « Webhooks »." });
       if (result.webhook === "missing") lines.push({ tone: "danger", text: `Aucun webhook ne pointe vers ce site. Dans votre compte FedaPay (mode ${modeLabel}), menu « Webhooks », créez-en un avec cette adresse : ${webhookUrl}` });

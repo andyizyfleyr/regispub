@@ -70,6 +70,8 @@ export interface PaymentProvider {
   readonly supportedOperators: OperatorCode[];
   /** Hors mode réel : phrase affichée au client pour dire qu'aucun argent ne circule et quels numéros essayer. */
   readonly testNotice: string | null;
+  /** En mode test, les seuls numéros (8 chiffres) qui donnent un paiement accepté. null : pas de liste imposée. */
+  readonly testNumbers: readonly string[] | null;
   isConfigured(): boolean;
   initiate(input: InitiateInput): Promise<InitiateResult>;
   /** Interroge le prestataire, de serveur à serveur. Seule source de vérité pour confirmer un paiement. */
