@@ -82,7 +82,7 @@ const sha256 = (v: string) => createHash("sha256").update(v).digest("hex");
 
 export const requestPasswordResetAction = formAction(z.object({ email }), async (input) => {
   if (!(await rateLimit(`reset:${input.email}`, 3, 3600))) throw new UserError("Trop de demandes. Réessayez dans une heure.");
-  if (!resendEmail.isConfigured()) {
+  if (!(await resendEmail.isConfigured())) {
     return { ok: false, error: "L'envoi d'e-mails n'est pas encore activé sur cette plateforme. Contactez le support pour réinitialiser votre mot de passe." };
   }
   const user = await db.user.findUnique({ where: { email: input.email }, select: { id: true, email: true, status: true } });

@@ -764,6 +764,14 @@ model Setting {
   updatedAt   DateTime @updatedAt
 }
 
+/// Clé d'un service externe saisie dans l'administration. `value` est chiffrée (voir lib/vault).
+model AppKey {
+  name        String   @id
+  value       String
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
 model AuditLog {
   id        String   @id @default(cuid())
   actorId   String?

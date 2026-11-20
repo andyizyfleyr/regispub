@@ -17,7 +17,7 @@ const mp4 = (size: number) => { const b = new Uint8Array(size); b.set([0, 0, 0, 
 
 describe.skipIf(process.env.STORAGE_DRIVER !== "s3")("stockage S3", () => {
   it("put / get / delete", async () => {
-    const s = getStorage();
+    const s = await getStorage();
     expect(s.id).toBe("s3");
     await s.put("t/a b-é.txt".replace(/[ é]/g, "_"), new TextEncoder().encode("bonjour"), "text/plain");
     expect(new TextDecoder().decode((await s.get("t/a_b-_.txt"))!)).toBe("bonjour");
@@ -37,7 +37,7 @@ describe.skipIf(process.env.STORAGE_DRIVER !== "s3")("stockage S3", () => {
     expect(asset).toMatchObject({ kind: "VIDEO", mime: "video/mp4", size: bytes.byteLength, name: "Ma vidéo.mp4", ownerId: owner.id });
     // Rejouer « complete » ne crée pas de doublon.
     expect((await completeDirectUpload(owner, started!.ticket)).id).toBe(asset.id);
-    const url = await getStorage().direct!.presignGet(asset.storageKey, 300, { contentType: "video/mp4", disposition: "inline; filename*=UTF-8''Ma%20vid%C3%A9o.mp4" });
+    const url = await (await getStorage()).direct!.presignGet(asset.storageKey, 300, { contentType: "video/mp4", disposition: "inline; filename*=UTF-8''Ma%20vid%C3%A9o.mp4" });
     const get = await fetch(url, { headers: { Range: "bytes=0-99" } });
     expect(get.status).toBe(206);
     expect(get.headers.get("content-type")).toBe("video/mp4");
@@ -52,7 +52,7 @@ describe.skipIf(process.env.STORAGE_DRIVER !== "s3")("stockage S3", () => {
     await expect(completeDirectUpload(owner, started!.ticket)).rejects.toThrow(/ne correspond pas/);
     // L'objet refusé est supprimé du stockage.
     const key = JSON.parse(Buffer.from(started!.ticket.split(".")[0]!, "base64url").toString()).k as string;
-    expect(await getStorage().get(key)).toBeNull();
+    expect(await (await getStorage()).get(key)).toBeNull();
   });
 
   it("refuse un objet plus lourd que la limite, même si la taille annoncée était correcte", async () => {
@@ -68,6 +68,6 @@ describe.skipIf(process.env.STORAGE_DRIVER !== "s3")("stockage S3", () => {
     const png = new Uint8Array(64); png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 4, 56, 0, 0, 4, 56]);
     const a = await storeAsset({ bytes: png, mime: "image/png", name: "a.png", owner });
     expect(a).toMatchObject({ width: 1080, height: 1080 });
-    expect((await getStorage().get(a.storageKey))!.byteLength).toBe(64);
+    expect((await (await getStorage()).get(a.storageKey))!.byteLength).toBe(64);
   });
 });

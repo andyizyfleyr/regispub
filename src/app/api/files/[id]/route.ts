@@ -15,7 +15,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const inline = asset.kind !== "DOCUMENT" || asset.mime === "application/pdf";
   const disposition = `${download || !inline ? "attachment" : "inline"}; filename*=UTF-8''${encodeURIComponent(asset.name)}`;
   let storage;
-  try { storage = getStorage(); } catch (error) {
+  try { storage = await getStorage(); } catch (error) {
     if (error instanceof DomainError) return new Response("Fichier indisponible", { status: 503 });
     throw error;
   }

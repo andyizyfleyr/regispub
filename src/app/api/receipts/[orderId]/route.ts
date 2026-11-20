@@ -23,7 +23,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ orderId: s
   // Un reçu n'existe que pour une commande dont le paiement a été vérifié.
   if (!order.invoiceNumber || !order.paidAt || !payment) return new Response("Aucun reçu : cette commande n'est pas payée.", { status: 409 });
   const quote = isRecord(order.quote) && Array.isArray(order.quote.lines) ? (order.quote.lines as QuoteLine[]) : [];
-  const provider = getProviderById(payment.provider);
+  const provider = await getProviderById(payment.provider);
   const operator = PAYMENT_COUNTRIES[0]!.operators.find((o) => o.code === payment.operator)?.label ?? payment.operator;
   const pdf = await renderReceiptPdf({
     invoiceNumber: order.invoiceNumber, orderReference: order.reference, paidAt: order.paidAt,

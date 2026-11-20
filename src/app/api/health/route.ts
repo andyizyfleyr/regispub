@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { rateLimit } from "@/lib/rate-limit";
-import { getStorage, s3Configured } from "@/lib/storage";
+import { getConfig } from "@/lib/config";
+import { s3Complete } from "@/lib/config/keys";
+import { getStorage } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -33,20 +35,21 @@ async function storageReport() {
     catch (error) { steps[label] = `ÉCHEC — ${describe(error)}`; }
   };
 
-  steps.pilote = `${env.storageDriver}${env.storageDriver === "s3" ? (s3Configured() ? ", configuration complète" : ", configuration INCOMPLÈTE") : ""}`;
+  const config = await getConfig();
+  steps.pilote = `${config.storageDriver}${config.storageDriver === "s3" ? (s3Complete(config) ? ", configuration complète" : ", configuration INCOMPLÈTE") : ""}`;
   const key = `verification/rt-${Date.now().toString(36)}.jpg`;
   const directKey = `verification/rt-${Date.now().toString(36)}-direct.mp4`;
   // Faux JPEG de 300 ko : même ordre de grandeur qu'une photo réduite par le navigateur.
   const bytes = new Uint8Array(300 * 1024);
   bytes.set([0xff, 0xd8, 0xff, 0xe0]);
 
-  await step("ecriture", async () => { await getStorage().put(key, bytes, "image/jpeg"); });
+  await step("ecriture", async () => { await (await getStorage()).put(key, bytes, "image/jpeg"); });
   await step("lecture", async () => {
-    const read = await getStorage().get(key);
+    const read = await (await getStorage()).get(key);
     if (!read || read.byteLength !== bytes.byteLength) throw new Error(`taille relue : ${read?.byteLength ?? "aucune"}`);
   });
   await step("envoi_par_adresse_signee", async () => {
-    const direct = getStorage().direct;
+    const direct = (await getStorage()).direct;
     if (!direct) return " (non proposé par ce pilote)";
     const url = await direct.presignPut(directKey, 120);
     const put = await fetch(url, { method: "PUT", body: bytes, headers: { "Content-Type": "video/mp4" } });
@@ -55,8 +58,9 @@ async function storageReport() {
     if (!found || found.size !== bytes.byteLength) throw new Error(`relecture partielle : ${found ? found.size : "introuvable"}`);
   });
   await step("suppression", async () => {
-    await getStorage().delete(key);
-    await getStorage().delete(directKey);
+    const storage = await getStorage();
+    await storage.delete(key);
+    await storage.delete(directKey);
   });
   await step("base_lecture", async () => {
     const [count] = await Promise.all([db.asset.count(), db.asset.findFirst()]);

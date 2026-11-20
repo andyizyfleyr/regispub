@@ -22,39 +22,8 @@ export const env = {
   get cronSecret() { return str("CRON_SECRET"); },
   get databaseUrl() { return str("DATABASE_URL", "postgresql://postgres:postgres@localhost:5433/regispub"); },
 
-  get paymentProvider() { return str("PAYMENT_PROVIDER", "sandbox").toLowerCase(); },
-  get allowSandboxPayments() { return str("ALLOW_SANDBOX_PAYMENTS") === "true"; },
-  get fedapayEnv() { return str("FEDAPAY_ENV", "sandbox") === "live" ? "live" as const : "sandbox" as const; },
-  get fedapaySecretKey() { return str("FEDAPAY_SECRET_KEY"); },
-  get fedapayWebhookSecret() { return str("FEDAPAY_WEBHOOK_SECRET"); },
-
-
-  get storageDriver() { return str("STORAGE_DRIVER", "local").toLowerCase(); },
+  /** Dossier du stockage sur disque (développement). Les clés des services externes se lisent avec getConfig() de lib/config. */
   get storageLocalDir() { return str("STORAGE_LOCAL_DIR", ".data/uploads"); },
-  get s3() {
-    return {
-      endpoint: str("S3_ENDPOINT").replace(/\/$/, ""),
-      region: str("S3_REGION", "auto"),
-      bucket: str("S3_BUCKET"),
-      accessKeyId: str("S3_ACCESS_KEY_ID"),
-      secretAccessKey: str("S3_SECRET_ACCESS_KEY"),
-    };
-  },
-
-  get emailProvider() { return str("EMAIL_PROVIDER").toLowerCase(); },
-  get emailFrom() { return str("EMAIL_FROM", "RegisPub <no-reply@example.com>"); },
-  get resendKey() { return str("RESEND_API_KEY"); },
-  get whatsapp() {
-    return {
-      phoneNumberId: str("WHATSAPP_PHONE_NUMBER_ID"),
-      accessToken: str("WHATSAPP_ACCESS_TOKEN"),
-      templateName: str("WHATSAPP_TEMPLATE_NAME"),
-      templateLang: str("WHATSAPP_TEMPLATE_LANG", "fr"),
-    };
-  },
-
-  get meta() { return { accessToken: str("META_ACCESS_TOKEN"), apiVersion: str("META_API_VERSION", "v23.0") }; },
-  get tiktok() { return { accessToken: str("TIKTOK_ACCESS_TOKEN"), advertiserId: str("TIKTOK_ADVERTISER_ID") }; },
 
   get cookieSameSite() { return str("SESSION_COOKIE_SAMESITE", "lax") === "none" ? "none" as const : "lax" as const; },
 };

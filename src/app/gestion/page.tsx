@@ -36,7 +36,7 @@ export default async function StaffHome({ searchParams }: { searchParams: Promis
     seeMoney ? db.payment.findMany({ orderBy: { createdAt: "desc" }, take: 6, include: { order: { select: { reference: true, id: true } }, user: { select: { name: true } } } }) : [],
     can(user.role, "boost.manage") ? db.boostOrder.count({ where: { status: "TO_DELIVER" } }) : 0,
   ]);
-  const integrations = can(user.role, "integration.view") ? integrationsStatus() : [];
+  const integrations = can(user.role, "integration.view") ? await integrationsStatus() : [];
   const simulation = integrations.filter((i) => i.state === "simulation");
   // Sans prestataire actif ni simulateur, les clients ne peuvent pas payer : c'est l'alerte prioritaire.
   const issues = simulation.length ? simulation : integrations.filter((i) => i.state === "needs_config" && i.name === "Paiement en ligne");

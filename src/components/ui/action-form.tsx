@@ -12,7 +12,7 @@ import { Button, type ButtonProps } from "./button";
 
 type FormActionFn = (prev: ActionState, formData: FormData) => Promise<ActionState>;
 
-const ErrorsContext = React.createContext<Partial<Record<string, string>>>({});
+export const ErrorsContext = React.createContext<Partial<Record<string, string>>>({});
 export const useFieldErrors = () => React.useContext(ErrorsContext);
 
 /** Formulaire relié à une Server Action : états de chargement, erreurs par champ et message de confirmation. */

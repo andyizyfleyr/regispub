@@ -239,7 +239,7 @@ async function Stats({ campaignId, platforms, adBudget, kpis, launched, canImpor
     db.metricSnapshot.findMany({ where: { campaignId }, orderBy: [{ date: "desc" }, { platform: "asc" }], take: 120 }),
     db.metricImport.findMany({ where: { campaignId }, orderBy: { createdAt: "desc" }, take: 8 }),
   ]);
-  const apiReady = platforms.some((p) => ADS_ADAPTERS[p === "TIKTOK" ? "TIKTOK" : "META"].isConfigured());
+  const apiReady = (await Promise.all(platforms.map((p) => ADS_ADAPTERS[p === "TIKTOK" ? "TIKTOK" : "META"].isConfigured()))).some(Boolean);
   const sourceLabel: Record<string, string> = { API: "API", IMPORT: "Import CSV", MANUAL: "Saisie" };
   return (
     <div className="space-y-6">

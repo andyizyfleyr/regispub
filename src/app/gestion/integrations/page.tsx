@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Check, FlaskConical, KeyRound, ShieldAlert, Clock } from "lucide-react";
 import { ToneIcon, type Tone } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Notice, PageHeader } from "@/components/ui/misc";
+import { can } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import { integrationsStatus, STATE_LABELS, type IntegrationState } from "@/lib/integrations";
@@ -14,14 +16,16 @@ const TONES: Record<IntegrationState, Tone> = { operational: "ok", simulation: "
 const ICONS: Record<IntegrationState, React.ReactNode> = { operational: <Check aria-hidden />, simulation: <FlaskConical aria-hidden />, needs_config: <KeyRound aria-hidden />, needs_authorization: <ShieldAlert aria-hidden />, planned: <Clock aria-hidden /> };
 
 export default async function IntegrationsPage() {
-  await requirePermission("integration.view");
-  const items = integrationsStatus();
+  const user = await requirePermission("integration.view");
+  const canEditKeys = can(user.role, "keys.manage");
+  const items = await integrationsStatus();
   const areas = Array.from(new Set(items.map((i) => i.area)));
   return (
     <>
       <PageHeader title="Intégrations" />
       <Notice tone="info" className="mb-5" title="Lecture de cette page">
-        « Opérationnel » : configuré et utilisé. « Simulation » : aucun échange réel. « À configurer » : le code est prêt, il manque des clés. « Autorisation requise » : dépend d&apos;une validation de Meta, TikTok ou WhatsApp sur vos comptes. « En attente » : non proposé pour l&apos;instant. Les clés se définissent dans les variables d&apos;environnement de l&apos;hébergement, jamais dans cette interface.
+        « Opérationnel » : configuré et utilisé. « Simulation » : aucun échange réel. « À configurer » : le code est prêt, il manque des clés. « Autorisation requise » : dépend d&apos;une validation de Meta, TikTok ou WhatsApp sur vos comptes. « En attente » : non proposé pour l&apos;instant. Les clés se saisissent dans{" "}
+        {canEditKeys ? <Link href="/gestion/parametres/cles" className="font-medium text-green underline-offset-4 hover:underline">Paramètres → Clés et connexions</Link> : "Paramètres → Clés et connexions (réservé au super administrateur)"}.
       </Notice>
       <div className="space-y-6">
         {areas.map((area) => (

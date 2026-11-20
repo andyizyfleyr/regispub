@@ -73,6 +73,7 @@ export async function notifyStaff(permission: Permission, input: Omit<NotifyInpu
   await Promise.allSettled(staff.map((s) => notify({ ...input, userId: s.id })));
 }
 
-export function notificationChannelsStatus() {
-  return { email: resendEmail.isConfigured(), whatsapp: whatsappCloud.isConfigured() };
+export async function notificationChannelsStatus() {
+  const [email, whatsapp] = await Promise.all([resendEmail.isConfigured(), whatsappCloud.isConfigured()]);
+  return { email, whatsapp };
 }

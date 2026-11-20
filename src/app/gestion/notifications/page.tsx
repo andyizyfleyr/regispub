@@ -21,7 +21,7 @@ export default async function StaffNotifications({ searchParams }: { searchParam
   const canSend = can(user.role, "notification.send");
   const view = vue === "envoi" && canSend ? "envoi" : vue === "journal" && canSend ? "journal" : "miennes";
   const base = "/gestion/notifications";
-  const channels = notificationChannelsStatus();
+  const channels = await notificationChannelsStatus();
   return (
     <>
       <PageHeader title="Notifications" />

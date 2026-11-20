@@ -29,6 +29,7 @@ export const PERMISSIONS = {
   "notification.send": "Envoyer des notifications",
   "report.view": "Consulter les rapports d'activité",
   "settings.manage": "Modifier les paramètres de la plateforme",
+  "keys.manage": "Saisir les clés des services externes (paiement, stockage, e-mails)",
   "integration.view": "Voir l'état des intégrations",
   "audit.view": "Consulter le journal d'audit",
 } as const;
@@ -38,7 +39,8 @@ const ALL = Object.keys(PERMISSIONS) as Permission[];
 
 const ROLE_PERMISSIONS: Record<RoleName, Permission[]> = {
   SUPER_ADMIN: ALL,
-  ADMIN: ALL.filter((p) => p !== "staff.manage_admins"),
+  // Les clés de paiement décident du compte qui encaisse : seul le super administrateur les modifie.
+  ADMIN: ALL.filter((p) => p !== "staff.manage_admins" && p !== "keys.manage"),
   AD_MANAGER: [
     "backoffice.access", "campaign.view_all", "campaign.assign", "campaign.update_status", "campaign.manage_creatives",
     "campaign.message", "revision.manage", "metrics.import", "metrics.validate", "order.view", "payment.view", "report.view", "access.reveal", "boost.manage",
