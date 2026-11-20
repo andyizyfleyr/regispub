@@ -19,6 +19,7 @@ export class SandboxProvider implements PaymentProvider {
   readonly id = "sandbox";
   readonly label = "Simulateur (aucun débit réel)";
   readonly mode = "simulation" as const;
+  readonly testNotice = "Mode simulation : aucun débit réel. Numéro finissant par 00 = refusé, 99 = sans réponse.";
   readonly supportedOperators: OperatorCode[] = ["MTN", "MOOV", "CELTIIS"];
 
   constructor(private readonly secret: string, private readonly now: () => number = Date.now, private readonly delayMs = SANDBOX_APPROVAL_DELAY_MS) {}
@@ -63,6 +64,10 @@ export class SandboxProvider implements PaymentProvider {
     if (given.length !== expected.length || !timingSafeEqual(given, expected)) throw new WebhookSignatureError("Signature de simulation invalide");
     const payload: unknown = JSON.parse(rawBody);
     if (!isRecord(payload)) throw new WebhookSignatureError("Corps inattendu");
-    return { eventKey: String(payload.id ?? this.sign(rawBody)), type: String(payload.type ?? "payment.updated"), providerRef: typeof payload.providerRef === "string" ? payload.providerRef : null, payload };
+    return { eventKey: String(payload.id ?? this.sign(rawBody)), type: String(payload.type ?? "payment.updated"), providerRef: this.refFromPayload(payload), payload };
+  }
+
+  refFromPayload(payload: unknown): string | null {
+    return isRecord(payload) && typeof payload.providerRef === "string" ? payload.providerRef : null;
   }
 }

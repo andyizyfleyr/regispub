@@ -12,8 +12,14 @@ export async function sandboxAllowed() {
   return allowed(await getConfig());
 }
 
+/** Hors production, FEDAPAY_API_BASE permet de viser un faux serveur FedaPay pour les essais. Ignoré en production. */
+export function fedapayFrom(config: RuntimeConfig) {
+  const apiBase = env.isProd ? undefined : process.env.FEDAPAY_API_BASE?.replace(/\/+$/, "") || undefined;
+  return new FedapayProvider({ secretKey: config.fedapaySecretKey, webhookSecret: config.fedapayWebhookSecret, environment: config.fedapayEnv, apiBase });
+}
+
 function build(id: string, config: RuntimeConfig): PaymentProvider | null {
-  if (id === "fedapay") return new FedapayProvider({ secretKey: config.fedapaySecretKey, webhookSecret: config.fedapayWebhookSecret, environment: config.fedapayEnv });
+  if (id === "fedapay") return fedapayFrom(config);
   if (id === "sandbox") return allowed(config) ? new SandboxProvider(env.appSecret) : null;
   return null;
 }

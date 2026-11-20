@@ -94,7 +94,7 @@ describe("paiement Mobile Money", () => {
     const bad = await handlePaymentWebhook("sandbox", raw, new Headers({ "x-sandbox-signature": "faux" }));
     expect(bad.status).toBe(400);
     expect((await handlePaymentWebhook("sandbox", raw, new Headers({ "x-sandbox-signature": "faux" }))).status).toBe(400);
-    expect(await db.paymentEvent.count({ where: { type: "invalid_signature", signatureValid: false } })).toBe(1);
+    expect(await db.paymentEvent.count({ where: { provider: "sandbox", type: "invalid_signature", signatureValid: false } })).toBe(1);
     expect((await handlePaymentWebhook("inconnu", "{}", new Headers())).status).toBe(404);
     expect((await db.payment.findUniqueOrThrow({ where: { id: payment.id } })).status).not.toBe("SUCCEEDED");
     expect((await db.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("PENDING");

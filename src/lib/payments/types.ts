@@ -17,18 +17,26 @@ export type InitiateInput = {
 export type InitiateResult = {
   providerRef: string;
   status: ProviderPaymentStatus;
-  /** Renseigné lorsque le client doit finaliser le paiement sur la page du prestataire. */
-  redirectUrl?: string;
   providerStatus?: string;
-  failureReason?: string;
+  /**
+   * Page de paiement hébergée par le prestataire pour CETTE transaction. Solution de secours quand la demande
+   * n'arrive pas sur le téléphone : comme il s'agit de la même transaction, elle ne peut pas être payée deux fois.
+   */
+  redirectUrl?: string;
+  /** false : la demande n'a pas pu être envoyée sur le téléphone, le client doit passer par redirectUrl. */
+  pushed?: boolean;
+  /** Réponse du prestataire quand l'envoi sur le téléphone a échoué (pour l'équipe, jamais affichée au client). */
+  pushError?: string;
 };
 
 export type VerifyResult = {
   providerRef: string;
   status: ProviderPaymentStatus;
   amount: number | null;
+  /** Statut tel que le prestataire l'exprime, complété du dernier code d'erreur s'il y en a un. */
   providerStatus: string;
   merchantReference?: string | null;
+  /** Explication en clair, destinée au client. */
   failureReason?: string;
 };
 
@@ -40,8 +48,15 @@ export type WebhookEvent = {
 };
 
 export class WebhookSignatureError extends Error {}
+/**
+ * Nature d'un refus du prestataire :
+ * auth = clé refusée (rien ne marchera tant qu'elle n'est pas corrigée), invalid = demande refusée (numéro, montant…),
+ * unavailable = prestataire injoignable ou en panne, config = prestataire non configuré de notre côté.
+ */
+export type PaymentErrorKind = "auth" | "invalid" | "not_found" | "unavailable" | "config" | "unknown";
+
 export class PaymentProviderError extends Error {
-  constructor(message: string, readonly userMessage?: string, readonly details?: unknown) { super(message); }
+  constructor(message: string, readonly userMessage?: string, readonly details?: unknown, readonly kind: PaymentErrorKind = "unknown") { super(message); }
 }
 
 /**
@@ -53,10 +68,14 @@ export interface PaymentProvider {
   readonly label: string;
   readonly mode: "live" | "test" | "simulation";
   readonly supportedOperators: OperatorCode[];
+  /** Hors mode réel : phrase affichée au client pour dire qu'aucun argent ne circule et quels numéros essayer. */
+  readonly testNotice: string | null;
   isConfigured(): boolean;
   initiate(input: InitiateInput): Promise<InitiateResult>;
   /** Interroge le prestataire, de serveur à serveur. Seule source de vérité pour confirmer un paiement. */
   verify(providerRef: string): Promise<VerifyResult>;
   /** Vérifie la signature et décode la notification. Lève WebhookSignatureError si elle est invalide. */
   parseWebhook(rawBody: string, headers: Headers): WebhookEvent;
+  /** Retrouve la transaction concernée dans une notification déjà enregistrée (reprise d'un traitement interrompu). */
+  refFromPayload(payload: unknown): string | null;
 }

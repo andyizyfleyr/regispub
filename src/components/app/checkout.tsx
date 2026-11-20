@@ -21,8 +21,12 @@ const newKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? 
  * Paiement en un geste : le numéro est déjà rempli, l'opérateur est reconnu d'après le numéro, il reste à toucher « Payer ».
  * La confirmation se fait sur le téléphone du client, avec son code secret : aucune seconde confirmation à l'écran.
  */
-export function Checkout({ orderId, total, operators, defaultPhone, simulation, open, lastFailure, promoCode, canCancel, allowPromo = true, children }: {
-  orderId: string; total: number; operators: Operator[]; defaultPhone: string; simulation: boolean; open: OpenPayment | null; lastFailure: string | null; promoCode: string | null; canCancel: boolean;
+export function Checkout({ orderId, total, operators, defaultPhone, testNotice, providerLabel, open, lastFailure, promoCode, canCancel, allowPromo = true, children }: {
+  orderId: string; total: number; operators: Operator[]; defaultPhone: string; open: OpenPayment | null; lastFailure: string | null; promoCode: string | null; canCancel: boolean;
+  /** Hors mode réel : rappel qu'aucun argent ne circule, avec les numéros à essayer. */
+  testNotice: string | null;
+  /** Nom du prestataire, pour désigner sa page de paiement. */
+  providerLabel: string;
   /** Les codes promo portent sur les frais de prestation d'une publicité : ils ne s'appliquent pas aux achats d'abonnés ou de J'aime. */
   allowPromo?: boolean;
   /** Détail du prix, affiché sous le bouton de paiement. */
@@ -35,6 +39,8 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState<OpenPayment | null>(open);
+  /** Tentative dont la demande n'a pas pu partir sur le téléphone : le client doit passer par la page du prestataire. */
+  const [notPushed, setNotPushed] = React.useState<string | null>(null);
   const [promo, setPromo] = React.useState(promoCode ?? "");
   const key = React.useRef(newKey());
   const normalized = normalizeBeninPhone(phone);
@@ -54,13 +60,13 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
     const res = await startPaymentAction({ orderId, operator, phone, idempotencyKey: key.current });
     setBusy(false);
     if (!res.ok) { setError(res.error); key.current = newKey(); router.refresh(); return; }
-    const redirectUrl = res.data.redirectUrl as string | null;
-    if (redirectUrl) { window.location.assign(redirectUrl); return; }
-    setPending({ id: res.data.paymentId as string, operator, phone: normalized.e164, expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(), redirectUrl: null });
+    const started = res.data as { paymentId: string; redirectUrl: string | null; pushed: boolean; expiresAt: string };
+    if (!started.pushed) setNotPushed(started.paymentId);
+    setPending({ id: started.paymentId, operator, phone: normalized.e164, expiresAt: started.expiresAt, redirectUrl: started.redirectUrl });
     router.refresh();
   }
 
-  if (pending) return <Waiting payment={pending} operators={operators} simulation={simulation} onDone={() => { key.current = newKey(); setPending(null); router.refresh(); }} />;
+  if (pending) return <Waiting payment={pending} operators={operators} testMode={Boolean(testNotice)} providerLabel={providerLabel} pushed={pending.id !== notPushed} onDone={() => { key.current = newKey(); setPending(null); router.refresh(); }} />;
 
   return (
     <div className="space-y-4">
@@ -99,7 +105,7 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
           {busy ? <LoaderCircle className="animate-spin" /> : null}{busy ? "Envoi…" : <>Payer {formatFcfa(total)} <ArrowRight /></>}
         </Button>
         <p className="flex items-start gap-2 text-xs text-muted"><ShieldCheck className="mt-px size-4 shrink-0 text-green" />Vous validez ensuite sur votre téléphone avec votre code secret. Nous ne le voyons jamais.</p>
-        {simulation && <p className="rounded-md bg-marigold-soft px-3 py-2 text-xs text-ink-soft"><span className="font-semibold">Mode simulation :</span> aucun débit réel. Numéro finissant par 00 = refusé, 99 = sans réponse.</p>}
+        {testNotice && <p className="rounded-md bg-marigold-soft px-3 py-2 text-xs text-ink-soft">{testNotice}</p>}
       </div>
 
       {children}
@@ -122,13 +128,16 @@ export function Checkout({ orderId, total, operators, defaultPhone, simulation, 
   );
 }
 
-function Waiting({ payment, operators, simulation, onDone }: { payment: OpenPayment; operators: Operator[]; simulation: boolean; onDone: () => void }) {
+function Waiting({ payment, operators, testMode, providerLabel, pushed, onDone }: { payment: OpenPayment; operators: Operator[]; testMode: boolean; providerLabel: string; pushed: boolean; onDone: () => void }) {
   const router = useRouter();
-  const [left, setLeft] = React.useState(() => Math.max(0, Math.round((Date.parse(payment.expiresAt) - Date.now()) / 1000)));
+  // Temps restant, recalculé d'après l'échéance (et non décompté) : il reste juste si l'onglet a dormi.
+  const remaining = React.useCallback(() => Math.max(0, Math.round((Date.parse(payment.expiresAt) - Date.now()) / 1000)), [payment.expiresAt]);
+  const [left, setLeft] = React.useState<number | null>(null);
   const [checking, setChecking] = React.useState(false);
   const [offline, setOffline] = React.useState(false);
   const done = React.useRef(false);
   const op = operators.find((o) => o.code === payment.operator);
+  const mustUsePage = !pushed && Boolean(payment.redirectUrl);
 
   const check = React.useCallback(async () => {
     if (done.current) return;
@@ -147,25 +156,40 @@ function Waiting({ payment, operators, simulation, onDone }: { payment: OpenPaym
 
   React.useEffect(() => {
     const poll = setInterval(check, 4000);
-    const tick = setInterval(() => setLeft((s) => Math.max(0, s - 1)), 1000);
+    setLeft(remaining());
+    const tick = setInterval(() => setLeft(remaining()), 1000);
     const first = setTimeout(check, 1500);
     return () => { clearInterval(poll); clearInterval(tick); clearTimeout(first); };
-  }, [check]);
+  }, [check, remaining]);
 
   return (
     <div className="rounded-lg border border-line-strong bg-surface p-6 text-center" role="status" aria-live="polite">
       <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-marigold-soft text-marigold-600"><Smartphone className="size-6" /></span>
-      <h2 className="mt-4 text-xl font-semibold">Validez sur votre téléphone</h2>
-      <p className="mx-auto mt-2 max-w-sm text-sm text-muted"><span className="tnum font-medium text-ink">{formatPhone(payment.phone)}</span>{op ? ` · ${op.label}` : ""}. {op?.ussdHint}</p>
+      {mustUsePage ? (
+        <>
+          <h2 className="mt-4 text-xl font-semibold">Terminez sur la page de paiement</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">La demande n&apos;a pas pu être envoyée sur votre téléphone. Payez sur la page sécurisée de {providerLabel} : c&apos;est la même commande, vous ne serez pas débité deux fois.</p>
+          <Button asChild variant="accent" size="lg" className="mt-5"><a href={payment.redirectUrl!}>Ouvrir la page de paiement <ArrowRight /></a></Button>
+        </>
+      ) : (
+        <>
+          <h2 className="mt-4 text-xl font-semibold">Validez sur votre téléphone</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted"><span className="tnum font-medium text-ink">{formatPhone(payment.phone)}</span>{op ? ` · ${op.label}` : ""}. {op?.ussdHint}</p>
+        </>
+      )}
       <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-sand px-3 py-1.5 text-[0.8125rem] text-ink-soft">
         <LoaderCircle className="size-4 animate-spin" />En attente
-        {left > 0 && <span className="tnum text-muted">· {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span>}
+        {left !== null && left > 0 && <span className="tnum text-muted">· {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span>}
       </p>
       {offline && <p className="mt-3 flex items-center justify-center gap-1.5 text-[0.8125rem] text-clay"><CircleAlert className="size-4" />Connexion instable. Nouvel essai automatique.</p>}
-      {simulation && <p className="mt-3 text-xs text-muted">Mode simulation.</p>}
+      {testMode && <p className="mt-3 text-xs text-muted">Mode test : aucun débit réel.</p>}
       <div className="mt-5 flex flex-col items-center gap-2">
-        {payment.redirectUrl && <Button asChild variant="accent"><a href={payment.redirectUrl}>Ouvrir la page de paiement</a></Button>}
         <Button type="button" variant="outline" size="sm" disabled={checking} onClick={check}><RefreshCw className={checking ? "animate-spin" : ""} />Vérifier</Button>
+        {!mustUsePage && payment.redirectUrl && (
+          <p className="mt-2 max-w-sm text-[0.8125rem] text-muted">Rien reçu sur votre téléphone ?{" "}
+            <a href={payment.redirectUrl} className="font-medium text-green underline-offset-4 hover:underline">Payer sur la page {providerLabel}</a>
+          </p>
+        )}
       </div>
       <p className="mx-auto mt-5 max-w-sm text-xs text-muted">Vous pouvez fermer cette page : vous serez prévenu.</p>
     </div>

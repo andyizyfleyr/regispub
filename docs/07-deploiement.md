@@ -111,10 +111,15 @@ Les fonctions Vercel refusent les requêtes de plus de 4,5 Mo. Le site s'y adapt
 
 ## 5. Paiements (FedaPay)
 
-1. Créer le compte marchand FedaPay et récupérer la clé secrète.
-2. Dans FedaPay, déclarer le webhook `https://votre-domaine/api/webhooks/payments/fedapay` et copier son secret de signature.
-3. Carte **Paiement Mobile Money** de la page Clés et connexions : prestataire « FedaPay », mode « Test » puis « Réel », clé secrète, secret du webhook.
-4. Dans la même carte, remettre « Simulation sur le site en ligne » sur « Interdite ».
+1. Créer le compte marchand FedaPay. Dans le menu « API » de FedaPay, copier la clé secrète (`sk_sandbox_…` en test, `sk_live_…` en réel).
+2. Dans le menu « Webhooks » de FedaPay, créer un webhook vers `https://votre-domaine/api/webhooks/payments/fedapay`, cocher les événements `transaction.approved`, `transaction.declined`, `transaction.canceled` et `transaction.transferred`, puis copier son secret. Le mode test et le mode réel ont chacun leur webhook et leur secret.
+3. Carte **Paiement Mobile Money** de la page Clés et connexions : prestataire « FedaPay », mode « Test », clé secrète, secret du webhook, puis « Enregistrer ».
+4. Bouton **Tester FedaPay** de la même carte : il dit si FedaPay accepte la clé et s'il connaît un webhook actif vers le site.
+5. Faire un paiement d'essai. En mode test, FedaPay n'accepte que les numéros `64 00 00 01` et `66 00 00 01` ; tout autre numéro est refusé, c'est voulu.
+6. Passer en mode « Réel » : clé secrète réelle, webhook et secret du mode réel, nouveau test, puis un vrai paiement de petit montant sur MTN, Moov et Celtiis.
+7. Remettre « Simulation sur le site en ligne » sur « Interdite ».
+
+FedaPay désactive un webhook après dix envois en échec. Si le bouton de test annonce un webhook désactivé, corrigez le secret enregistré ici puis réactivez le webhook dans FedaPay.
 
 ## 6. Vérifier après chaque mise en ligne
 

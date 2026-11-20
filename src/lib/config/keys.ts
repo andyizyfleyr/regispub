@@ -29,16 +29,16 @@ export const KEY_GROUPS: { id: KeyGroupId; title: string; description: string }[
 export const KEYS: KeyDef[] = [
   // ── Paiement
   { name: "PAYMENT_PROVIDER", group: "payments", label: "Prestataire de paiement", fallback: "sandbox",
-    options: [{ value: "fedapay", label: "FedaPay (paiements réels)" }, { value: "sandbox", label: "Simulation (aucun argent ne circule)" }] },
+    options: [{ value: "fedapay", label: "FedaPay" }, { value: "sandbox", label: "Simulation (aucun argent ne circule)" }] },
   { name: "ALLOW_SANDBOX_PAYMENTS", group: "payments", label: "Simulation sur le site en ligne", fallback: "false",
     hint: "À laisser sur « Interdite » dès que vous encaissez de vrais paiements.",
     options: [{ value: "false", label: "Interdite" }, { value: "true", label: "Autorisée (démonstration)" }] },
   { name: "FEDAPAY_ENV", group: "payments", label: "Mode FedaPay", fallback: "sandbox",
-    hint: "La clé secrète doit venir du même mode.",
+    hint: "La clé secrète et le secret du webhook doivent venir du même mode. En test, seuls les numéros 64 00 00 01 et 66 00 00 01 sont acceptés.",
     options: [{ value: "live", label: "Réel" }, { value: "sandbox", label: "Test" }] },
   { name: "FEDAPAY_SECRET_KEY", group: "payments", label: "Clé secrète FedaPay", secret: true, placeholder: "sk_live_…" },
   { name: "FEDAPAY_WEBHOOK_SECRET", group: "payments", label: "Secret du webhook FedaPay", secret: true, placeholder: "wh_live_…",
-    hint: "Donné par FedaPay quand vous créez le webhook. L'adresse à lui indiquer est dans « Intégrations »." },
+    hint: "Donné par FedaPay quand vous créez le webhook. L'adresse à lui indiquer est dans « Intégrations ». Événements à cocher : transaction.approved, declined, canceled, transferred." },
 
   // ── Stockage
   { name: "STORAGE_DRIVER", group: "storage", label: "Stockage utilisé", fallback: "local",
