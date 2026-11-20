@@ -23,7 +23,7 @@ export async function startPaymentAction(input: { orderId: string; operator: str
     const res = await startPayment({ orderId: input.orderId, userId: user.id, operator: input.operator as OperatorCode, phoneInput: String(input.phone ?? ""), idempotencyKey: String(input.idempotencyKey ?? "") });
     await audit({ actorId: user.id, action: res.ok ? "payment.started" : "payment.start_failed", entity: "Order", entityId: input.orderId, meta: { operator: input.operator, paymentId: res.paymentId }, ip: await clientIp() });
     if (!res.ok) throw new UserError(res.error);
-    return { paymentId: res.paymentId, redirectUrl: res.redirectUrl ?? null };
+    return { paymentId: res.paymentId, redirectUrl: res.redirectUrl ?? null, pushed: res.pushed, expiresAt: res.expiresAt.toISOString() };
   });
 }
 

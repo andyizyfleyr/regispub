@@ -69,7 +69,7 @@ async function Transactions({ sp, canRefund, canVerify, showFullPhone }: { sp: {
                   <tr key={p.id}>
                     <td>
                       <span className="block font-mono text-[0.8125rem] text-ink">{p.order.reference}</span>
-                      <span className="block text-xs text-muted">{formatDateTime(p.createdAt)} · {p.provider}{p.providerRef ? ` · ${p.providerRef}` : ""}</span>
+                      <span className="block text-xs text-muted">{formatDateTime(p.createdAt)} · {p.provider}{p.providerRef ? ` · ${p.providerRef}` : ""}{p.providerStatus ? ` · ${p.providerStatus}` : ""}</span>
                       {p.duplicate && <span className="block text-xs font-medium text-clay">Doublon : à rembourser</span>}
                       {p.failureReason && <span className="block max-w-64 truncate text-xs text-clay" title={p.failureReason}>{p.failureReason}</span>}
                     </td>
@@ -79,7 +79,7 @@ async function Transactions({ sp, canRefund, canVerify, showFullPhone }: { sp: {
                     <td><StateIcon kind="payment" value={p.status} /></td>
                     <td className="text-right">
                       <span className="flex justify-end gap-2">
-                        {canVerify && (open || p.status === "EXPIRED" || p.status === "FAILED") && p.providerRef && <ActionButton variant="outline" size="sm" action={recheckPaymentAction.bind(null, p.id)} successMessage="Vérification effectuée auprès du prestataire.">Revérifier</ActionButton>}
+                        {canVerify && (open || p.status === "EXPIRED" || p.status === "FAILED" || p.status === "CANCELLED") && p.providerRef && <ActionButton variant="outline" size="sm" action={recheckPaymentAction.bind(null, p.id)} successMessage="Vérification effectuée auprès du prestataire.">Revérifier</ActionButton>}
                         {canRefund && refundable > 0 && <RefundDialog paymentId={p.id} max={refundable} label={`${p.order.reference} · ${p.user.name} · ${formatPhone(p.phone)}`} />}
                       </span>
                     </td>

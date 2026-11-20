@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FedapayCheck } from "@/components/staff/fedapay-check";
 import { KeysForm } from "@/components/staff/keys-form";
 import { FieldError } from "@/components/ui/action-form";
 import { Badge, type Tone } from "@/components/ui/badge";
@@ -13,7 +14,7 @@ import { getConfig, keysOverview, type KeyView } from "@/lib/config";
 import { HOST_ONLY_KEYS, KEY_GROUPS, s3Complete, type KeyGroupId, type RuntimeConfig } from "@/lib/config/keys";
 import { env } from "@/lib/env";
 import { cn } from "@/lib/utils";
-import { saveKeysAction } from "@/server/actions/keys";
+import { saveKeysAction, testFedapayAction } from "@/server/actions/keys";
 
 export const metadata: Metadata = { title: "Clés et connexions" };
 
@@ -108,6 +109,7 @@ export default async function KeysPage() {
                 <KeysForm key={version} action={saveKeysAction}>
                   <div className="grid gap-4 sm:grid-cols-2">{items.map((k) => <KeyField key={k.name} k={k} />)}</div>
                 </KeysForm>
+                {group.id === "payments" && config.fedapaySecretKey && <FedapayCheck action={testFedapayAction} />}
               </CardBody>
             </Card>
           );

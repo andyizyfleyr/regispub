@@ -22,8 +22,17 @@ const log = createLogger("payments");
 const OPEN_PAYMENT = ["INITIATED", "PENDING"] as const;
 const VERIFY_MIN_INTERVAL_MS = 3_000;
 
+/** Fenêtre pendant laquelle une tentative close peut encore être réglée chez le prestataire (une collecte FedaPay expire au bout de 24 h). */
+const LATE_SETTLEMENT_WINDOW_MS = 26 * 3_600_000;
+
 export type StartPaymentResult =
-  | { ok: true; paymentId: string; redirectUrl?: string }
+  | {
+      ok: true; paymentId: string; expiresAt: Date;
+      /** Page de paiement du prestataire pour cette même tentative (secours). */
+      redirectUrl?: string;
+      /** false : la demande n'est pas partie sur le téléphone, le client doit ouvrir redirectUrl. */
+      pushed: boolean;
+    }
   | { ok: false; error: string; paymentId?: string };
 
 // ─────────────────────────── Codes promotionnels ───────────────────────────
@@ -61,7 +70,7 @@ export async function startPayment(args: { orderId: string; userId: string; oper
     const order = await tx.order.findFirst({ where: { id: args.orderId, userId: args.userId }, include: { user: { select: { name: true, email: true } } } });
     if (!order) return { error: "Commande introuvable." } as const;
     const same = await tx.payment.findUnique({ where: { idempotencyKey } });
-    if (same) return { existing: same.id } as const;
+    if (same) return { existing: same } as const;
     if (order.status === "PAID") return { error: "Cette commande est déjà réglée." } as const;
     if (order.status !== "PENDING") return { error: "Cette commande n'est plus payable." } as const;
     const open = await tx.payment.findFirst({ where: { orderId: order.id, status: { in: [...OPEN_PAYMENT] }, expiresAt: { gt: new Date() } }, orderBy: { createdAt: "desc" } });
@@ -76,11 +85,14 @@ export async function startPayment(args: { orderId: string; userId: string; oper
   });
 
   if ("error" in prepared) return { ok: false, error: prepared.error! };
-  if ("existing" in prepared) return { ok: true, paymentId: prepared.existing! };
+  if ("existing" in prepared) {
+    const same = prepared.existing!;
+    return { ok: true, paymentId: same.id, expiresAt: same.expiresAt, redirectUrl: same.redirectUrl ?? undefined, pushed: true };
+  }
   if ("busy" in prepared) {
     // Un paiement est déjà en cours : on rafraîchit son état avant de refuser.
     const refreshed = await refreshPayment(prepared.busy!, { force: true });
-    if (refreshed?.status === "SUCCEEDED") return { ok: true, paymentId: prepared.busy! };
+    if (refreshed?.status === "SUCCEEDED") return { ok: true, paymentId: refreshed.id, expiresAt: refreshed.expiresAt, pushed: true };
     if (refreshed && (OPEN_PAYMENT as readonly string[]).includes(refreshed.status)) {
       return { ok: false, paymentId: prepared.busy!, error: "Un paiement est déjà en cours pour cette commande. Validez-le sur votre téléphone ou attendez son expiration avant de réessayer." };
     }
@@ -99,14 +111,33 @@ export async function startPayment(args: { orderId: string; userId: string; oper
       where: { id: payment.id },
       data: { providerRef: result.providerRef, status: "PENDING", providerStatus: result.providerStatus ?? null, redirectUrl: result.redirectUrl ?? null },
     });
-    log.info("paiement initié", { paymentId: payment.id, provider: provider.id, operator: args.operator, amount: payment.amount });
-    return { ok: true, paymentId: payment.id, redirectUrl: result.redirectUrl };
+    const pushed = result.pushed !== false;
+    if (pushed) log.info("paiement initié", { paymentId: payment.id, provider: provider.id, operator: args.operator, amount: payment.amount });
+    else {
+      // La demande n'est pas partie sur le téléphone : le client règle sur la page du prestataire, et l'équipe garde la raison.
+      log.warn("demande non envoyée sur le téléphone, page du prestataire proposée", { paymentId: payment.id, provider: provider.id, operator: args.operator, reason: result.pushError });
+      await audit({ actorId: args.userId, action: "payment.push_failed", entity: "Payment", entityId: payment.id, meta: { provider: provider.id, operator: args.operator, reason: result.pushError ?? null } });
+    }
+    return { ok: true, paymentId: payment.id, expiresAt: payment.expiresAt, redirectUrl: result.redirectUrl, pushed };
   } catch (error) {
-    const userMessage = error instanceof PaymentProviderError && error.userMessage ? error.userMessage : "La demande de paiement n'a pas pu être envoyée. Vérifiez le numéro et réessayez.";
+    const known = error instanceof PaymentProviderError ? error : null;
+    const userMessage = known?.userMessage ?? "La demande de paiement n'a pas pu être envoyée. Vérifiez le numéro et réessayez.";
     await db.payment.update({ where: { id: payment.id }, data: { status: "FAILED", failureReason: userMessage, providerStatus: "initiation_error" } });
-    log.error("échec de l'initiation du paiement", { error, paymentId: payment.id, details: error instanceof PaymentProviderError ? error.details : undefined });
+    log.error("échec de l'initiation du paiement", { error, paymentId: payment.id, kind: known?.kind, details: known?.details });
+    if (known?.kind === "auth") await alertProviderRejected(provider.label, known.message);
     return { ok: false, error: userMessage };
   }
+}
+
+/** Clé refusée par le prestataire : plus aucun client ne peut payer. L'équipe est prévenue, une fois par heure au plus. */
+async function alertProviderRejected(providerLabel: string, reason: string) {
+  const recent = await db.notification.count({ where: { type: "payment.provider_rejected", createdAt: { gte: new Date(Date.now() - 3_600_000) } } });
+  if (recent > 0) return;
+  await notifyStaff("integration.view", {
+    type: "payment.provider_rejected", title: `${providerLabel} refuse notre clé : les paiements sont bloqués`,
+    body: `Un client vient d'essayer de payer et ${providerLabel} a refusé la clé enregistrée. Vérifiez la clé secrète et le mode (test ou réel) dans Paramètres → Clés et connexions. Réponse reçue : ${reason.slice(0, 300)}`,
+    link: "/gestion/integrations", email: true,
+  });
 }
 
 // ─────────────────────────── Vérification serveur ───────────────────────────
@@ -302,8 +333,16 @@ async function settlePayment(paymentId: string, providerStatus: string) {
 // ─────────────────────────── Webhooks ───────────────────────────
 
 export type WebhookOutcome = { status: number; body: Record<string, unknown> };
+export type WebhookReceipt = WebhookOutcome & {
+  /** Présent quand la notification est authentique et reste à traiter : à passer à processPaymentEvent. */
+  pending?: { providerId: string; eventKey: string };
+};
 
-export async function handlePaymentWebhook(providerId: string, rawBody: string, headers: Headers): Promise<WebhookOutcome> {
+/**
+ * Premier temps d'un webhook : contrôle de la signature et enregistrement de la notification. Rapide, sans appel
+ * extérieur, pour répondre tout de suite au prestataire (FedaPay désactive un webhook après dix envois en échec).
+ */
+export async function receivePaymentWebhook(providerId: string, rawBody: string, headers: Headers): Promise<WebhookReceipt> {
   const provider = await getProviderById(providerId);
   if (!provider) return { status: 404, body: { error: "unknown_provider" } };
   let event;
@@ -323,17 +362,35 @@ export async function handlePaymentWebhook(providerId: string, rawBody: string, 
     data: [{ provider: providerId, eventKey: event.eventKey, type: event.type, payload: event.payload as never, signatureValid: true }],
     skipDuplicates: true,
   });
-  if (inserted.count === 0) return { status: 200, body: { received: true, duplicate: true } };
+  if (inserted.count === 0) {
+    // Déjà reçue. Si son traitement est allé au bout, il n'y a rien à refaire ; sinon ce nouvel envoi sert de reprise.
+    const known = await db.paymentEvent.findUnique({ where: { provider_eventKey: { provider: providerId, eventKey: event.eventKey } }, select: { outcome: true } });
+    if (known?.outcome) return { status: 200, body: { received: true, duplicate: true } };
+  }
+  return { status: 200, body: { received: true }, pending: { providerId, eventKey: event.eventKey } };
+}
+
+/**
+ * Second temps : le contenu de la notification n'est qu'un signal, l'état est relu chez le prestataire puis appliqué.
+ * Peut être rejoué sans risque ; tant qu'il n'a pas abouti, la notification reste « à traiter ».
+ */
+export async function processPaymentEvent(providerId: string, eventKey: string): Promise<string> {
+  const where = { provider_eventKey: { provider: providerId, eventKey } };
+  const stored = await db.paymentEvent.findUnique({ where });
+  if (!stored || !stored.signatureValid) return "unknown_event";
+  if (stored.outcome) return stored.outcome;
+  const provider = await getProviderById(providerId);
+  if (!provider) return "unknown_provider";
 
   let outcome = "ignored";
   let paymentId: string | null = null;
-  if (event.providerRef) {
-    // Le contenu du webhook n'est qu'un signal : l'état est relu chez le prestataire.
-    const verification = await provider.verify(event.providerRef);
-    let payment = await db.payment.findUnique({ where: { provider_providerRef: { provider: providerId, providerRef: event.providerRef } } });
+  const providerRef = provider.refFromPayload(stored.payload);
+  if (providerRef) {
+    const verification = await provider.verify(providerRef);
+    let payment = await db.payment.findUnique({ where: { provider_providerRef: { provider: providerId, providerRef } } });
     if (!payment && verification.merchantReference) {
-      // Le webhook peut arriver avant que la référence du prestataire ne soit enregistrée.
-      const attached = await db.payment.updateMany({ where: { id: verification.merchantReference, provider: providerId, providerRef: null }, data: { providerRef: event.providerRef } });
+      // La notification peut arriver avant que la référence du prestataire ne soit enregistrée.
+      const attached = await db.payment.updateMany({ where: { id: verification.merchantReference, provider: providerId, providerRef: null }, data: { providerRef } });
       if (attached.count) payment = await db.payment.findUnique({ where: { id: verification.merchantReference } });
     }
     if (payment) {
@@ -342,20 +399,56 @@ export async function handlePaymentWebhook(providerId: string, rawBody: string, 
       outcome = `verified:${verification.status}`;
     } else {
       outcome = "unknown_payment";
-      log.warn("webhook pour un paiement inconnu", { provider: providerId, providerRef: event.providerRef });
+      log.warn("webhook pour un paiement inconnu", { provider: providerId, providerRef });
     }
   }
-  await db.paymentEvent.update({ where: { provider_eventKey: { provider: providerId, eventKey: event.eventKey } }, data: { outcome, paymentId } });
+  await db.paymentEvent.update({ where, data: { outcome, paymentId } });
+  return outcome;
+}
+
+/** Les deux temps à la suite. La route HTTP, elle, répond entre les deux. */
+export async function handlePaymentWebhook(providerId: string, rawBody: string, headers: Headers): Promise<WebhookOutcome> {
+  const receipt = await receivePaymentWebhook(providerId, rawBody, headers);
+  if (!receipt.pending) return { status: receipt.status, body: receipt.body };
+  const outcome = await processPaymentEvent(receipt.pending.providerId, receipt.pending.eventKey);
   return { status: 200, body: { received: true, outcome } };
 }
 
 // ─────────────────────────── Maintenance ───────────────────────────
 
-/** Tâche planifiée : relance la vérification des paiements ouverts et expire ceux restés sans réponse. */
+/**
+ * Tâche planifiée, filet de sécurité derrière les webhooks :
+ *  - reprend les notifications authentiques dont le traitement n'a pas abouti ;
+ *  - relance la vérification des paiements ouverts et expire ceux restés sans réponse ;
+ *  - revérifie les tentatives closes depuis peu : chez FedaPay un refus n'est pas définitif, la collecte peut
+ *    encore être réglée (page de paiement, nouvelle tentative) jusqu'à son expiration.
+ */
 export async function reconcileOpenPayments(limit = 50) {
+  const since = new Date(Date.now() - LATE_SETTLEMENT_WINDOW_MS);
+  const events = await db.paymentEvent.findMany({ where: { signatureValid: true, outcome: null, receivedAt: { gte: since } }, orderBy: { receivedAt: "asc" }, take: limit, select: { provider: true, eventKey: true } });
+  for (const e of events) {
+    await processPaymentEvent(e.provider, e.eventKey).catch((error) => log.warn("reprise d'une notification impossible", { error, provider: e.provider, eventKey: e.eventKey }));
+  }
   const open = await db.payment.findMany({ where: { status: { in: [...OPEN_PAYMENT] } }, orderBy: { createdAt: "asc" }, take: limit, select: { id: true } });
-  for (const p of open) await refreshPayment(p.id, { force: true });
-  return open.length;
+  const closed = await db.payment.findMany({
+    where: { status: { in: ["FAILED", "CANCELLED", "EXPIRED"] }, providerRef: { not: null }, createdAt: { gte: since }, OR: [{ providerStatus: null }, { providerStatus: { not: "mismatch" } }] },
+    orderBy: { createdAt: "desc" }, take: limit, select: { id: true },
+  });
+  for (const p of [...open, ...closed]) await refreshPayment(p.id, { force: true });
+  return open.length + closed.length;
+}
+
+/**
+ * À l'ouverture de la page d'une commande à payer : relit auprès du prestataire la tentative en cours, ou la
+ * dernière tentative close si elle peut encore avoir été réglée (retour depuis la page de paiement du prestataire).
+ */
+export async function refreshOrderPayments(orderId: string, opts: { force?: boolean } = {}) {
+  const last = await db.payment.findFirst({ where: { orderId, providerRef: { not: null } }, orderBy: { createdAt: "desc" }, select: { id: true, status: true, createdAt: true } });
+  if (!last || last.status === "SUCCEEDED") return false;
+  const open = (OPEN_PAYMENT as readonly string[]).includes(last.status);
+  if (!open && last.createdAt.getTime() < Date.now() - LATE_SETTLEMENT_WINDOW_MS) return false;
+  await refreshPayment(last.id, opts).catch(() => undefined);
+  return true;
 }
 
 // ─────────────────────────── Remboursements ───────────────────────────
@@ -412,6 +505,6 @@ export async function resolveRefund(args: { refundId: string; decision: "PROCESS
 export async function paymentModeInfo() {
   const provider = await getActiveProvider();
   const operators = PAYMENT_COUNTRIES[0]!.operators.filter((o) => provider?.supportedOperators.includes(o.code));
-  return { available: Boolean(provider), providerId: provider?.id ?? null, providerLabel: provider?.label ?? null, mode: provider?.mode ?? null, operators };
+  return { available: Boolean(provider), providerId: provider?.id ?? null, providerLabel: provider?.label ?? null, mode: provider?.mode ?? null, testNotice: provider?.testNotice ?? null, operators };
 }
 

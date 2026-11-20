@@ -12,7 +12,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Notice, PageHeader } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { paymentModeInfo, refreshPayment } from "@/lib/payments/service";
+import { paymentModeInfo, refreshOrderPayments } from "@/lib/payments/service";
 import { formatPhone, maskPhone, type OperatorCode } from "@/lib/phone";
 import type { QuoteLine } from "@/lib/pricing/quote";
 import { formatDateTime, formatFcfa, isRecord } from "@/lib/utils";
@@ -26,18 +26,18 @@ async function load(orderId: string, userId: string) {
   });
 }
 
-export default async function OrderPage({ params }: { params: Promise<{ orderId: string }> }) {
+export default async function OrderPage({ params, searchParams }: { params: Promise<{ orderId: string }>; searchParams: Promise<{ id?: string; status?: string }> }) {
   const user = await requireUser();
   const { orderId } = await params;
   let order = await load(orderId, user.id);
   if (!order) notFound();
 
-  // Retour depuis une page de paiement hébergée : on revérifie auprès du prestataire avant d'afficher quoi que ce soit.
-  const stale = order.payments.find((p) => p.status === "INITIATED" || p.status === "PENDING");
-  if (stale) {
-    await refreshPayment(stale.id).catch(() => undefined);
-    order = (await load(orderId, user.id))!;
-  }
+  // Ouverture de la page, ou retour depuis la page de paiement du prestataire : ce que dit l'adresse de retour
+  // (« ?status=approved ») n'est jamais cru, l'état est relu auprès du prestataire avant d'afficher quoi que ce soit.
+  // Au retour de la page du prestataire (FedaPay ajoute « ?id=…&status=… »), la relecture est immédiate.
+  const back = await searchParams;
+  const returning = Boolean(back.id || back.status);
+  if ((order.status === "PENDING" || order.status === "EXPIRED") && (await refreshOrderPayments(order.id, { force: returning }))) order = (await load(orderId, user.id))!;
 
   const mode = await paymentModeInfo();
   const lines = isRecord(order.quote) && Array.isArray(order.quote.lines) ? (order.quote.lines as QuoteLine[]) : [];
@@ -74,7 +74,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
 
         {order.status === "PENDING" && mode.available ? (
           <Checkout orderId={order.id} total={order.total} operators={mode.operators} defaultPhone={user.phone?.startsWith("+229") ? formatPhone(user.phone).replace(/^\+229\s?/, "") : ""}
-            simulation={mode.mode === "simulation"} promoCode={order.promoCode?.code ?? null} allowPromo={!order.boost} canCancel={!open} lastFailure={lastFailure}
+            testNotice={mode.testNotice} providerLabel={mode.providerLabel ?? "notre prestataire"} promoCode={order.promoCode?.code ?? null} allowPromo={!order.boost} canCancel={!open} lastFailure={lastFailure}
             open={open ? { id: open.id, operator: open.operator as OperatorCode, phone: open.phone, expiresAt: open.expiresAt.toISOString(), redirectUrl: open.redirectUrl } : null}>
             <details className="group rounded-lg border border-line bg-surface">
               <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink-soft">

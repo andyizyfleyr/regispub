@@ -37,8 +37,8 @@ Ajouter un agrégateur de paiement (KKiaPay, CinetPay…) revient à implémente
 ## Paiement
 
 1. Le client choisit un opérateur et un numéro. Le serveur verrouille la commande, relit le montant en base et crée un `Payment` (clé d'idempotence : deux clics ne créent qu'un paiement ; un paiement en cours bloque le suivant).
-2. Le prestataire envoie la demande de validation sur le téléphone.
-3. L'état est relu chez le prestataire par trois chemins : interrogation depuis la page de paiement, webhook signé, tâche planifiée.
+2. Le prestataire envoie la demande de validation sur le téléphone. Si elle ne part pas, le client règle la même transaction sur la page de paiement du prestataire.
+3. L'état est relu chez le prestataire par trois chemins : interrogation depuis la page de paiement, webhook signé (réponse immédiate, traitement ensuite), tâche planifiée. Un refus n'est pas tenu pour définitif : une tentative close est encore relue pendant 26 heures.
 4. `applyVerification` contrôle le montant et la référence. En cas d'écart, le paiement passe en échec et l'équipe est alertée.
 5. La validation est transactionnelle et idempotente : commande payée, numéro de reçu, campagne « Payée », points de fidélité, récompense de parrainage, notifications — une seule fois, même si la confirmation arrive plusieurs fois.
 6. Un second encaissement sur une commande déjà payée est marqué en double et ouvre un remboursement à traiter.
@@ -48,7 +48,7 @@ Ajouter un agrégateur de paiement (KKiaPay, CinetPay…) revient à implémente
 - Mots de passe hachés avec scrypt ; session par cookie `httpOnly`, `SameSite=Lax`, stockée hachée en base, révoquée à la suspension et au changement de rôle.
 - Droits par permission (`lib/auth/permissions.ts`), vérifiés côté serveur dans chaque page et chaque action ; un designer ne voit que les campagnes qui lui sont confiées.
 - Limitation du nombre de tentatives (connexion, inscription, réinitialisation, envois).
-- Webhooks : signature HMAC, tolérance de 5 minutes, dédoublonnage par identifiant d'événement.
+- Webhooks : signature HMAC, rejet des notifications de plus de 5 minutes, dédoublonnage par identifiant d'événement (une notification dont le traitement n'a pas abouti est reprise au nouvel envoi).
 - Fichiers : type vérifié sur le contenu, taille plafonnée, accès contrôlé par propriétaire ou par campagne.
 - En-têtes de sécurité (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`) dans `next.config.ts`. Une politique CSP stricte reste à ajouter (phase 2).
 - Le numéro Mobile Money est masqué à l'affichage ; aucun code secret ni donnée bancaire n'est demandé ni stocké.
