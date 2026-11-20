@@ -58,6 +58,22 @@ describe("clés saisies dans l'administration", () => {
     expect((await getConfig()).paymentProvider).toBe("sandbox");
   });
 
+  it("enregistre la clé publique FedaPay, et refuse une clé secrète collée à sa place", async () => {
+    const PUBLIC = "pk_sandbox_cleDeTest0123456789";
+    // Le champ de la clé publique est affiché en clair : la clé secrète ne doit pas y être rangée.
+    expect(await errorsOf(save({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_PUBLIC_KEY: SECRET, FEDAPAY_SECRET_KEY: SECRET }))).toHaveProperty("FEDAPAY_PUBLIC_KEY");
+    expect(await errorsOf(save({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_PUBLIC_KEY: PUBLIC, FEDAPAY_SECRET_KEY: PUBLIC }))).toHaveProperty("FEDAPAY_SECRET_KEY");
+    expect(await errorsOf(save({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_ENV: "sandbox", FEDAPAY_PUBLIC_KEY: "pk_live_cleReelle0123456789", FEDAPAY_SECRET_KEY: SECRET }))).toHaveProperty("FEDAPAY_PUBLIC_KEY");
+    expect(await db.appKey.count()).toBe(0);
+
+    expect(await save({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_ENV: "sandbox", FEDAPAY_PUBLIC_KEY: PUBLIC, FEDAPAY_SECRET_KEY: SECRET })).toEqual(["FEDAPAY_PUBLIC_KEY", "FEDAPAY_SECRET_KEY", "PAYMENT_PROVIDER"]);
+    expect((await getConfig()).fedapayPublicKey).toBe(PUBLIC);
+    expect((await keysOverview()).find((k) => k.name === "FEDAPAY_PUBLIC_KEY")).toMatchObject({ source: "admin", value: PUBLIC });
+    // Elle reste facultative : la vider ne coupe pas les paiements.
+    expect(await save({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_PUBLIC_KEY: "" })).toEqual(["FEDAPAY_PUBLIC_KEY"]);
+    expect((await getActiveProvider())?.id).toBe("fedapay");
+  });
+
   it("refuse d'effacer la clé d'un service encore activé", async () => {
     await save({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_SECRET_KEY: SECRET });
     expect(await errorsOf(save({ PAYMENT_PROVIDER: "fedapay" }, ["FEDAPAY_SECRET_KEY"]))).toHaveProperty("FEDAPAY_SECRET_KEY");

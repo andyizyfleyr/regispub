@@ -74,6 +74,14 @@ describe("contrôle d'une valeur saisie", () => {
     expect(check("EMAIL_FROM", "RegisPub").ok).toBe(false);
     expect(check("EMAIL_FROM", "RegisPub <contact@regispub.bj>").ok).toBe(true);
   });
+  it("refuse une clé FedaPay collée dans le mauvais champ", () => {
+    // La clé publique est affichée en clair : une clé secrète ne doit jamais y être enregistrée.
+    expect(check("FEDAPAY_PUBLIC_KEY", "sk_live_0123456789")).toMatchObject({ ok: false });
+    expect(check("FEDAPAY_SECRET_KEY", "pk_live_0123456789")).toMatchObject({ ok: false });
+    expect(check("FEDAPAY_PUBLIC_KEY", " pk_sandbox_0123456789 ")).toEqual({ ok: true, value: "pk_sandbox_0123456789" });
+    expect(check("FEDAPAY_SECRET_KEY", "sk_sandbox_0123456789")).toEqual({ ok: true, value: "sk_sandbox_0123456789" });
+    expect(check("FEDAPAY_PUBLIC_KEY", "")).toEqual({ ok: true, value: "" });
+  });
   it("accepte de vider une valeur non obligatoire", () => {
     expect(check("TIKTOK_ADVERTISER_ID", "")).toEqual({ ok: true, value: "" });
   });
@@ -90,6 +98,14 @@ describe("cohérence d'ensemble", () => {
     expect(configIssues(config({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_ENV: "live", FEDAPAY_SECRET_KEY: "sk_sandbox_abc" }))).toHaveProperty("FEDAPAY_ENV");
     expect(configIssues(config({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_ENV: "sandbox", FEDAPAY_SECRET_KEY: "sk_live_abc" }))).toHaveProperty("FEDAPAY_ENV");
     expect(configIssues(config({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_ENV: "live", FEDAPAY_SECRET_KEY: "sk_live_abc" }))).toEqual({});
+  });
+  it("refuse une clé publique FedaPay d'un autre mode, mais ne l'exige pas", () => {
+    const base = { PAYMENT_PROVIDER: "fedapay", FEDAPAY_ENV: "sandbox", FEDAPAY_SECRET_KEY: "sk_sandbox_abc" };
+    expect(configIssues(config(base))).toEqual({});
+    expect(configIssues(config({ ...base, FEDAPAY_PUBLIC_KEY: "pk_sandbox_abc" }))).toEqual({});
+    expect(Object.keys(configIssues(config({ ...base, FEDAPAY_PUBLIC_KEY: "pk_live_abc" })))).toEqual(["FEDAPAY_PUBLIC_KEY"]);
+    expect(Object.keys(configIssues(config({ PAYMENT_PROVIDER: "fedapay", FEDAPAY_ENV: "live", FEDAPAY_SECRET_KEY: "sk_live_abc", FEDAPAY_PUBLIC_KEY: "pk_sandbox_abc" })))).toEqual(["FEDAPAY_PUBLIC_KEY"]);
+    expect(config({ ...base, FEDAPAY_PUBLIC_KEY: "pk_sandbox_abc" }).fedapayPublicKey).toBe("pk_sandbox_abc");
   });
   it("signale chaque valeur S3 manquante", () => {
     expect(Object.keys(configIssues(config({ STORAGE_DRIVER: "s3" }))).sort()).toEqual(["S3_ACCESS_KEY_ID", "S3_BUCKET", "S3_ENDPOINT", "S3_SECRET_ACCESS_KEY"]);
