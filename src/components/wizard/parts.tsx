@@ -10,7 +10,7 @@ import { DatePicker, Slider } from "@/components/ui/controls";
 import { Field, Input } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import type { EditorData } from "@/lib/campaigns/editor-data";
-import { OBJECTIVE_CATEGORIES, OBJECTIVES, objectiveShort, type Objective, type ObjectiveCategory } from "@/lib/catalog/objectives";
+import { getObjective, OBJECTIVE_CATEGORIES, OBJECTIVES, objectiveShort, type Objective, type ObjectiveCategory } from "@/lib/catalog/objectives";
 import { PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import type { Quote } from "@/lib/pricing/quote";
 import { cn, formatFcfa } from "@/lib/utils";
@@ -88,7 +88,7 @@ export function PlatformPicker({ value, onChange, allowed }: { value: PlatformCo
 const CATEGORY_ICONS: Record<ObjectiveCategory, typeof Users> = { community: Users, business: ShoppingBag, awareness: Megaphone };
 
 export function ObjectivePicker({ value, platforms, baseFees, onChange }: { value: string | null; platforms: PlatformCode[]; baseFees: Record<string, number>; onChange: (code: string) => void }) {
-  const selected = OBJECTIVES.find((o) => o.code === value) ?? null;
+  const selected = getObjective(value);
   const [category, setCategory] = React.useState<ObjectiveCategory>(selected?.category ?? "business");
   const available = (o: Objective) => !platforms.length || o.platforms.some((p) => platforms.includes(p));
   return (
@@ -107,7 +107,7 @@ export function ObjectivePicker({ value, platforms, baseFees, onChange }: { valu
         {OBJECTIVES.filter((o) => o.category === category).map((o, i) => {
           const ok = available(o);
           return (
-            <ChoiceRow key={o.code} active={value === o.code} onClick={() => onChange(o.code)} disabled={!ok} className="items-center" title={o.label}
+            <ChoiceRow key={o.code} active={selected?.code === o.code} onClick={() => onChange(o.code)} disabled={!ok} className="items-center" title={o.label}
               leading={<span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", TILE_TONES[toneAt(i)])}><ObjectiveIcon name={o.icon} className="size-[1.125rem]" /></span>}>
               <span className="block font-medium leading-snug text-ink">{objectiveShort(o)}</span>
               {!ok && <span className="mt-0.5 block text-[0.8125rem] leading-snug text-clay">Indisponible sur {platforms.map((p) => PLATFORMS[p].label).join(" + ")}</span>}

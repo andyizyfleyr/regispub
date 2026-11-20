@@ -143,6 +143,9 @@ export async function saveCampaignAction(campaignId: string, input: CampaignPatc
     if (p.destinationWhatsapp !== undefined) {
       if (p.destinationWhatsapp && !toWhatsappLink(p.destinationWhatsapp)) throw new UserError("Numéro ou lien WhatsApp invalide. Exemple : 01 97 00 00 00 ou https://wa.me/22901970000.");
       data.destinationWhatsapp = p.destinationWhatsapp || null;
+      // Le numéro est retenu sur l'entreprise qui n'en a pas encore : il n'est demandé qu'une fois, puis repris à chaque nouvelle publicité.
+      const businessId = (data.businessId as string | undefined) ?? campaign.businessId;
+      if (p.destinationWhatsapp && businessId) await db.business.updateMany({ where: { id: businessId, ownerId: user.id, whatsapp: null }, data: { whatsapp: p.destinationWhatsapp } });
     }
     if (p.destinationUrl !== undefined) {
       if (p.destinationUrl && !/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(p.destinationUrl)) throw new UserError("Le lien de votre page doit commencer par https://");

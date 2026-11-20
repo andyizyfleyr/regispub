@@ -12,15 +12,18 @@ Le client touche un objectif sur `/app/creer` : la page de création `/app/creer
 
 | Étape | Ce que le client fait |
 | --- | --- |
-| 1. Réseau | Choisit **un seul** réseau (Facebook, Instagram ou TikTok), puis le nom, le secteur et le compte de son activité sur ce réseau. Le numéro WhatsApp est demandé si l'objectif en a besoin |
+| 1. Réseau | Choisit **un seul** réseau (Facebook, Instagram ou TikTok). La première fois seulement : le nom, le secteur et la ville de son activité. Le compte sur le réseau choisi et le numéro WhatsApp (si l'objectif en a besoin) sont demandés tant qu'ils ne sont pas enregistrés |
 | 2. Annonce | Dans un même bloc et dans cet ordre : photo ou vidéo, titre (3 caractères au moins), texte (20 caractères au moins) |
-| 3. Audience | Choisit au moins un pays ; villes, genre, âges et centres d'intérêt s'il veut les restreindre |
+| 3. Audience | Choisit au moins un pays, puis le genre et les âges. Il n'y a plus de choix de villes, de centres d'intérêt ni de reciblage : la publicité est diffusée dans tout le pays choisi |
 | 4. Budget | Choisit le montant, la durée, la date de début et la formule ; le total s'affiche, puis « Payer » crée la commande et ouvre le paiement |
 
 Règles :
 
 - **Un réseau par publicité.** Le serveur refuse tout enregistrement avec deux réseaux (`ONE_NETWORK` dans `lib/campaigns/missing.ts`), y compris pour une campagne confiée à un expert. Un ancien brouillon à plusieurs réseaux s'ouvre sans réseau coché.
 - **Aucun préremplissage.** À la création : pas de réseau, pas de budget, pas de durée, pas de date, pas d'audience, pas de numéro WhatsApp repris de l'inscription. Seules les informations que le client a déjà enregistrées lui-même (son activité et ses comptes) sont reprises. Le montant et la durée conseillés pour l'objectif sont signalés par la mention « conseillé », sans être sélectionnés.
+- **L'activité n'est demandée qu'une fois.** Dès qu'une entreprise est enregistrée (nom et secteur), ces champs ne s'affichent plus à l'étape 1 ; il en va de même du compte de chaque réseau et du numéro WhatsApp, retenu sur l'entreprise au premier enregistrement. Tout se modifie ensuite dans « Mon compte », onglet « Mes entreprises ». Le client qui a plusieurs entreprises garde seulement la liste pour choisir laquelle.
+- **Quatorze objectifs.** Ceux qui disaient la même chose sont regroupés (`MERGED_OBJECTIVES` dans `lib/catalog/objectives.ts`) : mentions J'aime et abonnés Facebook ; page, entreprise et marque à faire connaître ; prospects et demandes de devis ; promotion et lancement d'un produit. Un ancien code reste compris par `getObjective`, et la migration `20261123000000_merge_objectives` a renommé les campagnes existantes.
+- **Brouillons en bas.** Sur `/app/creer`, les publicités commencées s'affichent tout en bas de la page ; la liste complète reste dans « Mes campagnes ».
 - **Plus de champ « Que vendez-vous ? ».** L'annonce se décrit par son titre et son texte ; la colonne `productDescription` reste en base pour les anciennes campagnes.
 - **Aperçu en direct.** Sur ordinateur et tablette, l'aperçu de l'annonce reste affiché à droite pendant les quatre étapes et suit chaque frappe, le visuel importé et le réseau choisi. Sur téléphone, où il n'y a pas de place à droite, il s'affiche sous les champs de l'étape « Annonce ».
 

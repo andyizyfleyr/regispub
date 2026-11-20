@@ -24,13 +24,6 @@ export default async function CreatePage() {
     <div className="space-y-8">
       <PageHeader title="Que voulez-vous obtenir ?" />
 
-      {drafts.length > 0 && (
-        <section aria-labelledby="brouillons">
-          <SectionTitle id="brouillons">Brouillons</SectionTitle>
-          <List>{drafts.map((c) => <li key={c.id}><CampaignRow c={c} /></li>)}</List>
-        </section>
-      )}
-
       <ObjectiveBrowser />
 
       <section aria-labelledby="achat-direct">
@@ -47,6 +40,14 @@ export default async function CreatePage() {
           <Button asChild variant="accent"><Link href="/app/expert"><Headset />Un expert<ArrowRight /></Link></Button>
         </div>
       </Banner>
+
+      {/* Les publicités commencées restent accessibles, mais tout en bas : la page sert d'abord à en créer une. */}
+      {drafts.length > 0 && (
+        <section aria-labelledby="brouillons">
+          <SectionTitle id="brouillons">Brouillons</SectionTitle>
+          <List>{drafts.map((c) => <li key={c.id}><CampaignRow c={c} /></li>)}</List>
+        </section>
+      )}
     </div>
   );
 }

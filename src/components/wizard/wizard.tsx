@@ -2,14 +2,13 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, ChevronDown, CircleCheck, Eye, Heart, ImageIcon, ImagePlus, LoaderCircle, MapPin, Share2, Sparkles, Store, Target, Trash2, Users, Wallet, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleCheck, Eye, ImageIcon, ImagePlus, LoaderCircle, MapPin, Share2, Sparkles, Store, Target, Trash2, Users, Wallet, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdPreview } from "@/components/app/ad-preview";
 import { AssetThumb, Uploader } from "@/components/app/uploader";
 import { ObjectiveIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Switch, ToggleRow } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
 import type { AdCopy, EditorData, LinkedAsset } from "@/lib/campaigns/editor-data";
@@ -18,7 +17,7 @@ import { policyWarnings } from "@/lib/campaigns/policy";
 import { missingAccountMessage, missingAccounts, type Accounts } from "@/lib/catalog/accounts";
 import { getObjective, objectiveShort } from "@/lib/catalog/objectives";
 import { PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
-import { AGE_BOUNDS, CITIES_BY_COUNTRY, GENDERS, INTEREST_GROUPS, SECTORS, TARGET_COUNTRIES, type Targeting } from "@/lib/catalog/targeting";
+import { AGE_BOUNDS, GENDERS, SECTORS, TARGET_COUNTRIES, type Targeting } from "@/lib/catalog/targeting";
 import { cn, formatFcfa } from "@/lib/utils";
 import { attachAssetAction, detachAssetAction, placeOrderAction, saveCampaignAction, type CampaignPatch } from "@/server/actions/campaigns";
 import { AccountFields, BudgetQuick, Chip, LevelPicker, ObjectivePicker, PlatformPicker, QuotePanel, ScheduleFields, Section, Stepper, useQuote } from "./parts";
@@ -116,7 +115,8 @@ export function Wizard({ data, initialStep }: { data: EditorData; initialStep: n
     switch (n) {
       case 1: return { platforms: s.platforms, objective: s.objective ?? "", name: autoName(), business: s.business, destinationWhatsapp: s.destinationWhatsapp };
       case 2: return { adCopy: s.adCopy ?? emptyCopy };
-      case 3: return { targeting: s.targeting };
+      // Villes, centres d'intérêt et reciblage ne sont plus proposés : un ancien brouillon qui en contenait est remis à « tout le pays, tout le monde ».
+      case 3: return { targeting: { ...s.targeting, cities: [], interests: [], categories: [], customAudience: { requested: false, note: "" } } };
       default: return { adBudget: s.adBudget, durationDays: s.durationDays ?? 0, startDate: s.startDate ?? "", budgetSplit: s.platforms[0] ? { [s.platforms[0]]: 100 } : {}, serviceCode: s.serviceCode };
     }
   }
@@ -217,8 +217,19 @@ function NetworkStep({ s, set, data }: StepProps & { data: EditorData }) {
   const objective = getObjective(s.objective);
   const platform = s.platforms[0] ?? null;
   const [pick, setPick] = React.useState(false);
-  const [hadWhatsapp] = React.useState(Boolean(s.destinationWhatsapp));
-  const askWhatsapp = hadWhatsapp || Boolean(objective?.config.requires.includes("whatsapp"));
+  // Ce que le client a déjà enregistré n'est plus redemandé. L'état est figé à l'ouverture de l'étape :
+  // un champ ne disparaît pas pendant que le client le remplit.
+  const [hadWhatsapp] = React.useState(Boolean(s.destinationWhatsapp.trim()));
+  const [known] = React.useState(() => {
+    const map = new Map(data.businesses.map((b) => [b.id, b]));
+    if (s.business.id) map.set(s.business.id, { ...s.business, id: s.business.id });
+    return map;
+  });
+  const saved = s.business.id ? known.get(s.business.id) : undefined;
+  const askBusiness = !saved || saved.name.trim().length < 2 || !SECTORS.includes(saved.sector);
+  const chooseBusiness = data.businesses.length > 1;
+  const askAccount = platform !== null && !saved?.accounts?.[platform]?.trim();
+  const askWhatsapp = !hadWhatsapp && Boolean(objective?.config.requires.includes("whatsapp"));
   const setB = (patch: Partial<State["business"]>) => set({ business: { ...s.business, ...patch } });
 
   function setObjective(code: string) {
@@ -254,31 +265,37 @@ function NetworkStep({ s, set, data }: StepProps & { data: EditorData }) {
         <PlatformPicker value={platform} allowed={objective?.platforms} onChange={(p) => set({ platforms: [p] })} />
       </Section>
 
-      <Section icon={<Store />} title="Votre activité">
-        <div className="space-y-4">
-          {data.businesses.length > 1 && (
-            <Field label="Entreprise" htmlFor="businessId">
-              <Select id="businessId" value={s.business.id ?? ""} onChange={(e) => { const b = data.businesses.find((x) => x.id === e.target.value); set({ business: b ? { ...b } : { id: null, name: "", sector: "", city: "" } }); }}>
-                {data.businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                <option value="">+ Nouvelle entreprise</option>
-              </Select>
-            </Field>
-          )}
-          <Field label="Nom de votre activité" htmlFor="bname"><Input id="bname" value={s.business.name} maxLength={80} autoComplete="organization" onChange={(e) => setB({ name: e.target.value })} placeholder="Boutique Afi" /></Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Secteur" htmlFor="sector">
-              <Select id="sector" value={s.business.sector} onChange={(e) => setB({ sector: e.target.value })}><option value="" disabled>Choisir…</option>{SECTORS.map((x) => <option key={x}>{x}</option>)}</Select>
-            </Field>
-            <Field label="Ville" htmlFor="city" optional><Input id="city" value={s.business.city} maxLength={60} onChange={(e) => setB({ city: e.target.value })} placeholder="Cotonou" /></Field>
+      {(askBusiness || chooseBusiness || askAccount || askWhatsapp) && (
+        <Section icon={<Store />} title={askBusiness || chooseBusiness ? "Votre activité" : "À compléter"} description={askBusiness ? "Demandé une seule fois : nous le retenons pour vos prochaines publicités." : undefined}>
+          <div className="space-y-4">
+            {chooseBusiness && (
+              <Field label="Entreprise" htmlFor="businessId">
+                <Select id="businessId" value={s.business.id ?? ""} onChange={(e) => { const b = data.businesses.find((x) => x.id === e.target.value); set({ business: b ? { ...b } : { id: null, name: "", sector: "", city: "" } }); }}>
+                  {data.businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  <option value="">+ Nouvelle entreprise</option>
+                </Select>
+              </Field>
+            )}
+            {askBusiness && (
+              <>
+                <Field label="Nom de votre activité" htmlFor="bname"><Input id="bname" value={s.business.name} maxLength={80} autoComplete="organization" onChange={(e) => setB({ name: e.target.value })} placeholder="Boutique Afi" /></Field>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Secteur" htmlFor="sector">
+                    <Select id="sector" value={s.business.sector} onChange={(e) => setB({ sector: e.target.value })}><option value="" disabled>Choisir…</option>{SECTORS.map((x) => <option key={x}>{x}</option>)}</Select>
+                  </Field>
+                  <Field label="Ville" htmlFor="city" optional><Input id="city" value={s.business.city} maxLength={60} onChange={(e) => setB({ city: e.target.value })} placeholder="Cotonou" /></Field>
+                </div>
+              </>
+            )}
+            {askAccount && platform && <AccountFields platforms={[platform]} value={s.business.accounts} onChange={(accounts) => setB({ accounts })} />}
+            {askWhatsapp && (
+              <Field label="Votre numéro WhatsApp" htmlFor="wa" hint="Vos clients vous écriront sur ce numéro.">
+                <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" autoComplete="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />
+              </Field>
+            )}
           </div>
-          {platform && <AccountFields platforms={[platform]} value={s.business.accounts} onChange={(accounts) => setB({ accounts })} />}
-          {askWhatsapp && (
-            <Field label="Votre numéro WhatsApp" htmlFor="wa" hint="Vos clients vous écriront sur ce numéro.">
-              <Input id="wa" value={s.destinationWhatsapp} maxLength={40} inputMode="tel" autoComplete="tel" onChange={(e) => set({ destinationWhatsapp: e.target.value })} placeholder="01 97 00 00 00" />
-            </Field>
-          )}
-        </div>
-      </Section>
+        </Section>
+      )}
     </div>
   );
 }
@@ -325,27 +342,16 @@ function AudienceStep({ s, set }: StepProps) {
   const latest = React.useRef(t);
   latest.current = t;
   const setT = (patch: Partial<Targeting>) => set({ targeting: { ...latest.current, ...patch } });
-  const cities = t.countries.flatMap((c) => CITIES_BY_COUNTRY[c] ?? []);
   const label = "mb-2 text-[0.8125rem] font-medium text-ink-soft";
 
   return (
     <div className="space-y-7">
       <Section icon={<MapPin />} title="Zone">
-        <div className="space-y-4">
-          <div>
-            <p className={label}>Pays</p>
-            <div className="flex flex-wrap gap-1.5">
-              {TARGET_COUNTRIES.map((c) => (
-                <Chip key={c.code} active={t.countries.includes(c.code)} onClick={() => { const countries = toggle(t.countries, c.code); const ok = new Set(countries.flatMap((x) => CITIES_BY_COUNTRY[x] ?? [])); setT({ countries, cities: t.cities.filter((x) => ok.has(x)) }); }}>{c.name}</Chip>
-              ))}
-            </div>
-          </div>
-          {cities.length > 0 && (
-            <div>
-              <p className={label}>Villes <span className="font-normal text-muted">— aucune = tout le pays</span></p>
-              <div className="flex flex-wrap gap-1.5">{cities.map((city) => <Chip key={city} active={t.cities.includes(city)} onClick={() => setT({ cities: toggle(t.cities, city) })}>{city}</Chip>)}</div>
-            </div>
-          )}
+        <p className={label}>Pays</p>
+        <div className="flex flex-wrap gap-1.5">
+          {TARGET_COUNTRIES.map((c) => (
+            <Chip key={c.code} active={t.countries.includes(c.code)} onClick={() => setT({ countries: toggle(t.countries, c.code) })}>{c.name}</Chip>
+          ))}
         </div>
       </Section>
 
@@ -362,26 +368,6 @@ function AudienceStep({ s, set }: StepProps) {
             <Field label="Âge maximum" htmlFor="ageMax"><Select id="ageMax" value={t.ageMax} onChange={(e) => { const v = Number(e.target.value); setT({ ageMax: v, ageMin: Math.min(v, t.ageMin) }); }}>{AGE_BOUNDS.map((a) => <option key={a} value={a}>{a === 65 ? "65 ans et plus" : `${a} ans`}</option>)}</Select></Field>
           </div>
           <p className="text-xs text-muted">18 ans et plus uniquement.</p>
-        </div>
-      </Section>
-
-      <Section icon={<Heart />} tone="rose" title="Centres d'intérêt" description="Aucun = tout le monde dans la zone choisie." action={<span className="tnum text-xs text-muted">{t.interests.length} choisi{t.interests.length > 1 ? "s" : ""}</span>}>
-        <div className="space-y-3">
-          {INTEREST_GROUPS.map((g) => {
-            const picked = g.items.filter((i) => t.interests.includes(i)).length;
-            return (
-              <details key={g.group} className="group rounded-md bg-surface shadow-card" open={picked > 0 || undefined}>
-                <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-[0.84375rem] font-medium text-ink">
-                  {g.group}
-                  <span className="flex items-center gap-2">{picked > 0 && <span className="tnum rounded-full bg-forest px-2 py-px text-[11px] font-semibold text-white">{picked}</span>}<ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" /></span>
-                </summary>
-                <div className="flex flex-wrap gap-1.5 px-4 pb-4">{g.items.map((i) => <Chip key={i} active={t.interests.includes(i)} disabled={!t.interests.includes(i) && t.interests.length >= 25} onClick={() => setT({ interests: toggle(t.interests, i) })}>{i}</Chip>)}</div>
-              </details>
-            );
-          })}
-          <ToggleRow icon={<Users />} label="Recibler mes clients" hint="Montrer aussi la publicité à vos clients actuels." htmlFor="custom-aud">
-            <Switch id="custom-aud" checked={t.customAudience.requested} onCheckedChange={(v) => setT({ customAudience: { ...t.customAudience, requested: v } })} />
-          </ToggleRow>
         </div>
       </Section>
     </div>
