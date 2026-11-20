@@ -19,8 +19,12 @@ import {
 
 const BASE_URLS = { live: "https://api.fedapay.com/v1", sandbox: "https://sandbox-api.fedapay.com/v1" } as const;
 
-/** Seuls numéros acceptés par FedaPay en mode test : tout autre numéro y simule un paiement échoué. Rappelés à l'équipe. */
-export const FEDAPAY_TEST_NUMBERS = ["64000001", "66000001"] as const;
+/**
+ * Seuls numéros acceptés par FedaPay en mode test : tout autre numéro y simule un paiement échoué.
+ * Ils s'écrivent à 10 chiffres, avec le « 01 » devant. La documentation FedaPay donne encore l'ancienne écriture à
+ * 8 chiffres (64000001, 66000001), que la sandbox refuse : constaté sur le compte de test le 20/11/2026.
+ */
+export const FEDAPAY_TEST_NUMBERS = ["0164000001", "0166000001"] as const;
 
 /** Une notification plus ancienne est refusée (protection contre le rejeu), comme dans les bibliothèques FedaPay. */
 const WEBHOOK_TOLERANCE_SECONDS = 300;
@@ -150,7 +154,7 @@ export class FedapayProvider implements PaymentProvider {
    */
   get testNotice() {
     if (this.config.environment === "live") return null;
-    return `Mode test : aucun argent n'est débité. Sur la page de paiement, saisissez le numéro d'essai ${FEDAPAY_TEST_NUMBERS.map(groupDigits).join(" ou ")}. Tout autre numéro, même un vrai, est refusé.`;
+    return `Mode test : aucun argent n'est débité. Sur la page de paiement, saisissez le numéro d'essai ${FEDAPAY_TEST_NUMBERS.map(groupDigits).join(" ou ")}, avec le 01 devant. Tout autre numéro, même un vrai, est refusé.`;
   }
   get testNumbers() { return this.config.environment === "live" ? null : FEDAPAY_TEST_NUMBERS; }
   isConfigured() { return Boolean(this.config.secretKey); }

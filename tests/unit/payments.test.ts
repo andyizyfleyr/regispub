@@ -55,9 +55,11 @@ describe("FedaPay : demande de paiement", () => {
     expect((await provider.initiate(fedapayInput())).redirectUrl).toBe("https://process.fedapay.com/tok_abc");
     expect(api.calls.every((c) => c.host === "sandbox-api.fedapay.com")).toBe(true);
     expect(provider.mode).toBe("test");
-    expect(provider.testNotice).toMatch(/aucun argent n'est débité.*64 00 00 01 ou 66 00 00 01.*refusé/);
+    expect(provider.testNotice).toMatch(/aucun argent n'est débité.*01 64 00 00 01 ou 01 66 00 00 01.*refusé/);
+    // La sandbox refuse l'ancienne écriture à 8 chiffres : seuls les numéros à 10 chiffres sont annoncés.
+    expect(provider.testNumbers?.every((n) => /^01\d{8}$/.test(n))).toBe(true);
     expect(new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: "", environment: "live" }).testNotice).toBeNull();
-    expect(provider.testNumbers).toEqual(["64000001", "66000001"]);
+    expect(provider.testNumbers).toEqual(["0164000001", "0166000001"]);
     expect(new FedapayProvider({ secretKey: "sk_live_x", webhookSecret: "", environment: "live" }).testNumbers).toBeNull();
   });
 
