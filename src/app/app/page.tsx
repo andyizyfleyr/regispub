@@ -54,19 +54,23 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div className="animate-rise space-y-5 sm:space-y-7">
       <Onboarding userId={user.id} auto={!hasCampaigns} force={guide === "1"} />
-      {/* Bandeau et cartes sur fond blanc, comme les listes : la couleur est réservée à ce qui demande une action. */}
-      <section className="rounded-[22px] border border-line/70 bg-surface px-4 py-4 shadow-card sm:rounded-[28px] sm:px-8 sm:py-7">
-        <h1 className="truncate text-[1.25rem] font-semibold leading-tight text-ink sm:text-[1.875rem]"><span className="font-normal text-muted">Bonjour,</span> {firstName}</h1>
-        {hasCampaigns ? (
-          <dl className="mt-3 grid grid-cols-3 gap-2 sm:mt-5 sm:gap-2.5">
-            {stats.map((st) => (
-              <div key={st.label} className="flex items-baseline gap-1.5 rounded-xl bg-paper px-2.5 py-2 ring-1 ring-inset ring-line sm:block sm:rounded-2xl sm:px-3.5 sm:py-3">
-                <dd className="tnum font-display text-[1.125rem] font-semibold leading-none text-ink sm:text-[1.625rem]">{st.value}</dd>
-                <dt className="min-w-0 truncate text-[0.75rem] text-muted sm:mt-1.5 sm:text-[0.8125rem]">{st.label}</dt>
-              </div>
-            ))}
-          </dl>
-        ) : <p className="mt-1.5 text-[0.875rem] text-muted">{lead}</p>}
+      {/* Bandeau vert, la seule grande surface de couleur ; les deux cartes en dessous restent blanches, comme les listes. */}
+      <section className="bg-brand relative overflow-hidden rounded-[22px] px-4 py-4 text-white shadow-lift sm:rounded-[28px] sm:px-8 sm:py-7">
+        <div aria-hidden className="bg-grid absolute inset-0 opacity-60" />
+        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-36 rounded-full bg-mint/20 blur-2xl" />
+        <div className="relative">
+          <h1 className="truncate text-[1.25rem] font-semibold leading-tight text-white sm:text-[1.875rem]"><span className="font-normal text-white/70">Bonjour,</span> {firstName}</h1>
+          {hasCampaigns ? (
+            <dl className="mt-3 grid grid-cols-3 gap-2 sm:mt-5 sm:gap-2.5">
+              {stats.map((st) => (
+                <div key={st.label} className="flex items-baseline gap-1.5 rounded-xl bg-white/10 px-2.5 py-2 ring-1 ring-inset ring-white/10 sm:block sm:rounded-2xl sm:px-3.5 sm:py-3">
+                  <dd className="tnum font-display text-[1.125rem] font-semibold leading-none sm:text-[1.625rem]">{st.value}</dd>
+                  <dt className="min-w-0 truncate text-[0.75rem] text-white/70 sm:mt-1.5 sm:text-[0.8125rem]">{st.label}</dt>
+                </div>
+              ))}
+            </dl>
+          ) : <p className="mt-1.5 text-[0.875rem] text-white/75">{lead}</p>}
+        </div>
       </section>
 
       {/* Deux cartes blanches côte à côte, basses : petite illustration, titre, une ligne de description.
