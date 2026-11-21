@@ -11,7 +11,7 @@ L'application n'affiche jamais une intégration comme active si elle ne l'est pa
 
 | Domaine | État | Ce qu'il faut pour l'activer |
 | --- | --- | --- |
-| Comptes, rôles, commandes, devis, suivi, messagerie, validation des créations, réclamations, reçus, fidélité, parrainage, journal d'audit | **Opérationnel** | Rien |
+| Comptes, rôles, commandes, devis, suivi, validation des créations, réclamations, reçus, fidélité, parrainage, journal d'audit | **Opérationnel** | Rien |
 | Statistiques par import CSV ou saisie, validées avant publication | **Opérationnel** | Rien |
 | Vente d'abonnés, de J'aime, de commentaires et de vues (Facebook, Instagram, TikTok) | **Opérationnel, livraison manuelle** : la commande payée arrive dans `/gestion/boosts`, l'équipe la passe chez son fournisseur puis la marque « Livrée » | Rien. Aucun fournisseur n'est branché : les tarifs installés sont des exemples, à régler dans `/gestion/services` |
 | Paiement Mobile Money MTN / Moov / Celtiis via FedaPay | **Implémenté d'après la documentation FedaPay, non testé avec un vrai compte** | Compte marchand FedaPay, clés saisies dans Clés et connexions, bouton « Tester FedaPay » |

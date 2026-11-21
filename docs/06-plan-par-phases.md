@@ -3,7 +3,7 @@
 ## Phase 1 — Socle (livrée dans ce dépôt)
 
 - Site public, inscription, connexion, réinitialisation du mot de passe.
-- Espace client : assistant de création, brief expert, devis, paiement, suivi, créations, messagerie, résultats, rapport, compte.
+- Espace client : assistant de création, brief expert, devis, paiement, suivi, validation des créations, résultats, rapport, compte.
 - Espace de gestion : campagnes, commandes, paiements, remboursements, réclamations, rapports, clients, équipe, tarifs, promotions, modèles, notifications, intégrations, paramètres, journal d'audit.
 - Paiement : contrat de prestataire, adaptateur FedaPay, simulateur, webhook, vérification, idempotence.
 - Tests : tarification, statuts, droits, import CSV, signatures, parcours de paiement et de remboursement sur une vraie base.

@@ -51,7 +51,7 @@ export function StatusPanel({ campaignId, status, next }: { campaignId: string; 
       <Field label="Nouveau statut" htmlFor="st-to">
         <Select id="st-to" value={to} onChange={(e) => setTo(e.target.value as CampaignStatusName)}>{next.map((s) => <option key={s} value={s}>{STATUS_META[s].label}</option>)}</Select>
       </Field>
-      <Field label={to === "AWAITING_INFO" ? "Information attendue du client" : "Note pour le client"} htmlFor="st-note" optional={to !== "AWAITING_INFO"}>
+      <Field label={to === "AWAITING_INFO" ? "Information attendue du client" : "Note pour le client"} htmlFor="st-note" optional={to !== "AWAITING_INFO"} hint={to === "AWAITING_INFO" ? "Le client lit cette demande sur la page de sa campagne et répond sur le WhatsApp du support." : undefined}>
         <Textarea id="st-note" rows={2} maxLength={600} value={note} onChange={(e) => setNote(e.target.value)} placeholder={to === "AWAITING_INFO" ? "Ex. : merci d'envoyer le lien de votre page Facebook." : "Ajoutée à la notification envoyée au client."} />
       </Field>
       {destructive && <Notice tone="warn">L&apos;annulation d&apos;une campagne payée ne rembourse pas le client automatiquement : créez le remboursement depuis la page Paiements.</Notice>}

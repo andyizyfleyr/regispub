@@ -36,7 +36,7 @@ async function housekeeping() {
   for (const c of ending) {
     const link = `/app/campagnes/${c.id}`;
     if (await alreadyNotified(c.userId, "campaign.ending", link, addDays(today, -5))) continue;
-    await notify({ userId: c.userId, type: "campaign.ending", title: `${c.name} se termine bientôt`, body: `Votre campagne prend fin le ${formatPureDate(c.endDate!)}. Pour la prolonger ou la renouveler, créez une nouvelle campagne ou écrivez à votre gestionnaire.`, link, email: true, whatsapp: true });
+    await notify({ userId: c.userId, type: "campaign.ending", title: `${c.name} se termine bientôt`, body: `Votre campagne prend fin le ${formatPureDate(c.endDate!)}. Pour la prolonger ou la renouveler, créez une nouvelle campagne.`, link, email: true, whatsapp: true });
     alerts++;
   }
 
