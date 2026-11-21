@@ -13,7 +13,7 @@ import { getObjective, unsupportedPlatforms } from "@/lib/catalog/objectives";
 import { normalizeSplit, PLATFORM_CODES, platformLabel, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import { CITIES_BY_COUNTRY, MAX_AGE, MIN_AGE, SECTORS, TARGET_COUNTRIES } from "@/lib/catalog/targeting";
 import { db } from "@/lib/db";
-import { notify, notifyStaff } from "@/lib/notifications/service";
+import { notifyCampaignTeam } from "@/lib/notifications/service";
 import { resolvePromo } from "@/lib/payments/service";
 import { toWhatsappLink } from "@/lib/phone";
 import { QuoteError } from "@/lib/pricing/quote";
@@ -190,7 +190,7 @@ export async function attachAssetAction(campaignId: string, assetId: string, rol
   return safeAction(async () => {
     const user = await assertUser();
     if (!CLIENT_ROLES.includes(role)) throw new UserError("Usage non autorisé.");
-    const campaign = await db.campaign.findFirst({ where: { id: campaignId, userId: user.id }, select: { id: true, status: true, name: true, managerId: true } });
+    const campaign = await db.campaign.findFirst({ where: { id: campaignId, userId: user.id }, select: { id: true, status: true, name: true, managerId: true, designerId: true } });
     if (!campaign) throw new UserError("Campagne introuvable.");
     if (["COMPLETED", "CANCELLED"].includes(campaign.status)) throw new UserError("Cette campagne est clôturée.");
     const asset = await db.asset.findFirst({ where: { id: assetId, ownerId: user.id }, select: { id: true, kind: true } });
@@ -202,7 +202,8 @@ export async function attachAssetAction(campaignId: string, assetId: string, rol
       create: { campaignId, assetId, role, addedById: user.id }, update: {},
     });
     if (!clientCanEdit(campaign.status as CampaignStatusName)) {
-      await notifyStaff("campaign.manage_creatives", { type: "campaign.file_added", title: `Nouveau fichier client : ${campaign.name}`, body: "Le client a ajouté un fichier à sa campagne.", link: `/gestion/campagnes/${campaign.id}` });
+      // Plusieurs fichiers envoyés à la suite : un seul avis.
+      await notifyCampaignTeam(campaign, "campaign.manage_creatives", { type: "campaign.file_added", title: `Nouveaux fichiers du client : ${campaign.name}`, body: "Le client a ajouté un ou plusieurs fichiers à sa campagne.", link: `/gestion/campagnes/${campaign.id}`, group: true });
     }
     return { linkId: link.id };
   });
@@ -320,9 +321,10 @@ export async function decideCreativeAction(linkId: string, decision: "APPROVED" 
     const pending = await db.campaignAsset.count({ where: { campaignId: link.campaignId, role: "CREATIVE", approval: "PENDING" } });
     const title = decision === "APPROVED" ? `Création validée : ${link.campaign.name}` : `Modification demandée : ${link.campaign.name}`;
     const body = decision === "APPROVED" ? (pending ? `Il reste ${pending} création(s) en attente de validation.` : "Toutes les créations soumises ont reçu une réponse. Vous pouvez faire avancer la campagne.") : truncate(note, 200);
-    const targets = [link.campaign.managerId, link.campaign.designerId].filter((v): v is string => Boolean(v));
-    for (const id of targets) await notify({ userId: id, type: "creative.decision", title, body, link: `/gestion/campagnes/${link.campaignId}?onglet=creations` });
-    if (!targets.length) await notifyStaff("campaign.assign", { type: "creative.decision", title, body, link: `/gestion/campagnes/${link.campaignId}?onglet=creations` });
+    // Validations à la suite : un seul avis, tenu à jour. Une demande de correction porte le texte du client : chacune reste.
+    await notifyCampaignTeam(link.campaign, "campaign.assign", decision === "APPROVED"
+      ? { type: "creative.approved", title, body, link: `/gestion/campagnes/${link.campaignId}?onglet=creations`, group: true }
+      : { type: "creative.changes_requested", title, body, link: `/gestion/campagnes/${link.campaignId}?onglet=creations` });
     await audit({ actorId: user.id, action: `creative.${decision.toLowerCase()}`, entity: "CampaignAsset", entityId: linkId });
   });
 }
@@ -338,6 +340,6 @@ export async function requestRevisionAction(campaignId: string, description: str
     if ((await db.revisionRequest.count({ where: { campaignId, status: { in: ["OPEN", "IN_PROGRESS"] } } })) >= 5) throw new UserError("Plusieurs demandes sont déjà en cours de traitement pour cette campagne.");
     await db.revisionRequest.create({ data: { campaignId, requesterId: user.id, description: content } });
     const payload = { type: "revision.requested", title: `Demande de modification : ${campaign.name}`, body: truncate(content, 200), link: `/gestion/campagnes/${campaign.id}?onglet=modifications` };
-    if (campaign.managerId) await notify({ userId: campaign.managerId, ...payload }); else await notifyStaff("revision.manage", payload);
+    await notifyCampaignTeam(campaign, "revision.manage", payload);
   });
 }

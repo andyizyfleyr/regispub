@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { DatePicker, Switch } from "@/components/ui/controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Notice } from "@/components/ui/misc";
-import { STATUS_META, type CampaignStatusName } from "@/lib/campaigns/status";
+import { CLIENT_NOTIFIED_STATUSES, STATUS_META, type CampaignStatusName } from "@/lib/campaigns/status";
 import { ACCESS_STATE_META, METHOD_LABELS, type AccessMethod, type AccessState } from "@/lib/catalog/access";
 import { accountDisplay } from "@/lib/catalog/accounts";
 import { PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
@@ -46,16 +46,19 @@ export function StatusPanel({ campaignId, status, next }: { campaignId: string; 
   React.useEffect(() => { setTo(next[0] ?? ""); setNote(""); }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!next.length) return <p className="text-sm text-muted">{status === "PENDING_PAYMENT" ? "En attente du paiement du client : le passage à « Payé » est automatique, après vérification auprès du prestataire." : "Aucun changement de statut possible."}</p>;
   const destructive = to === "CANCELLED";
+  // Étape interne : le client n'est prévenu que si une note lui est écrite.
+  const silent = to !== "" && !CLIENT_NOTIFIED_STATUSES.includes(to);
+  const notified = !silent || note.trim().length > 0;
   return (
     <div className="space-y-3">
       <Field label="Nouveau statut" htmlFor="st-to">
         <Select id="st-to" value={to} onChange={(e) => setTo(e.target.value as CampaignStatusName)}>{next.map((s) => <option key={s} value={s}>{STATUS_META[s].label}</option>)}</Select>
       </Field>
-      <Field label={to === "AWAITING_INFO" ? "Information attendue du client" : "Note pour le client"} htmlFor="st-note" optional={to !== "AWAITING_INFO"} hint={to === "AWAITING_INFO" ? "Le client lit cette demande sur la page de sa campagne et répond sur le WhatsApp du support." : undefined}>
-        <Textarea id="st-note" rows={2} maxLength={600} value={note} onChange={(e) => setNote(e.target.value)} placeholder={to === "AWAITING_INFO" ? "Ex. : merci d'envoyer le lien de votre page Facebook." : "Ajoutée à la notification envoyée au client."} />
+      <Field label={to === "AWAITING_INFO" ? "Information attendue du client" : "Note pour le client"} htmlFor="st-note" optional={to !== "AWAITING_INFO"} hint={to === "AWAITING_INFO" ? "Le client lit cette demande sur la page de sa campagne et répond sur le WhatsApp du support." : silent ? "Étape interne : sans note, le client ne reçoit pas de notification." : undefined}>
+        <Textarea id="st-note" rows={2} maxLength={600} value={note} onChange={(e) => setNote(e.target.value)} placeholder={to === "AWAITING_INFO" ? "Ex. : merci d'envoyer le lien de votre page Facebook." : silent ? "Laissez vide pour ne pas déranger le client." : "Ajoutée à la notification envoyée au client."} />
       </Field>
       {destructive && <Notice tone="warn">L&apos;annulation d&apos;une campagne payée ne rembourse pas le client automatiquement : créez le remboursement depuis la page Paiements.</Notice>}
-      <Button variant={destructive ? "danger" : "primary"} disabled={busy || !to} onClick={() => { if (destructive && !window.confirm("Annuler définitivement cette campagne ?")) return; void run(() => staffChangeStatusAction(campaignId, to, note), "Statut mis à jour, client notifié."); }}>
+      <Button variant={destructive ? "danger" : "primary"} disabled={busy || !to} onClick={() => { if (destructive && !window.confirm("Annuler définitivement cette campagne ?")) return; void run(() => staffChangeStatusAction(campaignId, to, note), notified ? "Statut mis à jour, client notifié." : "Statut mis à jour."); }}>
         {busy ? "Mise à jour…" : "Mettre à jour le statut"}
       </Button>
     </div>

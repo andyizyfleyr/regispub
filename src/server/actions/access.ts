@@ -3,17 +3,17 @@
 import { audit } from "@/lib/audit";
 import { assertUser } from "@/lib/auth/session";
 import { ACTIVE_STATUSES, type CampaignStatusName } from "@/lib/campaigns/status";
-import { inviteNeedsCode, METHOD_LABELS, type AccessMethod } from "@/lib/catalog/access";
+import { inviteNeedsCode, type AccessMethod } from "@/lib/catalog/access";
 import { PLATFORM_CODES, PLATFORMS, type PlatformCode } from "@/lib/catalog/platforms";
 import { db } from "@/lib/db";
-import { notifyStaff } from "@/lib/notifications/service";
+import { notifyCampaignTeam } from "@/lib/notifications/service";
 import { rateLimit } from "@/lib/rate-limit";
 import { seal } from "@/lib/vault";
 import { safeAction, UserError } from "@/server/action";
 
 async function ownedActiveCampaign(campaignId: string, userId: string, platform: string) {
   if (!PLATFORM_CODES.includes(platform as PlatformCode)) throw new UserError("Réseau inconnu.");
-  const campaign = await db.campaign.findFirst({ where: { id: campaignId, userId }, select: { id: true, name: true, status: true, platforms: true, businessId: true } });
+  const campaign = await db.campaign.findFirst({ where: { id: campaignId, userId }, select: { id: true, name: true, status: true, platforms: true, businessId: true, managerId: true } });
   if (!campaign || !campaign.businessId) throw new UserError("Campagne introuvable.");
   if (!ACTIVE_STATUSES.includes(campaign.status as CampaignStatusName)) throw new UserError("L'accès se donne une fois la campagne payée.");
   if (!(campaign.platforms as string[]).includes(platform)) throw new UserError("Ce réseau ne fait pas partie de la campagne.");
@@ -52,9 +52,12 @@ export async function giveAccessAction(campaignId: string, platform: string, inp
     await db.accountAccess.upsert({ where: { businessId_platform: { businessId: c.businessId, platform: c.platform } }, create: { businessId: c.businessId, platform: c.platform, ...data }, update: data });
     // Le journal garde la trace de l'action, jamais des identifiants.
     await audit({ actorId: user.id, action: "access.given", entity: "Campaign", entityId: c.id, meta: { platform: c.platform, method } });
-    await notifyStaff("campaign.update_status", {
+    // Un client ouvre souvent plusieurs comptes à la suite : un seul avis, qui cite tout ce qui reste à vérifier.
+    const sent = await db.accountAccess.findMany({ where: { businessId: c.businessId, status: "SENT", platform: { in: c.platforms as PlatformCode[] } }, select: { platform: true } });
+    const labels = PLATFORM_CODES.filter((p) => sent.some((r) => r.platform === p)).map((p) => PLATFORMS[p].label);
+    await notifyCampaignTeam(c, "campaign.update_status", {
       type: "access.given", title: `Accès reçu : ${c.name}`,
-      body: `${PLATFORMS[c.platform].label} — ${METHOD_LABELS[method].staff.toLowerCase()}. À vérifier avant de lancer.`, link: `/gestion/campagnes/${c.id}`,
+      body: `${labels.join(", ")}. À vérifier avant de lancer.`, link: `/gestion/campagnes/${c.id}`, group: true,
     });
     return { method };
   });
@@ -65,11 +68,11 @@ export async function removeAccessAction(campaignId: string, platform: string) {
   return safeAction(async () => {
     const user = await assertUser();
     if (!PLATFORM_CODES.includes(platform as PlatformCode)) throw new UserError("Réseau inconnu.");
-    const campaign = await db.campaign.findFirst({ where: { id: campaignId, userId: user.id }, select: { id: true, name: true, businessId: true } });
+    const campaign = await db.campaign.findFirst({ where: { id: campaignId, userId: user.id }, select: { id: true, name: true, businessId: true, managerId: true } });
     if (!campaign?.businessId) throw new UserError("Campagne introuvable.");
     const res = await db.accountAccess.deleteMany({ where: { businessId: campaign.businessId, platform: platform as PlatformCode } });
     if (!res.count) return;
     await audit({ actorId: user.id, action: "access.removed", entity: "Campaign", entityId: campaign.id, meta: { platform } });
-    await notifyStaff("campaign.update_status", { type: "access.removed", title: `Accès retiré : ${campaign.name}`, body: `Le client a retiré l'accès à son compte ${PLATFORMS[platform as PlatformCode].label}.`, link: `/gestion/campagnes/${campaign.id}` });
+    await notifyCampaignTeam(campaign, "campaign.update_status", { type: "access.removed", title: `Accès retiré : ${campaign.name}`, body: `Le client a retiré l'accès à son compte ${PLATFORMS[platform as PlatformCode].label}.`, link: `/gestion/campagnes/${campaign.id}`, group: true });
   });
 }

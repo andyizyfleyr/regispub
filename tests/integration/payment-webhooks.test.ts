@@ -90,7 +90,8 @@ describe("un refus n'est pas définitif", () => {
     const base = { providerRef: payment.providerRef!, amount: payment.amount, merchantReference: payment.id };
     await applyVerification(payment.id, { ...base, status: "CANCELLED", providerStatus: "declined", failureReason: "La validation sur le téléphone n'est pas allée au bout." });
     expect(await db.payment.findUniqueOrThrow({ where: { id: payment.id } })).toMatchObject({ status: "CANCELLED", providerStatus: "declined" });
-    expect(await db.notification.count({ where: { userId, type: "payment.failed", link: { contains: payment.orderId } } })).toBe(1);
+    // Un refus s'affiche sur la page de paiement : il ne donne pas lieu à une notification.
+    expect(await db.notification.count({ where: { userId, type: "payment.failed" } })).toBe(0);
 
     await applyVerification(payment.id, { ...base, status: "SUCCEEDED", providerStatus: "approved" });
     expect(await db.payment.findUniqueOrThrow({ where: { id: payment.id } })).toMatchObject({ status: "SUCCEEDED", failureReason: null });

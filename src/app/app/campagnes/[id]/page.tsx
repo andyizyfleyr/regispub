@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, BarChart3, ChevronDown, CircleCheck, CircleDot, CircleX, Eye, FileText, Flag, Info, MessageSquareText, Megaphone, Paintbrush, Pause, PencilLine, Rocket, Wallet } from "lucide-react";
-import { AccessCard, type AccessItem } from "@/components/app/access-card";
+import { AccessCard, EntrustedLogins, type AccessItem } from "@/components/app/access-card";
 import { AdPreview } from "@/components/app/ad-preview";
 import { CampaignActions, CreativeReview } from "@/components/app/campaign-client-parts";
 import { CampaignSummary } from "@/components/app/campaign-summary";
@@ -78,9 +78,10 @@ export default async function CampaignPage({ params, searchParams }: { params: P
     const state = accessState(accessRows, p, c.id);
     return { platform: p, account: accounts[p] ? accountDisplay(accounts[p]).replace(/^[^/]+\//, "") : "", state, method: state === "TODO" ? null : row?.method ?? null, note: row?.note ?? null };
   });
-  const launched = status === "RUNNING" || status === "PAUSED";
-  const showAccess = (ACTIVE_STATUSES as string[]).includes(status) && platforms.length > 0
-    && (!launched || accessItems.some((i) => i.state === "TODO" || i.state === "PROBLEM" || i.method === "LOGIN"));
+  // La carte ne s'affiche que s'il reste un accès à donner ou à refaire : une fois tout reçu, elle disparaît.
+  const showAccess = (ACTIVE_STATUSES as string[]).includes(status) && accessItems.some((i) => i.state === "TODO" || i.state === "PROBLEM");
+  // Identifiants confiés (option « Je donne mes identifiants ») : le client peut toujours les effacer, depuis « Détails ».
+  const entrusted = accessItems.filter((i) => i.method === "LOGIN" && i.state !== "TODO").map((i) => i.platform);
   const awaitingInfo = status === "AWAITING_INFO";
   const settings = showAccess || awaitingInfo ? await getSettings() : null;
   const agency = settings ? settings.agencyFacebookName || settings.companyName : "";
@@ -159,6 +160,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
               <DefinitionList className="mt-2.5 border-t border-line pt-2.5" items={[
                 { label: "Gestionnaire", value: c.manager?.name ?? "Bientôt attribué" },
                 { label: "Référence", value: <span className="font-mono text-[0.8125rem]">{c.reference}</span> },
+                ...(entrusted.length ? [{ label: "Identifiants confiés", value: <EntrustedLogins campaignId={c.id} platforms={entrusted} /> }] : []),
               ]} />
             </div>
             <div className="mt-3"><CampaignActions id={c.id} canCancel={clientCanCancel(status)} canRevise={!["PENDING_PAYMENT", "COMPLETED", "CANCELLED"].includes(status)} /></div>

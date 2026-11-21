@@ -76,7 +76,8 @@ Le nom du profil Facebook à ajouter se règle dans Gestion → Paramètres (« 
 - **Création à valider** : quand l'équipe soumet un visuel, il s'affiche en haut de la page, au-dessus des onglets ; le client le valide ou demande une correction avec un commentaire. Une fois la réponse donnée, le bloc disparaît.
 - **Pas de messagerie.** Elle est retirée des deux espaces (client et gestion). Quand l'équipe attend une précision (statut « En attente d'informations »), sa demande s'affiche en haut de la page de la campagne avec un lien « Répondre sur WhatsApp » vers le numéro du support (Gestion → Paramètres) ; sans numéro réglé, le lien mène à « Mon compte → Aide ».
 - **Demande de modification** : budget, ciblage, texte, visuel ou dates, après paiement.
-- **Notifications** à chaque étape, dans l'application et, une fois configurés, par e-mail et WhatsApp.
+- **Notifications** : seulement quand le client doit agir ou qu'un cap est franchi, dans l'application et, une fois configurés, par e-mail et WhatsApp. Le détail est dans « Notifications : qui est prévenu, et quand » ci-dessous.
+- **Accès aux comptes** : la carte « Donnez-nous l'accès » s'affiche en haut de la page tant qu'un accès reste à donner ou à refaire, puis disparaît. Si le client a confié ses identifiants, la ligne « Identifiants confiés » de l'onglet « Détails » lui permet de les effacer.
 
 ## Résultats
 
@@ -88,3 +89,27 @@ Le nom du profil Facebook à ajouter se règle dans Gestion → Paramètres (« 
 ## Autour de la campagne
 
 Historique des paiements et reçus, fidélité, parrainage, accompagnement mensuel, support par ticket.
+
+## Notifications : qui est prévenu, et quand
+
+Règle : on ne prévient quelqu'un que s'il doit agir ou si un cap est franchi. Le résultat d'un geste que la personne vient de faire à l'écran ne donne pas lieu à une notification.
+
+Le client est prévenu pour :
+
+- son inscription (message de bienvenue) et un paiement confirmé, avec le reçu ;
+- une précision attendue, une création à valider, un accès à refaire ;
+- la publicité lancée, mise en pause, terminée ou annulée, et sa fin prochaine ;
+- de nouveaux résultats publiés, la réponse à une demande de modification ou à une demande d'aide ;
+- une commande de boost livrée ou annulée, un remboursement, un double paiement, une récompense de parrainage.
+
+Il n'est pas prévenu pour :
+
+- les étapes internes « En préparation » et « Prête à lancer », sauf si l'équipe y joint une note (elles restent visibles dans l'historique de la campagne) ;
+- un paiement non abouti : le motif s'affiche sur la page de paiement, où il peut réessayer ;
+- une commande de boost passée « En cours ».
+
+Une seule notification non lue par sujet : plusieurs créations soumises à la suite, ou plusieurs publications de résultats, tiennent en une notification, mise à jour, sans nouvel e-mail ni WhatsApp (option `group` de `notify`, dans `src/lib/notifications/service.ts`).
+
+Côté équipe, les gestes du client sur une campagne (accès donné ou retiré, fichier ajouté, création validée, demande de modification) préviennent le gestionnaire et le designer de la campagne. Tant que personne n'est désigné, ce sont les collaborateurs ayant la permission qui sont prévenus. Trois accès donnés à la suite font un seul avis.
+
+Ouvrir la page « Notifications » marque tout comme lu : la pastille de la cloche s'efface sans autre geste.

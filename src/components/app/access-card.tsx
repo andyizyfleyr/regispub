@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, ExternalLink, Eye, EyeOff, KeyRound, LoaderCircle, Lock, Trash2, UserPlus } from "lucide-react";
+import { ArrowRight, ExternalLink, Eye, EyeOff, KeyRound, LoaderCircle, Lock, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformBadge } from "@/components/icons";
 import { ToneIcon } from "@/components/ui/badge";
@@ -16,31 +16,24 @@ import { giveAccessAction, removeAccessAction } from "@/server/actions/access";
 
 export type AccessItem = { platform: PlatformCode; account: string; state: AccessState; method: AccessMethod | null; note: string | null };
 
-/** Après le paiement : le client ouvre l'accès à ses comptes pour que l'équipe y lance la publicité. */
+/**
+ * Après le paiement : le client ouvre l'accès à ses comptes pour que l'équipe y lance la publicité.
+ * La carte ne s'affiche que s'il reste un accès à donner ou à refaire ; une fois tout reçu, elle disparaît de la page.
+ */
 export function AccessCard({ campaignId, items, agency }: { campaignId: string; items: AccessItem[]; agency: string }) {
   const router = useRouter();
   const [open, setOpen] = React.useState<PlatformCode | null>(null);
   const [busy, setBusy] = React.useState<PlatformCode | null>(null);
-  const todo = items.filter((i) => i.state === "TODO" || i.state === "PROBLEM").length;
   const current = items.find((i) => i.platform === open) ?? null;
-
-  async function remove(p: PlatformCode) {
-    if (!window.confirm(`Retirer l'accès à votre ${accountNoun(p)} ?`)) return;
-    setBusy(p);
-    const res = await removeAccessAction(campaignId, p);
-    setBusy(null);
-    if (!res.ok) { toast.error(res.error); return; }
-    toast.success("Accès retiré.");
-    router.refresh();
-  }
+  const remove = useRemoveAccess(campaignId, setBusy);
 
   return (
-    <section className={cn("mb-5 overflow-hidden rounded-xl border bg-surface", todo ? "border-marigold/50" : "border-line")} aria-label="Accès à vos comptes">
+    <section className="mb-5 overflow-hidden rounded-xl border border-marigold/50 bg-surface" aria-label="Accès à vos comptes">
       <header className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
-        <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", todo ? "bg-marigold-soft text-[#8a5a00]" : "bg-green-soft text-green")}>{todo ? <KeyRound className="size-4" /> : <Check className="size-4" />}</span>
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-marigold-soft text-[#8a5a00]"><KeyRound className="size-4" /></span>
         <div className="min-w-0">
-          <h2 className="text-[0.9375rem] font-semibold text-ink">{todo ? "Donnez-nous l'accès" : "Accès reçu"}</h2>
-          <p className="text-[0.8125rem] text-muted">{todo ? "Sans accès, nous ne pouvons pas lancer." : "Nous vérifions, puis nous lançons."}</p>
+          <h2 className="text-[0.9375rem] font-semibold text-ink">Donnez-nous l&apos;accès</h2>
+          <p className="text-[0.8125rem] text-muted">Sans accès, nous ne pouvons pas lancer.</p>
         </div>
       </header>
       <ul className="divide-y divide-line border-t border-line">
@@ -75,6 +68,37 @@ export function AccessCard({ campaignId, items, agency }: { campaignId: string; 
         )}
       </Dialog>
     </section>
+  );
+}
+
+function useRemoveAccess(campaignId: string, setBusy: (p: PlatformCode | null) => void) {
+  const router = useRouter();
+  return async function remove(p: PlatformCode) {
+    if (!window.confirm(`Effacer vos identifiants ${PLATFORMS[p].label} ? Nous n'aurons plus accès à votre ${accountNoun(p)}.`)) return;
+    setBusy(p);
+    const res = await removeAccessAction(campaignId, p);
+    setBusy(null);
+    if (!res.ok) { toast.error(res.error); return; }
+    toast.success("Identifiants effacés.");
+    router.refresh();
+  };
+}
+
+/** Dans « Détails » : le client peut reprendre les identifiants qu'il a confiés, même une fois la carte d'accès disparue. */
+export function EntrustedLogins({ campaignId, platforms }: { campaignId: string; platforms: PlatformCode[] }) {
+  const [busy, setBusy] = React.useState<PlatformCode | null>(null);
+  const remove = useRemoveAccess(campaignId, setBusy);
+  return (
+    <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+      {platforms.map((p) => (
+        <span key={p} className="inline-flex items-center gap-2">
+          {PLATFORMS[p].label}
+          <button type="button" disabled={busy !== null} onClick={() => remove(p)} className="inline-flex items-center gap-1 text-[0.8125rem] font-medium text-clay underline underline-offset-2 disabled:opacity-60">
+            {busy === p ? <LoaderCircle className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}Effacer
+          </button>
+        </span>
+      ))}
+    </span>
   );
 }
 
