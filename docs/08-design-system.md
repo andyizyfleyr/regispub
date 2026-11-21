@@ -66,8 +66,9 @@ Sur téléphone (moins de 640 px de large), toute l'interface est réduite d'env
 
 ## Accueil client et barre du haut
 
-- **Accueil** : le bandeau vert (« Bonjour » et les trois chiffres, sans bouton), puis deux cartes côte à côte, « Faire une publicité » (`/app/creer`) et « Acheter » (`/app/booster`), puis « À faire » s'il y a lieu. Rien d'autre : les campagnes se lisent sur la page « Campagnes » du menu.
-- **Les deux cartes** vont d'un bord de l'écran à l'autre sur téléphone et tablette (elles annulent la marge de la page, d'où les coins arrondis seulement au centre) ; sur ordinateur, elles remplissent la colonne. Chacune porte une illustration, un titre et une ligne de description.
+- **Accueil** : le bandeau vert (« Bonjour » et les trois chiffres, sans bouton), puis deux cartes côte à côte, « Faire une publicité » (`/app/creer`) et « Acheter » (`/app/booster`), puis « À faire » s'il y a lieu, puis « Vos campagnes ». Rien d'autre.
+- **Les deux cartes** sont un peu plus larges que le reste de la page sur téléphone et tablette : elles ne gardent que la moitié de la marge (8 px sur téléphone, 12 px sur tablette). Sur ordinateur, elles remplissent la colonne. Chacune porte une illustration, un titre et une ligne de description.
+- **« Vos campagnes »** : les 5 dernières seulement (constante `RECENT` de `src/app/app/page.tsx`), par activité la plus récente ; le lien « Tout voir » mène à la page « Campagnes ». L'état est une pastille (voir « États : pastilles rondes »), comme partout ailleurs.
 - **Barre du haut sur téléphone** : logo et cloche uniquement, pas d'avatar. Le client passe par « Plus » → « Mon compte » (bouton « Se déconnecter » en bas de la page). L'équipe retrouve son compte en bas du menu latéral.
 
 ## États : pastilles rondes
