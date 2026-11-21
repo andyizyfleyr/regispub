@@ -66,8 +66,9 @@ Sur téléphone (moins de 640 px de large), toute l'interface est réduite d'env
 
 ## Accueil client et barre du haut
 
-- **Accueil** : le bandeau vert (« Bonjour » et les trois chiffres, sans bouton), puis deux cartes côte à côte, « Faire une publicité » (`/app/creer`) et « Acheter » (`/app/booster`), puis « À faire » s'il y a lieu, puis « Vos campagnes ». Rien d'autre.
-- **Les deux cartes** sont un peu plus larges que le reste de la page sur téléphone et tablette : elles ne gardent que la moitié de la marge (8 px sur téléphone, 12 px sur tablette). Sur ordinateur, elles remplissent la colonne. Chacune porte une illustration, un titre et une ligne de description.
+- **Accueil** : le bandeau « Bonjour » et ses trois chiffres (sans bouton), puis deux cartes côte à côte, « Faire une publicité » (`/app/creer`) et « Acheter » (`/app/booster`), puis « À faire » s'il y a lieu, puis « Vos campagnes ». Rien d'autre.
+- **Tout est sur fond blanc** : le bandeau et les deux cartes ont le même fond blanc, la même bordure et la même ombre que les listes. La seule couleur de la page est celle de « À faire », qui demande une action.
+- **Les deux cartes** sont basses (environ 130 px sur téléphone, 110 px au-delà) : une petite illustration (environ 50 px sur téléphone, 64 px au-delà), un titre et une ligne de description. Sur téléphone, l'illustration est au-dessus du texte ; à partir de la tablette, elle est à sa gauche. Sur téléphone et tablette, les cartes sont un peu plus larges que le reste de la page : elles ne gardent que la moitié de la marge (8 px sur téléphone, 12 px sur tablette). Sur ordinateur, elles remplissent la colonne.
 - **« Vos campagnes »** : les 5 dernières seulement (constante `RECENT` de `src/app/app/page.tsx`), par activité la plus récente ; le lien « Tout voir » mène à la page « Campagnes ». L'état est une pastille (voir « États : pastilles rondes »), comme partout ailleurs.
 - **Barre du haut sur téléphone** : logo et cloche uniquement, pas d'avatar. Le client passe par « Plus » → « Mon compte » (bouton « Se déconnecter » en bas de la page). L'équipe retrouve son compte en bas du menu latéral.
 
