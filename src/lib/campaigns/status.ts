@@ -42,6 +42,13 @@ const STAFF_TRANSITIONS: Record<CampaignStatusName, CampaignStatusName[]> = {
   CANCELLED: [],
 };
 
+/**
+ * Statuts annoncés au client : il doit agir, ou un cap est franchi.
+ * Les étapes internes (« En préparation », « Prête à lancer ») se lisent sur la page de la campagne, sans notification,
+ * sauf si l'équipe y joint une note.
+ */
+export const CLIENT_NOTIFIED_STATUSES: readonly CampaignStatusName[] = ["AWAITING_INFO", "CLIENT_REVIEW", "RUNNING", "PAUSED", "COMPLETED", "CANCELLED"];
+
 export function staffTransitions(from: CampaignStatusName): CampaignStatusName[] {
   return STAFF_TRANSITIONS[from];
 }

@@ -12,7 +12,7 @@ import { resolvePromo } from "@/lib/payments/service";
 import { computeCampaignQuote, computeServiceQuote, QuoteError, type PromoInput, type Quote, type ServicePrice } from "@/lib/pricing/quote";
 import { makeReference } from "@/lib/utils";
 import type { SessionUser } from "@/lib/auth/session";
-import { canTransition, STATUS_META, type CampaignStatusName } from "./status";
+import { canTransition, CLIENT_NOTIFIED_STATUSES, STATUS_META, type CampaignStatusName } from "./status";
 
 export async function loadServicePrices(): Promise<ServicePrice[]> {
   return db.service.findMany({ select: { code: true, name: true, kind: true, fee: true, active: true } });
@@ -137,11 +137,17 @@ export async function changeCampaignStatus(args: { campaignId: string; to: Campa
     const purged = await purgeIdleLogins(campaign.businessId);
     if (purged) await audit({ actorId: args.actor.id, action: "access.purged", entity: "Business", entityId: campaign.businessId ?? undefined, meta: { count: purged, reason: args.to } });
   }
-  const important = ["AWAITING_INFO", "CLIENT_REVIEW", "RUNNING", "COMPLETED", "CANCELLED", "PAUSED"].includes(args.to);
-  await notify({
-    userId: campaign.userId, type: `campaign.${args.to.toLowerCase()}`, title: `${campaign.name} : ${STATUS_META[args.to].label.toLowerCase()}`,
-    body: `${STATUS_META[args.to].clientHint}${args.note?.trim() ? `\n${args.note.trim()}` : ""}`,
-    link: `/app/campagnes/${campaign.id}`, email: important, whatsapp: important,
-  });
+  const note = args.note?.trim() ?? "";
+  const important = CLIENT_NOTIFIED_STATUSES.includes(args.to);
+  // Une étape interne ne dérange pas le client, sauf si l'équipe lui a écrit une note.
+  if (important || note) {
+    await notify({
+      userId: campaign.userId, type: `campaign.${args.to.toLowerCase()}`, title: `${campaign.name} : ${STATUS_META[args.to].label.toLowerCase()}`,
+      body: `${STATUS_META[args.to].clientHint}${note ? `\n${note}` : ""}`,
+      link: `/app/campagnes/${campaign.id}`, email: important, whatsapp: important,
+      // « Création à valider » a pu être annoncée à l'envoi du visuel : le client n'en reçoit qu'une.
+      group: args.to === "CLIENT_REVIEW" ? ["creative.submitted"] : undefined,
+    });
+  }
   return updated;
 }

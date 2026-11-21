@@ -78,8 +78,12 @@ export async function saveExternalRefsAction(campaignId: string, refs: Record<st
 
 // ─────────────────────────── Créations ───────────────────────────
 
+/** Une seule annonce par campagne tant que le client ne l'a pas lue, même si plusieurs visuels sont soumis à la suite. */
 async function notifyReview(campaign: { id: string; userId: string; name: string }) {
-  await notify({ userId: campaign.userId, type: "creative.submitted", title: `Création à valider : ${campaign.name}`, body: "Notre équipe vous soumet une création. Validez-la ou demandez une modification.", link: `/app/campagnes/${campaign.id}`, email: true, whatsapp: true });
+  const link = `/app/campagnes/${campaign.id}`;
+  // Déjà prévenu par le passage à « Validation » (avec, parfois, une note de l'équipe) : on ne l'écrase pas.
+  if (await db.notification.count({ where: { userId: campaign.userId, readAt: null, link, type: "campaign.client_review" } })) return;
+  await notify({ userId: campaign.userId, type: "creative.submitted", title: `Création à valider : ${campaign.name}`, body: "Notre équipe vous soumet une création. Validez-la ou demandez une modification.", link, email: true, whatsapp: true, group: true });
 }
 
 /** Rattache à la campagne un fichier envoyé par le collaborateur ; `submit` le soumet à la validation du client. */
@@ -207,7 +211,7 @@ export async function validateMetricsAction(campaignId: string) {
     if (!res.count) throw new UserError("Aucune statistique en attente de validation.");
     await db.metricImport.updateMany({ where: { campaignId, status: "PENDING" }, data: { status: "VALIDATED" } });
     await audit({ actorId: actor.id, action: "metrics.validated", entity: "Campaign", entityId: campaignId, meta: { rows: res.count } });
-    await notify({ userId: campaign.userId, type: "metrics.updated", title: `Nouveaux résultats : ${campaign.name}`, body: "Les statistiques de votre campagne ont été mises à jour.", link: `/app/campagnes/${campaign.id}?onglet=resultats` });
+    await notify({ userId: campaign.userId, type: "metrics.updated", title: `Nouveaux résultats : ${campaign.name}`, body: "Les statistiques de votre campagne ont été mises à jour.", link: `/app/campagnes/${campaign.id}?onglet=resultats`, group: true });
     return { count: res.count };
   });
 }

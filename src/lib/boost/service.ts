@@ -100,9 +100,8 @@ export async function changeBoostStatus(args: { boostId: string; to: BoostStatus
   const link = `/app/paiements/${boost.orderId}`;
   await audit({ actorId: args.actor.id, action: `boost.${args.to.toLowerCase()}`, entity: "BoostOrder", entityId: boost.id, meta: { reference: boost.order.reference, from: boost.status } });
 
-  if (args.to === "IN_PROGRESS") {
-    await notify({ userId: boost.userId, type: "boost.in_progress", title: "Votre commande est lancée", body: `${label} : la livraison a commencé. Elle arrive progressivement.`, link });
-  } else if (args.to === "DELIVERED") {
+  // « En cours » est une étape interne, visible sur la page de la commande : le client est prévenu à la livraison ou à l'annulation.
+  if (args.to === "DELIVERED") {
     await notify({ userId: boost.userId, type: "boost.delivered", title: "Commande livrée", body: `${label} : votre commande ${boost.order.reference} est livrée.`, link, email: true, whatsapp: true });
   } else if (args.to === "CANCELLED") {
     let refunded = 0;

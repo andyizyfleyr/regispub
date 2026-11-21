@@ -215,13 +215,8 @@ export async function applyVerification(paymentId: string, v: VerifyResult) {
       where: { id: paymentId, status: { in: [...OPEN_PAYMENT] } },
       data: { status: v.status, providerStatus: v.providerStatus, failureReason: v.failureReason ?? "Paiement non abouti.", verifiedAt: new Date() },
     });
-    if (updated.count) {
-      await notify({
-        userId: payment.userId, type: "payment.failed", title: "Paiement non abouti",
-        body: `${v.failureReason ?? "Votre paiement n'a pas abouti."} Aucun montant n'a été encaissé. Vous pouvez réessayer.`,
-        link: `/app/paiements/${payment.orderId}`,
-      });
-    }
+    // Pas de notification : le motif s'affiche sur la page de paiement, où le client peut réessayer aussitôt.
+    if (updated.count) log.info("paiement non abouti", { paymentId, status: v.status, providerStatus: v.providerStatus });
     return;
   }
   await db.payment.updateMany({ where: { id: paymentId, status: { in: [...OPEN_PAYMENT] } }, data: { providerStatus: v.providerStatus } });
