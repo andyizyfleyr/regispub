@@ -24,7 +24,7 @@ const CHOICES = [
 ] as const;
 
 /** Nombre de campagnes montrées sur l'accueil : les dernières seulement, le reste est derrière « Tout voir ». */
-const RECENT = 5;
+const RECENT = 3;
 
 /** Accueil : bonjour, les deux choix, ce qu'il y a à faire, puis les dernières campagnes. Rien d'autre. */
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ guide?: string }> }) {
