@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ImageIcon, MessageSquareText, Wallet } from "lucide-react";
+import { CampaignRow } from "@/components/app/campaign-row";
 import { Onboarding } from "@/components/app/onboarding";
 import { List, ListRow, SectionTitle } from "@/components/ui/list";
 import { requireUser } from "@/lib/auth/session";
@@ -16,22 +17,25 @@ const TODO_META: Partial<Record<CampaignStatusName, { cta: string; icon: typeof 
   AWAITING_INFO: { cta: "Répondre", icon: MessageSquareText },
 };
 
-/** Les deux choses que l'on vient faire ici. Les campagnes ont leur page (« Campagnes », dans le menu). */
+/** Les deux choses que l'on vient faire ici. */
 const CHOICES = [
   { href: "/app/creer", title: "Faire une publicité", text: "Trouvez de nouveaux clients sur les réseaux.", img: "megaphone", tone: "bg-green-soft" },
   { href: "/app/booster", title: "Acheter", text: "Abonnés, J'aime, commentaires, vues.", img: "phone", tone: "bg-marigold-soft" },
 ] as const;
 
-/** Accueil : bonjour, les deux choix, puis ce qu'il y a à faire. Rien d'autre. */
+/** Nombre de campagnes montrées sur l'accueil : les dernières seulement, le reste est derrière « Tout voir ». */
+const RECENT = 5;
+
+/** Accueil : bonjour, les deux choix, ce qu'il y a à faire, puis les dernières campagnes. Rien d'autre. */
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ guide?: string }> }) {
   const [user, { guide }] = await Promise.all([requireUser(), searchParams]);
-  const [active, totalCount, anyCount, todo] = await Promise.all([
+  const [active, totalCount, campaigns, todo] = await Promise.all([
     db.campaign.count({ where: { userId: user.id, status: { in: ACTIVE_STATUSES } } }),
     db.campaign.count({ where: { userId: user.id, status: { notIn: ["DRAFT", "CANCELLED"] } } }),
-    db.campaign.count({ where: { userId: user.id, status: { not: "CANCELLED" } } }),
+    db.campaign.findMany({ where: { userId: user.id, status: { not: "CANCELLED" } }, orderBy: { updatedAt: "desc" }, take: RECENT }),
     db.campaign.findMany({ where: { userId: user.id, status: { in: ["AWAITING_INFO", "CLIENT_REVIEW", "PENDING_PAYMENT"] } }, orderBy: { updatedAt: "desc" }, take: 5, include: { orders: { where: { status: "PENDING" }, take: 1, select: { id: true } } } }),
   ]);
-  const hasCampaigns = anyCount > 0;
+  const hasCampaigns = campaigns.length > 0;
   const firstName = user.name.split(" ")[0];
   const lead = !hasCampaigns
     ? "Lancez votre première publicité."
@@ -68,11 +72,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       </section>
 
-      {/* Deux cartes côte à côte, d'un bord à l'autre : sur téléphone et tablette, elles annulent la marge de la page. */}
-      <nav aria-label="Que voulez-vous faire ?" className="-mx-4 grid grid-cols-2 gap-2 sm:-mx-6 sm:gap-3 lg:mx-0 lg:gap-4">
-        {CHOICES.map((c, i) => (
+      {/* Deux cartes côte à côte, presque d'un bord à l'autre : sur téléphone et tablette, elles ne gardent que la moitié de la marge de la page. */}
+      <nav aria-label="Que voulez-vous faire ?" className="-mx-2 grid grid-cols-2 gap-2 sm:-mx-3 sm:gap-3 lg:mx-0 lg:gap-4">
+        {CHOICES.map((c) => (
           <Link key={c.href} href={c.href}
-            className={`group flex flex-col px-4 pb-4 pt-1 transition-[transform,box-shadow] active:scale-[0.98] sm:px-6 sm:pb-6 lg:rounded-[28px] lg:hover:-translate-y-0.5 lg:hover:shadow-lift ${c.tone} ${i === 0 ? "rounded-r-[22px] sm:rounded-r-[28px]" : "rounded-l-[22px] sm:rounded-l-[28px]"}`}>
+            className={`group flex flex-col rounded-[22px] px-4 pb-4 pt-1 transition-[transform,box-shadow] active:scale-[0.98] sm:rounded-[28px] sm:px-6 sm:pb-6 lg:hover:-translate-y-0.5 lg:hover:shadow-lift ${c.tone}`}>
             <Image src={`/img/3d/${c.img}.webp`} alt="" width={280} height={280} unoptimized priority className="mx-auto size-28 mix-blend-multiply sm:size-40" />
             <span className="flex items-center justify-between gap-2 font-display text-[1.0625rem] font-semibold leading-tight text-ink sm:text-[1.375rem]">
               {c.title}<ArrowRight aria-hidden className="size-4 shrink-0 text-ink/45 transition-transform group-hover:translate-x-0.5 sm:size-5" />
@@ -94,6 +98,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 trailing={<span className="flex h-8 w-[5.25rem] items-center justify-center rounded-full bg-marigold text-[0.8125rem] font-semibold text-forest shadow-glow sm:h-9">{meta.cta}</span>} chevron={false} />;
             })}
           </List>
+        </section>
+      )}
+
+      {hasCampaigns && (
+        <section aria-labelledby="campagnes">
+          <SectionTitle id="campagnes" action={<Link href="/app/campagnes">Tout voir</Link>}>Vos campagnes</SectionTitle>
+          <List>{campaigns.map((c) => <li key={c.id}><CampaignRow c={c} /></li>)}</List>
         </section>
       )}
     </div>
