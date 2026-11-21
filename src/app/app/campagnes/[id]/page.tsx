@@ -1,22 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, ArrowRight, BarChart3, ChevronDown, CircleCheck, CircleDot, CircleX, Eye, FileText, Flag, Images, Info, MessageSquareText, Megaphone, Paintbrush, Pause, PencilLine, Rocket, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, ChevronDown, CircleCheck, CircleDot, CircleX, Eye, FileText, Flag, Info, MessageSquareText, Megaphone, Paintbrush, Pause, PencilLine, Rocket, Wallet } from "lucide-react";
 import { AccessCard, type AccessItem } from "@/components/app/access-card";
 import { AdPreview } from "@/components/app/ad-preview";
 import { CampaignActions, CreativeReview } from "@/components/app/campaign-client-parts";
 import { CampaignSummary } from "@/components/app/campaign-summary";
 import { MetricsView } from "@/components/app/metrics-view";
-import { Thread } from "@/components/app/thread";
 import { CampaignStatusIcon, StateIcon } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { List, ListRow, SectionTitle } from "@/components/ui/list";
-import { DefinitionList, EmptyState, Notice, TabsNav } from "@/components/ui/misc";
+import { DefinitionList, Notice, TabsNav } from "@/components/ui/misc";
 import type { TileTone } from "@/components/ui/tile";
 import { Timeline } from "@/components/ui/timeline";
 import { loadCampaignReport } from "@/lib/ads/report";
-import { ROLE_LABELS, type RoleName } from "@/lib/auth/permissions";
 import { requireUser } from "@/lib/auth/session";
 import { loadAccessRows } from "@/lib/campaigns/access";
 import { readAdCopy } from "@/lib/campaigns/editor-data";
@@ -55,20 +53,19 @@ export default async function CampaignPage({ params, searchParams }: { params: P
       statusEvents: { orderBy: { createdAt: "desc" }, take: 20 },
       revisions: { orderBy: { createdAt: "desc" }, take: 10 },
       orders: { orderBy: { createdAt: "desc" }, take: 1 },
-      reads: { where: { userId: user.id } },
     },
   });
   if (!c) notFound();
   if (c.status === "DRAFT") redirect(c.mode === "EXPERT" ? `/app/expert/${c.id}` : `/app/creer/${c.id}`);
 
   const status = c.status as CampaignStatusName;
-  const tab = onglet === "messages" || onglet === "creations" || onglet === "details" ? onglet : "suivi";
+  // Deux onglets : « Détails », ouvert d'office, puis « Résultats ». Un ancien lien (?onglet=messages, ?onglet=creations) ouvre « Détails ».
+  const tab = onglet === "resultats" || onglet === "suivi" ? "resultats" : "details";
   const objective = getObjective(c.objective);
   const order = c.orders[0];
   const creatives = c.assets.filter((a) => a.role === "CREATIVE");
-  const pendingReview = creatives.filter((a) => a.approval === "PENDING").length;
-  const lastRead = c.reads[0]?.lastReadAt ?? new Date(0);
-  const unread = await db.message.count({ where: { campaignId: c.id, internal: false, senderId: { not: user.id }, createdAt: { gt: lastRead } } });
+  // Seules les créations que l'équipe soumet au client s'affichent, le temps qu'il réponde.
+  const toReview = creatives.filter((a) => a.approval === "PENDING");
   const base = `/app/campagnes/${c.id}`;
   const phase = PHASE_OF[status] ?? 0;
   const copy = readAdCopy(c.adCopy);
@@ -84,7 +81,12 @@ export default async function CampaignPage({ params, searchParams }: { params: P
   const launched = status === "RUNNING" || status === "PAUSED";
   const showAccess = (ACTIVE_STATUSES as string[]).includes(status) && platforms.length > 0
     && (!launched || accessItems.some((i) => i.state === "TODO" || i.state === "PROBLEM" || i.method === "LOGIN"));
-  const agency = showAccess ? await getSettings().then((s) => s.agencyFacebookName || s.companyName) : "";
+  const awaitingInfo = status === "AWAITING_INFO";
+  const settings = showAccess || awaitingInfo ? await getSettings() : null;
+  const agency = settings ? settings.agencyFacebookName || settings.companyName : "";
+  // Précision demandée par l'équipe : le client la lit ici et répond sur WhatsApp (ou par une demande d'aide si aucun numéro n'est réglé).
+  const infoNote = awaitingInfo ? c.statusEvents.find((e) => e.toStatus === "AWAITING_INFO")?.note ?? null : null;
+  const supportWa = settings?.supportWhatsapp.replace(/\D/g, "") ?? "";
   const firstImage = creatives.find((a) => a.asset.kind === "IMAGE") ?? c.assets.find((a) => a.asset.kind === "IMAGE");
 
   return (
@@ -121,42 +123,31 @@ export default async function CampaignPage({ params, searchParams }: { params: P
         </Notice>
       )}
       {showAccess && <AccessCard campaignId={c.id} items={accessItems} agency={agency} />}
-      {status === "AWAITING_INFO" && <Notice tone="warn" title="Une précision est attendue" className="mb-5"><Link href={`${base}?onglet=messages`} className="inline-flex items-center gap-1 font-medium underline">Répondre<ArrowRight className="size-3.5" /></Link></Notice>}
-      {pendingReview > 0 && tab !== "creations" && <Notice tone="info" title={`${pendingReview} création${pendingReview > 1 ? "s" : ""} à valider`} className="mb-5"><Link href={`${base}?onglet=creations`} className="inline-flex items-center gap-1 font-medium underline">Voir<ArrowRight className="size-3.5" /></Link></Notice>}
+      {awaitingInfo && (
+        <Notice tone="warn" title="Une précision est attendue" className="mb-5">
+          {infoNote && <p className="whitespace-pre-wrap">{infoNote}</p>}
+          {supportWa
+            ? <a href={`https://wa.me/${supportWa}?text=${encodeURIComponent(`Bonjour, au sujet de ma campagne ${c.reference} : `)}`} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 font-medium underline">Répondre sur WhatsApp<ArrowRight className="size-3.5" /></a>
+            : <Link href="/app/compte?onglet=support" className="mt-1 inline-flex items-center gap-1 font-medium underline">Répondre<ArrowRight className="size-3.5" /></Link>}
+        </Notice>
+      )}
+      {toReview.length > 0 && (
+        <Card className="mb-5">
+          <CardHeader title={toReview.length > 1 ? "Créations à valider" : "Création à valider"} />
+          <CreativeReview items={toReview.map((a) => ({ linkId: a.id, assetId: a.asset.id, name: a.asset.name, kind: a.asset.kind, format: a.asset.format, approval: a.approval, feedback: a.feedback, byTeam: a.addedById !== user.id }))} />
+        </Card>
+      )}
 
       <TabsNav current={tab} className="mb-5" tabs={[
-        { id: "suivi", label: "Résultats", icon: <BarChart3 />, href: base },
-        { id: "creations", label: "Créations", icon: <Images />, href: `${base}?onglet=creations`, count: pendingReview || undefined },
-        { id: "messages", label: "Messages", icon: <MessageSquareText />, href: `${base}?onglet=messages`, count: unread || undefined },
-        { id: "details", label: "Détails", icon: <Info />, href: `${base}?onglet=details` },
+        { id: "details", label: "Détails", icon: <Info />, href: base },
+        { id: "resultats", label: "Résultats", icon: <BarChart3 />, href: `${base}?onglet=resultats` },
       ]} />
 
-      {tab === "suivi" && (
+      {tab === "resultats" && (
         <div className="space-y-6">
           <MetricsView report={await loadCampaignReport(c.id, { validatedOnly: true })} kpis={objective?.config.kpis ?? []} adBudget={c.adBudget} />
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-muted">Chiffres validés par votre gestionnaire{c.manager ? ` (${c.manager.name})` : ""}.</p>
-            {["RUNNING", "PAUSED", "COMPLETED"].includes(status) && <Button asChild variant="outline" size="sm"><Link href={`${base}/rapport`}><FileText />Rapport</Link></Button>}
-          </div>
+          {["RUNNING", "PAUSED", "COMPLETED"].includes(status) && <div className="flex justify-end"><Button asChild variant="outline" size="sm"><Link href={`${base}/rapport`}><FileText />Rapport</Link></Button></div>}
         </div>
-      )}
-
-      {tab === "creations" && (
-        <Card>
-          <CardHeader title="Créations" />
-          {creatives.length ? (
-            <CreativeReview items={creatives.map((a) => ({ linkId: a.id, assetId: a.asset.id, name: a.asset.name, kind: a.asset.kind, format: a.asset.format, approval: a.approval, feedback: a.feedback, byTeam: a.addedById !== user.id }))} />
-          ) : <EmptyState icon={<Images />} title="Aucune création" />}
-        </Card>
-      )}
-
-      {tab === "messages" && (
-        <Card>
-          <CardHeader title="Messages" description={c.manager ? `Gestionnaire : ${c.manager.name}` : "Gestionnaire attribué après paiement."} />
-          <Thread campaignId={c.id} canPost={!["CANCELLED"].includes(status)} disabledReason="Campagne annulée : messagerie fermée."
-            messages={(await db.message.findMany({ where: { campaignId: c.id, internal: false }, orderBy: { createdAt: "asc" }, take: 200, include: { sender: { select: { name: true, role: true } } } }))
-              .map((m) => ({ id: m.id, body: m.body, internal: false, createdAt: m.createdAt.toISOString(), mine: m.senderId === user.id, author: m.sender.name, role: m.sender.role === "CLIENT" ? null : ROLE_LABELS[m.sender.role as RoleName] }))} />
-        </Card>
       )}
 
       {tab === "details" && (

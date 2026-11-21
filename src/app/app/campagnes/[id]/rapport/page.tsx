@@ -28,7 +28,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const objective = getObjective(c.objective);
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="no-print"><PageHeader title="Rapport de campagne" back={{ href: `/app/campagnes/${c.id}`, label: c.name }} actions={<PrintButton />} /></div>
+      <div className="no-print"><PageHeader title="Rapport de campagne" back={{ href: `/app/campagnes/${c.id}?onglet=resultats`, label: c.name }} actions={<PrintButton />} /></div>
       <article className="rounded-lg border border-line bg-surface p-6 sm:p-10 print:border-0 print:p-0">
         <header className="flex items-start justify-between gap-6 border-b border-line pb-6">
           <div>

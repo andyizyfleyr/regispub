@@ -376,6 +376,7 @@ model CampaignStatusEvent {
   @@index([campaignId, createdAt])
 }
 
+/// Messagerie client ↔ équipe : retirée du site. La table reste pour garder les anciens échanges ; plus rien ne la lit ni ne l'écrit.
 model Message {
   id         String   @id @default(cuid())
   campaignId String
@@ -389,6 +390,7 @@ model Message {
   @@index([campaignId, createdAt])
 }
 
+/// Marqueurs de lecture de l'ancienne messagerie : même remarque que pour `Message`.
 model CampaignRead {
   userId     String
   campaignId String

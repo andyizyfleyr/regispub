@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { policyWarnings } from "@/lib/campaigns/policy";
 import { audit } from "@/lib/audit";
-import { can, canViewCampaign } from "@/lib/auth/permissions";
 import { assertUser } from "@/lib/auth/session";
 import { ONE_NETWORK } from "@/lib/campaigns/missing";
 import { campaignMissing, quoteCampaign, upsertCampaignOrder } from "@/lib/campaigns/service";
@@ -28,7 +27,7 @@ const text = (max: number) => z.string().trim().max(max);
 async function ownedEditable(campaignId: string, userId: string) {
   const campaign = await db.campaign.findFirst({ where: { id: campaignId, userId } });
   if (!campaign) throw new UserError("Campagne introuvable.");
-  if (!clientCanEdit(campaign.status as CampaignStatusName)) throw new UserError("Cette campagne a déjà été commandée : elle ne peut plus être modifiée ici. Écrivez à votre gestionnaire pour toute modification.");
+  if (!clientCanEdit(campaign.status as CampaignStatusName)) throw new UserError("Cette campagne a déjà été commandée : elle ne peut plus être modifiée ici. Pour demander un changement, ouvrez la campagne et touchez « Modifier ».");
   return campaign;
 }
 
@@ -305,43 +304,7 @@ export async function duplicateCampaignAction(campaignId: string) {
   redirect(c.mode === "EXPERT" ? `/app/expert/${copy.id}` : `/app/creer/${copy.id}`);
 }
 
-// ─────────────────────────── Échanges client ↔ équipe ───────────────────────────
-
-async function viewableCampaign(campaignId: string) {
-  const user = await assertUser();
-  const campaign = await db.campaign.findUnique({ where: { id: campaignId }, select: { id: true, name: true, userId: true, managerId: true, designerId: true, status: true } });
-  if (!campaign || !canViewCampaign(user, campaign)) throw new UserError("Campagne introuvable.");
-  return { user, campaign };
-}
-
-export async function postMessageAction(campaignId: string, body: string, internal = false) {
-  return safeAction(async () => {
-    const { user, campaign } = await viewableCampaign(campaignId);
-    const content = body.trim();
-    if (content.length < 1 || content.length > 2000) throw new UserError("Votre message doit contenir entre 1 et 2 000 caractères.");
-    const isClient = user.role === "CLIENT";
-    if (!isClient && !can(user.role, "campaign.message")) throw new UserError("Vous n'avez pas le droit d'écrire au client.");
-    if (isClient && campaign.status === "DRAFT") throw new UserError("La messagerie s'ouvre une fois la commande passée.");
-    if (!(await rateLimit(`msg:${user.id}`, 60, 600))) throw new UserError("Trop de messages en peu de temps.");
-    const isInternal = !isClient && internal;
-    await db.message.create({ data: { campaignId, senderId: user.id, body: content, internal: isInternal } });
-    await db.campaignRead.upsert({ where: { userId_campaignId: { userId: user.id, campaignId } }, create: { userId: user.id, campaignId }, update: { lastReadAt: new Date() } });
-    if (isInternal) return;
-    const excerpt = truncate(content, 160);
-    if (isClient) {
-      const targets = [campaign.managerId, campaign.designerId].filter((v): v is string => Boolean(v));
-      if (targets.length) for (const id of targets) await notify({ userId: id, type: "message.client", title: `Message client : ${campaign.name}`, body: excerpt, link: `/gestion/campagnes/${campaign.id}?onglet=messages` });
-      else await notifyStaff("campaign.assign", { type: "message.client", title: `Message client (campagne non attribuée) : ${campaign.name}`, body: excerpt, link: `/gestion/campagnes/${campaign.id}?onglet=messages` });
-    } else {
-      await notify({ userId: campaign.userId, type: "message.staff", title: `Nouveau message : ${campaign.name}`, body: excerpt, link: `/app/campagnes/${campaign.id}?onglet=messages`, email: true, whatsapp: true });
-    }
-  });
-}
-
-export async function markCampaignReadAction(campaignId: string) {
-  const { user } = await viewableCampaign(campaignId);
-  await db.campaignRead.upsert({ where: { userId_campaignId: { userId: user.id, campaignId } }, create: { userId: user.id, campaignId }, update: { lastReadAt: new Date() } });
-}
+// ─────────────────────────── Créations et modifications ───────────────────────────
 
 /** Validation ou refus d'une création par le client. */
 export async function decideCreativeAction(linkId: string, decision: "APPROVED" | "CHANGES_REQUESTED", feedback?: string) {

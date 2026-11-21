@@ -27,7 +27,7 @@ Source de vérité : `prisma/schema.prisma` (PostgreSQL). Les montants sont des 
 | `Campaign` | Mode (libre-service ou expert), plateformes, objectif, produit, textes, ciblage, budget, dates, statut, gestionnaire et designer, identifiants externes Meta / TikTok |
 | `CampaignStatusEvent` | Historique des statuts (auteur, note) |
 | `Asset`, `CampaignAsset` | Fichiers et leur rôle dans une campagne (média produit, pièce du brief, création) avec l'état de validation par le client |
-| `Message`, `CampaignRead` | Messagerie client ↔ équipe et marqueurs de lecture |
+| `Message`, `CampaignRead` | Ancienne messagerie client ↔ équipe et ses marqueurs de lecture. La messagerie est retirée du site : ces tables ne sont plus lues ni écrites, elles gardent seulement les anciens échanges |
 | `RevisionRequest` | Demandes de modification après paiement |
 
 Statuts : `DRAFT` → `PENDING_PAYMENT` → `PAID` → `AWAITING_INFO` / `IN_PREPARATION` → `CLIENT_REVIEW` → `READY_TO_LAUNCH` → `RUNNING` ↔ `PAUSED` → `COMPLETED`, et `CANCELLED`. Le passage à `PAID` n'existe que par un paiement vérifié.

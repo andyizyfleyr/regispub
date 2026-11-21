@@ -9,7 +9,6 @@ export const PERMISSIONS = {
   "campaign.assign": "Attribuer les campagnes",
   "campaign.update_status": "Mettre à jour les statuts",
   "campaign.manage_creatives": "Préparer et soumettre les créations",
-  "campaign.message": "Échanger avec les clients",
   "access.reveal": "Voir les identifiants confiés par les clients",
   "revision.manage": "Traiter les demandes de modification",
   "metrics.import": "Saisir ou importer des statistiques",
@@ -43,11 +42,11 @@ const ROLE_PERMISSIONS: Record<RoleName, Permission[]> = {
   ADMIN: ALL.filter((p) => p !== "staff.manage_admins" && p !== "keys.manage"),
   AD_MANAGER: [
     "backoffice.access", "campaign.view_all", "campaign.assign", "campaign.update_status", "campaign.manage_creatives",
-    "campaign.message", "revision.manage", "metrics.import", "metrics.validate", "order.view", "payment.view", "report.view", "access.reveal", "boost.manage",
+    "revision.manage", "metrics.import", "metrics.validate", "order.view", "payment.view", "report.view", "access.reveal", "boost.manage",
   ],
-  DESIGNER: ["backoffice.access", "campaign.view_assigned", "campaign.manage_creatives", "campaign.message", "revision.manage"],
+  DESIGNER: ["backoffice.access", "campaign.view_assigned", "campaign.manage_creatives", "revision.manage"],
   SUPPORT: [
-    "backoffice.access", "campaign.view_all", "campaign.message", "order.view", "payment.view", "payment.verify",
+    "backoffice.access", "campaign.view_all", "order.view", "payment.view", "payment.verify",
     "user.view", "ticket.manage", "notification.send", "boost.manage",
   ],
   CLIENT: [],

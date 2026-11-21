@@ -72,8 +72,9 @@ Le nom du profil Facebook à ajouter se règle dans Gestion → Paramètres (« 
 ## Suivre
 
 - **Fil d'avancement** : En attente de paiement → Payé → En préparation → À valider → Prête → En cours → Terminée.
-- **Créations** : le client valide chaque visuel ou demande une correction avec un commentaire.
-- **Messages** : échanges avec le gestionnaire, avec pièces jointes.
+- **Page d'une campagne** : deux onglets, « Détails » (ouvert d'office) puis « Résultats ». Il n'y a plus d'onglet « Créations » ni « Messages ».
+- **Création à valider** : quand l'équipe soumet un visuel, il s'affiche en haut de la page, au-dessus des onglets ; le client le valide ou demande une correction avec un commentaire. Une fois la réponse donnée, le bloc disparaît.
+- **Pas de messagerie.** Elle est retirée des deux espaces (client et gestion). Quand l'équipe attend une précision (statut « En attente d'informations »), sa demande s'affiche en haut de la page de la campagne avec un lien « Répondre sur WhatsApp » vers le numéro du support (Gestion → Paramètres) ; sans numéro réglé, le lien mène à « Mon compte → Aide ».
 - **Demande de modification** : budget, ciblage, texte, visuel ou dates, après paiement.
 - **Notifications** à chaque étape, dans l'application et, une fois configurés, par e-mail et WhatsApp.
 

@@ -74,7 +74,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             {todo.map((c) => {
               const status = c.status as CampaignStatusName;
               const meta = TODO_META[status]!;
-              const href = status === "PENDING_PAYMENT" && c.orders[0] ? `/app/paiements/${c.orders[0].id}` : status === "CLIENT_REVIEW" ? `/app/campagnes/${c.id}?onglet=creations` : `/app/campagnes/${c.id}?onglet=messages`;
+              const href = status === "PENDING_PAYMENT" && c.orders[0] ? `/app/paiements/${c.orders[0].id}` : `/app/campagnes/${c.id}`;
               return <ListRow key={c.id} href={href} icon={<meta.icon />} tone="forest" title={c.name} subtitle={STATUS_META[status].clientHint} className="hover:bg-marigold-soft"
                 trailing={<span className="flex h-8 w-[5.25rem] items-center justify-center rounded-full bg-marigold text-[0.8125rem] font-semibold text-forest shadow-glow sm:h-9">{meta.cta}</span>} chevron={false} />;
             })}

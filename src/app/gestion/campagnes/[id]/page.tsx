@@ -5,7 +5,6 @@ import { Link as LinkIcon, MessageCircle } from "lucide-react";
 import { CampaignSummary } from "@/components/app/campaign-summary";
 import { AssetThumb } from "@/components/app/uploader";
 import { MetricsView } from "@/components/app/metrics-view";
-import { Thread } from "@/components/app/thread";
 import { AccessPanel, AssignPanel, CreativesPanel, ExternalRefsPanel, MetricsPanel, RevisionItem, StatusPanel } from "@/components/staff/campaign-panels";
 import { CampaignStatusIcon, StateIcon } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -14,7 +13,7 @@ import { ADS_ADAPTERS } from "@/lib/ads/adapters";
 import { CSV_TEMPLATE } from "@/lib/ads/csv";
 import { loadCampaignReport } from "@/lib/ads/report";
 import { readExternalRefs } from "@/lib/ads/sync";
-import { can, canViewCampaign, ROLE_LABELS, type RoleName } from "@/lib/auth/permissions";
+import { can, canViewCampaign, ROLE_LABELS } from "@/lib/auth/permissions";
 import { requireStaff } from "@/lib/auth/session";
 import { loadAccessRows } from "@/lib/campaigns/access";
 import { readAdCopy } from "@/lib/campaigns/editor-data";
@@ -29,7 +28,7 @@ import { formatDateTime, formatFcfa, formatNumber, formatPureDate, todayUtc, toI
 
 export const metadata: Metadata = { title: "Campagne" };
 
-const TABS = ["apercu", "creations", "messages", "modifications", "statistiques"] as const;
+const TABS = ["apercu", "creations", "modifications", "statistiques"] as const;
 
 export default async function StaffCampaign({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ onglet?: string }> }) {
   const user = await requireStaff();
@@ -41,7 +40,7 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
       user: { select: { id: true, name: true, email: true, phone: true, accountType: true } }, business: true, manager: { select: { name: true } }, designer: { select: { name: true } },
       assets: { include: { asset: { select: { id: true, name: true, kind: true } } }, orderBy: { createdAt: "desc" } },
       statusEvents: { orderBy: { createdAt: "desc" }, take: 30 }, revisions: { orderBy: { createdAt: "desc" }, include: { requester: { select: { name: true } } } },
-      orders: { orderBy: { createdAt: "desc" }, take: 3 }, reads: { where: { userId: user.id } },
+      orders: { orderBy: { createdAt: "desc" }, take: 3 },
     },
   });
   if (!c || c.status === "DRAFT") notFound();
@@ -52,11 +51,9 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
   const base = `/gestion/campagnes/${c.id}`;
   const platforms = c.platforms as PlatformCode[];
   const objective = getObjective(c.objective);
-  const lastRead = c.reads[0]?.lastReadAt ?? new Date(0);
   const accessRows = await loadAccessRows(c.businessId);
   const accessMissing = accessToGive(accessRows, platforms, c.id);
-  const [unread, pendingMetrics, actors] = await Promise.all([
-    db.message.count({ where: { campaignId: c.id, senderId: { not: user.id }, createdAt: { gt: lastRead } } }),
+  const [pendingMetrics, actors] = await Promise.all([
     db.metricSnapshot.count({ where: { campaignId: c.id, validated: false } }),
     db.user.findMany({ where: { id: { in: c.statusEvents.map((e) => e.actorId).filter((v): v is string => Boolean(v)) } }, select: { id: true, name: true } }),
   ]);
@@ -77,7 +74,6 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
       <TabsNav current={tab} tabs={[
         { id: "apercu", label: "Aperçu", href: base },
         { id: "creations", label: "Créations", href: `${base}?onglet=creations`, count: creatives.filter((a) => a.approval === "CHANGES_REQUESTED").length || undefined },
-        { id: "messages", label: "Messages", href: `${base}?onglet=messages`, count: unread || undefined },
         { id: "modifications", label: "Modifications", href: `${base}?onglet=modifications`, count: openRevisions || undefined },
         { id: "statistiques", label: "Statistiques", href: `${base}?onglet=statistiques`, count: pendingMetrics || undefined },
       ]} />
@@ -198,15 +194,6 @@ export default async function StaffCampaign({ params, searchParams }: { params: 
           <CardHeader title="Fichiers et créations" />
           <CreativesPanel campaignId={c.id} canManage={can(user.role, "campaign.manage_creatives") && !["COMPLETED", "CANCELLED"].includes(status)}
             items={c.assets.map((a) => ({ linkId: a.id, assetId: a.asset.id, name: a.asset.name, kind: a.asset.kind, approval: a.approval, feedback: a.feedback, byClient: a.addedById === c.userId, role: a.role }))} />
-        </Card>
-      )}
-
-      {tab === "messages" && (
-        <Card>
-          <CardHeader title="Échanges" />
-          <Thread campaignId={c.id} canPost={can(user.role, "campaign.message")} allowInternal disabledReason="Votre rôle ne permet pas d'écrire au client."
-            messages={(await db.message.findMany({ where: { campaignId: c.id }, orderBy: { createdAt: "asc" }, take: 300, include: { sender: { select: { name: true, role: true } } } }))
-              .map((m) => ({ id: m.id, body: m.body, internal: m.internal, createdAt: m.createdAt.toISOString(), mine: m.senderId === user.id, author: m.sender.name, role: ROLE_LABELS[m.sender.role as RoleName] }))} />
         </Card>
       )}
 

@@ -79,7 +79,7 @@ export async function saveExternalRefsAction(campaignId: string, refs: Record<st
 // ─────────────────────────── Créations ───────────────────────────
 
 async function notifyReview(campaign: { id: string; userId: string; name: string }) {
-  await notify({ userId: campaign.userId, type: "creative.submitted", title: `Création à valider : ${campaign.name}`, body: "Notre équipe vous soumet une création. Validez-la ou demandez une modification.", link: `/app/campagnes/${campaign.id}?onglet=creations`, email: true, whatsapp: true });
+  await notify({ userId: campaign.userId, type: "creative.submitted", title: `Création à valider : ${campaign.name}`, body: "Notre équipe vous soumet une création. Validez-la ou demandez une modification.", link: `/app/campagnes/${campaign.id}`, email: true, whatsapp: true });
 }
 
 /** Rattache à la campagne un fichier envoyé par le collaborateur ; `submit` le soumet à la validation du client. */
@@ -207,7 +207,7 @@ export async function validateMetricsAction(campaignId: string) {
     if (!res.count) throw new UserError("Aucune statistique en attente de validation.");
     await db.metricImport.updateMany({ where: { campaignId, status: "PENDING" }, data: { status: "VALIDATED" } });
     await audit({ actorId: actor.id, action: "metrics.validated", entity: "Campaign", entityId: campaignId, meta: { rows: res.count } });
-    await notify({ userId: campaign.userId, type: "metrics.updated", title: `Nouveaux résultats : ${campaign.name}`, body: "Les statistiques de votre campagne ont été mises à jour.", link: `/app/campagnes/${campaign.id}` });
+    await notify({ userId: campaign.userId, type: "metrics.updated", title: `Nouveaux résultats : ${campaign.name}`, body: "Les statistiques de votre campagne ont été mises à jour.", link: `/app/campagnes/${campaign.id}?onglet=resultats` });
     return { count: res.count };
   });
 }

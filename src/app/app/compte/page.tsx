@@ -42,7 +42,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const base = "/app/compte";
 
   if (!tab) {
-    const rows = [...TABS.map((id) => ({ href: `${base}?onglet=${id}`, ...MENU[id] })), { href: "/app/notifications", label: "Notifications", icon: Bell, hint: "Vos messages", tone: "neutral" as const }];
+    const rows = [...TABS.map((id) => ({ href: `${base}?onglet=${id}`, ...MENU[id] })), { href: "/app/notifications", label: "Notifications", icon: Bell, hint: "Nouvelles de vos campagnes", tone: "neutral" as const }];
     return (
       <>
         <section className="mb-4 flex animate-rise items-center gap-3 rounded-xl border border-line/70 bg-surface p-3.5 shadow-card sm:mb-6 sm:gap-4 sm:p-5">
